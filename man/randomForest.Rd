@@ -13,9 +13,11 @@
 }
 \usage{
 \method{randomForest}{formula}(formula, data=NULL, subset, ...)
-\method{randomForest}{default}(x, y=NULL, addclass=0, ntree=100,
-mtry=ceiling(sqrt(ncol(x))), classwt=NULL, nodesize=1, importance=FALSE,
-proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE, ...)
+\method{randomForest}{default}(x, y=NULL, addclass=0, ntree=500,
+  mtry=ifelse(is.null(y) || is.factor(y), max(floor(ncol(x)/3), 1),
+    floor(sqrt(ncol(x)))), classwt=NULL, nodesize=1, importance=FALSE,
+  proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE,
+  keep.forest=FALSE, ...)
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -57,6 +59,8 @@ proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE, ...)
   \item{do.trace}{If set to \code{TRUE}, give a more verbose output as
     \code{randomForest} is run.  If set to some integer, then running
     output is printed for every \code{do.trace} trees.}
+  \item{keep.forest}{If set to \code{FALSE}, the forest will not be
+    retained in the output object.}
   \item{...}{optional parameters to be passed to the low level function
     \code{randomForest.default}.}
 }
@@ -77,8 +81,9 @@ proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE, ...)
     component is set to \code{NULL}).}
   \item{ntree}{number of trees grown.}
   \item{mtry}{number of predictors sampled for spliting at each node.}
-  \item{forest}{a list that contains the entire forest; \code{NULL} if
-    \code{randomForest} is run in unsupervised mode.}  
+  \item{forest}{(a list that contains the entire forest; \code{NULL} if 
+    \code{randomForest} is run in unsupervised mode or if
+    \code{keep.forest=FALSE}.} 
   For classification problem, the following are also included:
   \item{err.rate}{final error rate of the prediction on the input data.}
   \item{confusion}{the confusion matrix of the prediction.}
@@ -112,11 +117,12 @@ proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE, ...)
 \examples{
 ## Classification:
 data(iris)
+set.seed(71)
 iris.rf <- randomForest(Species ~ ., data=iris, importance=TRUE,
                         proximity=TRUE)
 print(iris.rf)
 ## Look at variable importance:
-print(iris.rf$importance)
+print(round(iris.rf$importance, 2))
 ## Do MDS on 1 - proximity:
 library(mva)
 iris.mds <- cmdscale(1 - iris.rf$proximity)
@@ -127,12 +133,20 @@ pairs(cbind(iris[,1:4], iris.mds), cex=0.6, gap=0.2,
 print( sum((as.dist(1 - iris.rf$proximity) - dist(iris.mds))^2) /
        sum((as.dist(1 - iris.rf$proximity)^2)) )
 
+## The `unsupervised' case:
+set.seed(17)
+iris.urf <- randomForest(iris[, -5], proximity=TRUE, outscale=TRUE)
+## Look for Outliers:
+plot(iris.urf$out, type="h", ylab="",
+     main="Measure of Outlyingness for Iris Data")
+
 ## Regression:
 data(airquality)
+set.seed(131)
 ozone.rf <- randomForest(Ozone ~ ., data=airquality, mtry=3, importance=TRUE)
 print(ozone.rf)
 ## Show "importance" of variables: higher value mean more important:
-print(ozone.rf$importance)
+print(round(ozone.rf$importance, 2))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

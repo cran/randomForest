@@ -11,13 +11,13 @@ c	SUBROUTINE BUILDTREE
      1    jdex,upper,avnode,bestcrit, nodestatus,
      2    nodepop,nodestart,nrnodes,nthsize,rsnodecost,
      3    ncase,parent,ut,v,xt,mtry,ip,
-     4    mbest,cat,tgini)
+     4    mbest,cat,tgini, mind)
 	
       implicit double precision (a-h,o-z)
       integer treemap(2,nrnodes),parent(nrnodes),
      $     nodestatus(nrnodes),ip(mdim),nodepop(nrnodes),
      $     nodestart(nrnodes),jdex(nsample),ncase(nsample),
-     $     mbest(nrnodes),cat(mdim)
+     $     mbest(nrnodes),cat(mdim), mind(mdim)
 	
       double precision y(nsample),bestcrit(nrnodes),x(mdim,nsample),
      1     avnode(nrnodes),xt(nsample),upper(nrnodes),
@@ -66,7 +66,7 @@ c     initialize for next call to findbestsplit
          
          call rfindbestsplit(x,xt,ut,jdex,y,mdim,nsample,
      $        ndstart,ndend,msplit,decsplit,ubest,ncase,ndendl,
-     $        jstat,v,mtry,ip,sumnode,nodecnt,yl,cat)
+     $        jstat,v,mtry,ip,sumnode,nodecnt,yl,cat, mind)
 
 c         iprint=0
 c         if(iprint.eq.1) then
@@ -146,11 +146,11 @@ c	SUBROUTINE FINDBESTSPLIT
       subroutine rfindbestsplit(x,xt,ut,jdex,y,mdim,
      $     nsample,ndstart,ndend,msplit,decsplit,ubest,
      $     ncase,ndendl,jstat,v,mtry,ip,
-     $     sumnode,nodecnt,yl,cat)
+     $     sumnode,nodecnt,yl,cat, mind)
 
       implicit double precision (a-h,o-z)
       integer ncase(nsample),jdex(nsample),ip(mdim),
-     $     ncat(32),icat(32),cat(mdim)
+     $     ncat(32),icat(32),cat(mdim), mind(mdim)
       
       double precision x(mdim,nsample),ut(nsample),xt(nsample),
      $     v(nsample),y(nsample),yl(nsample),
@@ -160,15 +160,24 @@ c	SUBROUTINE FINDBESTSPLIT
 c       START BIG LOOP
       
       critmax=0
- 200  call zerv(ip,mdim)
+      ubestt = 0.0
+c 200  call zerv(ip,mdim)
       non=0
+      do k = 1, mdim
+	 mind(k) = k
+      end do
+
+      nn = mdim
       do mt=1,mtry
          critvar=0
- 100     call rrand(rnd);
-	 kv=int(rnd*mdim)+1
-         if(ip(kv).eq.1) goto 100
-         ip(kv)=100
-         lc=cat(kv)
+ 100     call rrand(rnd)
+	 j = int(rnd * nn) + 1
+	 kv = mind(j)
+	 mind(j) = mind(nn)
+	 nn = nn - 1
+c	 if(ip(kv).eq.1) goto 100
+c	 ip(kv) = 1
+	 lc=cat(kv)
          if(lc.eq.1) then
             do n=ndstart,ndend
                xt(n)=x(kv,jdex(n))
@@ -211,7 +220,8 @@ c       START BIG LOOP
                jstat=1
                return
             end if
-            goto 100
+c            goto 100
+	    continue
          end if
          
 c     ncase(n)=case number of v nth from bottom
@@ -288,7 +298,7 @@ c     ncase(n)=case number of v nth from bottom
                icat(j)=0
             end if
          end do
-         call pack(lc,icat,nubest)
+         call mypack(lc,icat,nubest)
          ubest=dble(nubest)
       end if
       

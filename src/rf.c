@@ -35,7 +35,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
         double *outlier, int *outcl, int *counttr, double *prox, 
 	double *imprt, int *trace, int *ndbigtree, int *nodestatus, 
 	int *bestvar, int *treemap, int *nodeclass, double *xbestsplit, 
-	double *pid)
+	double *pid, int *savef)
 {
   /******************************************************************
    *  C wrapper for random forests:  get input from R and drive
@@ -82,7 +82,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     *nodepop, *parent, *jin, *ndble, *nodex,
     *nodexts, *nodestart, *ta, *ncase, *jerr, *iv, *isort, *ncp, *clp,
     *jtr, *nc, *msum, *jet, *idmove, *jvr, *countimp,
-    *at, *a, *b, *cbestsplit;
+    *at, *a, *b, *cbestsplit, *mind;
   
   double errtr, errc;
 
@@ -104,7 +104,8 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   mimp = (*imp == 1) ? mdim : 1;
   nimp = (*imp == 1) ? nsample : 1;
   near = (*iprox == 1) ? nsample0 : 1;
-  
+  if (*trace == 0) *trace = jbt + 1;
+
   tgini =      (double *) S_alloc(mdim, sizeof(double));
   v =          (double *) S_alloc(nsample, sizeof(double));
   tx =         (double *) S_alloc(nsample, sizeof(double));
@@ -159,6 +160,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   a =             (int *) S_alloc(mdim*nsample, sizeof(int));
   b =             (int *) S_alloc(mdim*nsample, sizeof(int));
   cbestsplit =    (int *) S_alloc(*maxcat*nrnodes, sizeof(int));
+  mind =          (int *) S_alloc(mdim, sizeof(int));
   
   /* SET UP DATA TO ADD A CLASS++++++++++++++++++++++++++++++ */
 
@@ -196,7 +198,8 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 
   for(jb = 0; jb < jbt; jb++) {
 
-    arrayindex = jb * nrnodes;
+    arrayindex = (*savef == 1) ? jb * nrnodes : 0;
+
     F77_CALL(zerv)(nodestatus + arrayindex, &nrnodes);
     F77_CALL(zerm)(treemap + 2*arrayindex, &itwo, &nrnodes);
     F77_CALL(zervr)(xbestsplit + arrayindex, &nrnodes);
@@ -224,7 +227,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 			tclasspop, tclasscat, ta, &nrnodes, idmove,
 			&ndsize, ncase, parent, jin, &mtry, iv,
 			nodeclass + arrayindex, ndbigtree + jb, win, wr, wc,
-			wl, &mdim, &nuse); 
+			wl, &mdim, &nuse, mind); 
 
     F77_CALL(xtranslate)(x, &mdim, &nrnodes, &nsample, bestvar + arrayindex, 
 			 bestsplit, bestsplitnext, xbestsplit + arrayindex,
@@ -245,10 +248,10 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
       }
     }
 
-    if ((jb + 1) % 10 == 0 || jb + 1 == jbt) {
+    if ((jb + 1) % *trace == 0 || jb + 1 == jbt) {
       F77_CALL(oob)(&nsample, &nclass, jin, cl, jtr, jerr, counttr, out,
 		    &errtr, &errc, rmargin, q, outcl, wtt);
-      if(*trace ==1) 
+      if(*trace < jbt)
 	Rprintf("%4i: Out-of-bag error rate=%5.2f%%\n", jb+1, 100.0*errtr);
     }
 
@@ -317,7 +320,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 	assert(n*near + k < near * near);
 	assert(k*near + n >= 0);
 	assert(n*near + k >= 0);
-	prox[near*k + n] = prox[near*k + n] / (2.0 * jbt);
+	prox[near*k + n] = prox[near*k + n] / jbt;
 	prox[near*n + k] = prox[near*k + n];
       }
       assert(near*n + n < near * near);

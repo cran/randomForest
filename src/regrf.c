@@ -16,7 +16,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	   int *nrnodes, int *jbt, int *mtry, int *imp, int *cat, int *jprint,
 	   double *yptr, double *errimp, int *ndbigtree, int *nodestatus, 
 	   int *treemap, double *avnode, int *mbest, double *upper, 
-	   double *mse, double *rsq)
+	   double *mse, double *rsq, int *savef)
 {
   /*************************************************************************
    Input:
@@ -46,7 +46,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   int k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx;
   
   int *jdex, *nodepop, *npert, *ip, *nperm, *parent, *nout, *jin, *isort, 
-    *nodestart, *ncase, *nbrterm, *jperm, *incl;
+    *nodestart, *ncase, *nbrterm, *jperm, *incl, *mind;
   
   nimp = (*imp == 1) ? (*imp * *nsample) : 1;
   mimp = (*imp == 1) ? (*imp * *mdim) : 1;
@@ -84,6 +84,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   nbrterm    = (int *) R_alloc(*nrnodes, sizeof(int));
   jperm      = (int *) R_alloc(*jbt, sizeof(int));
   incl       = (int *) R_alloc(*mdim, sizeof(int));
+  mind       = (int *) R_alloc(*mdim, sizeof(int)); 
 
   qverrts = 0.0;
   averrb = 0.0;
@@ -92,18 +93,24 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   vary = 0.0;
 
   for(n=0; n < *nsample; ++n) {
+    yptr[n] = 0.0;
+    nout[n] = 0;
     ntrue = n;
     vary += ntrue * (y[n] - avy)*(y[n] - avy) / (ntrue + 1);
     avy = (ntrue * avy + y[n]) / (ntrue + 1);
   }
   vary /= *nsample;
   
-  for(n = 0; n < *nsample; ++n) {
-    yptr[n] = 0.0;
-    nout[n] = 0;
-  }
   astr = 0.0;
   asd = 0.0;
+
+  if(*imp==1) {
+    for(n = 0; n < nimp; ++n) {
+      for(m = 0; m < mimp; ++m) {
+	predimp[n + m * nimp] = 0.0;
+      }
+    }
+  }
 
   GetRNGstate();
 
@@ -111,7 +118,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
    Start the loop over trees.
   *************************************/
   for(jb = 0; jb < *jbt; ++jb) {
-    idx = jb * *nrnodes;
+    idx = (*savef == 1) ? jb * *nrnodes : 0;
     for(n = 0; n < *nsample; ++n) jin[n] = 0;
     for(n = 0; n < *nsample; ++n) {
       xrand = unif_rand();
@@ -130,7 +137,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 			nodestatus + idx, nodepop,
 			nodestart, nrnodes, nthsize, rsnodecost, ncase, 
 			parent, ut, v, xt, mtry, ip, mbest + idx, cat, 
-			tgini);
+			tgini, mind);
 
     ndbigtree[jb] = *nrnodes;
     for(k = *nrnodes-1; k >= 0; --k) {
@@ -181,6 +188,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	  }
 	  em += (y[n] - predimp[n + mr* *nsample]) *
 	    (y[n] - predimp[n + mr* *nsample]);
+	  /*	  if(mr==0) Rprintf("%i %10.5f\n", n+1, predimp[n]);*/
 	}
 	errimp[mr] = em / *nsample;
       }

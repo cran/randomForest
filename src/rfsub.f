@@ -187,7 +187,7 @@ c     SUBROUTINE BUILDTREE
      1     bestvar,bestsplit,bestsplitnext,tgini, nodestatus,nodepop,
      1     nodestart,classpop,tclasspop,tclasscat,ta,nrnodes,
      1     idmove,ndsize,ncase,parent,jin,mtry,iv,nodeclass,ndbigtree,
-     1     win,wr,wc,wl,mred,nuse)
+     1     win,wr,wc,wl,mred,nuse,mind)
       
 
 c Buildtree consists of repeated calls to two subroutines, Findbestsplit
@@ -212,7 +212,7 @@ c main program.
      1     nodepop(nrnodes),nodestart(nrnodes),
      1     bestsplitnext(nrnodes),idmove(nsample),
      1     ncase(nsample),parent(nrnodes),b(mdim,nsample),
-     1     jin(nsample),iv(mred),nodeclass(nrnodes)
+     1     jin(nsample),iv(mred),nodeclass(nrnodes),mind(mred)
       
       
       double precision tclasspop(nclass),classpop(nclass,nrnodes),
@@ -255,7 +255,7 @@ c     initialize for next call to findbestsplit
 
          call findbestsplit(a,b,cl,mdim,nsample,nclass,cat,ndstart,
      1        ndend,tclasspop,tclasscat,msplit,decsplit,nbest,ncase,
-     1        jstat,jin,mtry,iv,win,wr,wc,wl,mred,kbuild)
+     1        jstat,jin,mtry,iv,win,wr,wc,wl,mred,kbuild,mind)
          
          
          if(jstat.eq.1) then
@@ -366,14 +366,14 @@ c the coding into an integer of the categories going left.
 
       subroutine findbestsplit(a,b,cl,mdim,nsample,nclass,cat,
      1     ndstart,ndend,tclasspop,tclasscat,msplit,decsplit,nbest,
-     1     ncase,jstat,jin,mtry,iv,win,wr,wc,wl,mred,kbuild)
+     1     ncase,jstat,jin,mtry,iv,win,wr,wc,wl,mred,kbuild,mind)
       implicit double precision(a-h,o-z)      
       integer a(mdim,nsample),cl(nsample),cat(mdim),iv(mred),
-     1     ncase(nsample),b(mdim,nsample),jin(nsample)
-          
+     1     ncase(nsample),b(mdim,nsample),jin(nsample), nn, j          
       double precision tclasspop(nclass),tclasscat(nclass,32),
      1     win(nsample),
      1     wr(nclass),wc(nclass),wl(nclass), xrand
+      integer mind(mred)
 c      real pno, pdo, rrd, rld
       
 c     compute initial values of numerator and denominator of Gini
@@ -393,10 +393,22 @@ c     start main loop through variables to find best split
       
       critmax=-1.0e20
       
+      do k = 1, mred
+         mind(k) = k
+      end do
+
+      nn = mred
       do 20 mt=1,mtry
  200     continue
+c
+c  sampling mtry variables w/o replacement.
+c
          call rrand(xrand)
-         mvar=int(mred*xrand)+1
+         j = int(nn * xrand) + 1
+         mvar = mind(j)
+         mind(j) = mind(nn)
+         nn = nn - 1
+c
          if(cat(mvar).eq.1) then
             rrn=pno
             rrd=pdo
@@ -1219,7 +1231,7 @@ c     MISCELLANOUS SMALL SUBROUTINES
       if(j.gt.1) go to 11
       end
 
-      subroutine pack(l,icat,npack)
+      subroutine mypack(l,icat,npack)
       integer*4 icat(32),npack
       
 c     icat is a binary integer with ones for categories going left

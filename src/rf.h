@@ -31,7 +31,8 @@ extern void F77_NAME(buildtree)(int *, int *, int *, int *, int *, int *, int
 				*, int *, int *, double *, double *, double
 				*, int *, int *, int *, int *, int *, int *,
 				int *, int *, int *, int *, int *, double *,
-				double *, double *, double *, int *, int *); 
+				double *, double *, double *, int *, int *,
+				int *); 
 extern void F77_NAME(xtranslate)(double *, int *, int *, int *, int *, int *,
 				 int *, double *, int *, int *, int *); 
 extern void F77_NAME(testreebag)(double *, int *, int *, int *, int *,
@@ -60,7 +61,7 @@ extern void F77_NAME(rbuildtree)(double *xb, double *yb, double *yl, int *mdim,
 				int *nthsize, double *rsnodecost, int *ncase, 
 				int *parent, double *ut, double *v, 
 				double *xt, int *mtry, int *ip, int *mbest, 
-				int *cat, double *tgini);
+				int *cat, double *tgini, int *mind);
 extern void F77_NAME(rtestreebag)(double *x, int *nsample, int *mdim, 
 				 int *treemap, int *nodestatus, int *nrnodes,
 				 int *ndbigtree, double *ytr, double *upper, 

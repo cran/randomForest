@@ -4,6 +4,7 @@
 {
   if (!inherits(object, "randomForest")) 
     stop("object not of class randomForest")
+  if (is.null(object$forest)) stop("No forest component in the object")
   out.type <- charmatch(tolower(type),
                         c("response", "prob", "vote", "class"))
   if (is.na(out.type)) 

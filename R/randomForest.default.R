@@ -1,9 +1,9 @@
 "randomForest.default" <-
-function(x, y=NULL, addclass=0, ntree=100,
-                                 mtry=ceiling(sqrt(ncol(x))),
-                                 classwt=NULL, nodesize=1, importance=FALSE,
-                                 proximity=FALSE, outscale=FALSE,
-                                 norm.votes=TRUE, do.trace=FALSE, ...)
+function(x, y=NULL, addclass=0, ntree=500,
+         mtry=ifelse(!is.null(y) && !is.factor(y), max(floor(ncol(x)/3), 1),
+           floor(sqrt(ncol(x)))), classwt=NULL, nodesize=1,
+         importance=FALSE, proximity=FALSE, outscale=FALSE, norm.votes=TRUE,
+         do.trace=FALSE, keep.forest=TRUE, ...)
 {
   classRF <- is.null(y) || is.factor(y)
   n <- nrow(x)
@@ -73,6 +73,8 @@ function(x, y=NULL, addclass=0, ntree=100,
   nsample <- if(addclass == 0) n else 2*n
   nrnodes <- 2 * trunc(nsample/nodesize) + 1
 
+  if(keep.forest) nt <- ntree else nt <- 1
+  
   if(classRF) {
     rfout <- .C("rf",
                 x=as.double(x),
@@ -98,33 +100,36 @@ function(x, y=NULL, addclass=0, ntree=100,
                 impout=as.double(impout), 
                 trace=as.integer(as.numeric(do.trace)),
                 ndbigtree = as.integer(numeric(ntree)),
-                nodestatus = as.integer(numeric(ntree * nrnodes)),
-                bestvar = as.integer(numeric(ntree * nrnodes)),
-                treemap = as.integer(numeric(ntree * 2 * nrnodes)),
-                nodeclass = as.integer(numeric(ntree * nrnodes)),
-                xbestsplit = as.double(numeric(ntree * nrnodes)),
+                nodestatus = as.integer(numeric(nt * nrnodes)),
+                bestvar = as.integer(numeric(nt * nrnodes)),
+                treemap = as.integer(numeric(nt * 2 * nrnodes)),
+                nodeclass = as.integer(numeric(nt * nrnodes)),
+                xbestsplit = as.double(numeric(nt * nrnodes)),
                 pid = as.double(numeric(max(2, nclass))),
+                savef = as.integer(keep.forest),
                 DUP=FALSE,
                 PACKAGE="randomForest")
     if(addclass == 0) {
-      ## deal with the random forest outputs
-      max.nodes <- max(rfout$ndbigtree)
-      treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
-      treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,]
+      if(keep.forest) {
+        ## deal with the random forest outputs
+        max.nodes <- max(rfout$ndbigtree)
+        treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
+        treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,]
+      }
       ## Turn the predicted class into a factor like y.
+      out.class <- factor(rfout$outcl, levels = 1:length(levels(y)), 
+                          labels = levels(y))
+      names(out.class) <- x.row.names
     }
-    out.class <- factor(rfout$outcl, levels = 1:length(levels(y)), 
-                        labels = levels(y))
-    names(out.class) <- x.row.names
     out.votes <- t(matrix(rfout$counttr, nclass, nsample))[1:n, ]
-    dimnames(out.votes) <- list(x.row.names, levels(out.class))
     if(norm.votes) out.votes <- t(apply(out.votes, 1, function(x) x/sum(x)))
+    dimnames(out.votes) <- list(x.row.names, levels(y))
     
     out <- list(call = match.call(),
                 type = ifelse(addclass == 0, "classification",
                   "unsupervised"),
                 predicted = if(addclass == 0) out.class else NULL,
-                err.rate = mean(y != out.class),
+                err.rate = if(addclass == 0) mean(y != out.class) else NULL, 
                 confusion = if(addclass == 0) table(observed = y,
                                  predicted = out.class) else NULL,
                 votes = out.votes,
@@ -135,7 +140,7 @@ function(x, y=NULL, addclass=0, ntree=100,
                 outlier = if(outscale) rfout$outlier else NULL,
                 ntree = ntree,
                 mtry = mtry,
-                forest = if(addclass > 0) NULL else {
+                forest = if(addclass > 0 || !keep.forest) NULL else {
                   list(ndbigtree = rfout$ndbigtree, 
                        nodestatus = matrix(rfout$nodestatus,
                          nc = ntree)[1:max.nodes,],
@@ -165,13 +170,14 @@ function(x, y=NULL, addclass=0, ntree=100,
                 as.double(ypred),
                 as.double(impout),
                 ndbigtree = as.integer(numeric(ntree)),
-                nodestatus = as.integer(numeric(ntree * nrnodes)),
-                treemap = as.integer(numeric(ntree * 2 * nrnodes)),
-                avnode = as.double(numeric(ntree * nrnodes)),
-                mbest = as.integer(numeric(ntree * nrnodes)),
-                upper = as.double(numeric(ntree * nrnodes)),
+                nodestatus = as.integer(numeric(nt * nrnodes)),
+                treemap = as.integer(numeric(nt * 2 * nrnodes)),
+                avnode = as.double(numeric(nt * nrnodes)),
+                mbest = as.integer(numeric(nt * nrnodes)),
+                upper = as.double(numeric(nt * nrnodes)),
                 mse = as.double(numeric(1)),
                 rsq = as.double(numeric(1)),
+                savef = as.integer(keep.forest),
                 DUP=FALSE,
                 PACKAGE="randomForest")[12:21]
     out <- list(call = match.call(),
@@ -182,8 +188,8 @@ function(x, y=NULL, addclass=0, ntree=100,
                 importance = if(importance) structure(rfout[[2]], names=x.col.names) else NULL,
                 ntree = ntree,
                 mtry = mtry,
-                forest = c(rfout[3:8], list(ncat = ncat),
-                  list(nrnodes=nrnodes)))
+                forest = if(keep.forest) c(rfout[3:8], list(ncat = ncat),
+                  list(nrnodes=nrnodes)) else NULL)
   }
   class(out) <- "randomForest"
   return(out)

@@ -229,7 +229,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     F77_CALL(zervr)(win, &nsample);
 
     for(n = 0; n < nsample; n++) {
-      k = (unif_rand() * nsample) - 1;
+      k = unif_rand() * nsample;
       /*      Rprintf("%i\n",k); */
       tclasspop[cl[k] - 1] = tclasspop[cl[k] - 1] + wtt[k];
       win[k] = win[k] + wtt[k];

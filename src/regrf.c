@@ -135,7 +135,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     }
   }
 
-  for(m = 0; n < *mdim; ++m) {
+  for(m = 0; m < *mdim; ++m) {
     tgini[m] = 0.0;
   }
   
@@ -167,7 +167,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 
     for(n = 0; n < *nsample; ++n) {
       xrand = unif_rand();
-      k = ftrunc(xrand * *nsample);
+      k = xrand * *nsample;
       jin[k] = 1;
       yb[n] = y[k];
       for(m = 0; m < *mdim; ++m) {

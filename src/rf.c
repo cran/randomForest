@@ -1,15 +1,19 @@
 /*****************************************************************
-   Copyright (C) 2001-2 Leo Breiman, Adele Cutler, Andy Liaw and Mathew Wiener
+   Copyright (C) 2001-2 Leo Breiman, Adele Cutler, Andy Liaw and Matthew Wiener
   
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
- 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.                            
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
    C driver for Breiman & Cutler's random forest code.
    Re-written from the original main program in Fortran.
@@ -17,11 +21,13 @@
    Modifications to get the forest out Matt Wiener Feb. 26, 2002. 
  *****************************************************************/
 
+#include <stdio.h>
+#include <assert.h>
 #include <R.h>
 #include "rf.h"
 
 /*  Define the R RNG for use from Fortran. */
-double F77_SUB(rrand)(void) { return(unif_rand()); }
+void F77_SUB(rrand)(double *r) { *r = unif_rand(); }
 
 void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat, 
         int *maxcat, int *addcl, int *ntree, int *nvar, int *ipi, double
@@ -173,6 +179,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     for(m = 0; m < mdim; ++m) {
       for(k = 0; k < nsample; ++k) {
 	for(j = 0; j < nclass; ++j) {
+	  assert(j + (k*nclass) + (m*nclass*nsample) < nclass*nimp*mimp);
 	  countimp[j + (k*nclass) + (m*nclass*nsample)] = 0;
 	}
       }
@@ -199,7 +206,9 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     F77_CALL(zervr)(win, &nsample);
 
     for(n = 0; n < nsample; n++) {
-      k = (int) (unif_rand() * nsample);
+      k = (unif_rand() * nsample) - 1;
+      assert(k < nsample); 
+      assert(k >= 0); 
       tclasspop[cl[k] - 1] = tclasspop[cl[k] - 1] + wtt[k];
       win[k] = win[k] + wtt[k];
       jin[k] = 1;
@@ -229,6 +238,8 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 
     for(n = 0; n < nsample; n++) {
       if(jin[n] == 0) {
+	assert((n*nclass + jtr[n] - 1) < (*ncl * nsample)); 
+	assert((n*nclass + jtr[n] - 1) >= 0); 
 	counttr[n*nclass + jtr[n] - 1] ++;
         out[n]++;
       }
@@ -246,6 +257,10 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
       F77_CALL(zerv)(iv, &mdim);
       for(kt = 0; kt < *(ndbigtree + jb); kt++) {
         if(nodestatus[kt + arrayindex] != -1) {
+	  assert(kt + arrayindex < jbt * nrnodes);
+	  assert(kt + arrayindex >= 0);
+	  assert(bestvar[kt + arrayindex] - 1 < mdim);
+	  assert(bestvar[kt + arrayindex] - 1 >= 0);
 	  iv[bestvar[kt + arrayindex] - 1] = 1;
 	  msum[bestvar[kt + arrayindex] - 1] ++;
 	}
@@ -261,11 +276,18 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 			       &nclass, jvr, nodex, maxcat); 
 	  for(n = 0; n < nsample; n++) {
 	    if(jin[n] == 0 && jtr[n] != jvr[n]) {
+	      assert(jvr[n]-1 + n*nclass + (mr-1)*nclass*nsample < 
+		     nclass * nimp * mimp);
+	      assert(jvr[n]-1 + n*nclass + (mr-1)*nclass*nsample >= 0);
 	      countimp[jvr[n]-1 + n*nclass + (mr-1)*nclass*nsample]++;
 	      countimp[jtr[n]-1 + n*nclass + (mr-1)*nclass*nsample]--;
 	    }
 	  }
-	  for(n = 0; n < nsample; n++)  x[mr-1 + n*mdim] = tx[n];
+	  for(n = 0; n < nsample; n++) {
+	    assert(mr-1 + n*mdim < mdim*nsample);
+	    assert(mr-1 + n*mdim >= 0);
+	    x[mr-1 + n*mdim] = tx[n];
+	  }
 	}
       }
     }
@@ -274,6 +296,12 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     if(*iprox == 1) {
       for(n = 0; n < near; n++) {
 	for(k = 0; k < near; k++) {
+	  assert(k < nsample);
+	  assert(n < nsample);
+	  assert(k >= 0);
+	  assert(n >= 0);
+	  assert(k*near + n < near * near);
+	  assert(k*near + n >= 0);
 	  if(nodex[k] == nodex[n]) prox[k*near + n] += 1.0;
 	}
       }
@@ -285,9 +313,15 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   if(*iprox == 1) {
     for(n = 0; n < near; n++) {
       for(k = n + 1; k < near; k++) {
+	assert(k*near + n < near * near);
+	assert(n*near + k < near * near);
+	assert(k*near + n >= 0);
+	assert(n*near + k >= 0);
 	prox[near*k + n] = prox[near*k + n] / (2.0 * jbt);
 	prox[near*n + k] = prox[near*k + n];
       }
+      assert(near*n + n < near * near);
+      assert(near*n + n >= 0);
       prox[near*n + n] = 1.0;
     }
   }
@@ -306,6 +340,10 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 
   /*	GIVES STANDARD IMP OUTPUT */
     for(m = 0; m < mdim; m++) {
+      assert(m < mimp);
+      assert(m >= 0);
+      assert(3*mdim + m < 4*mdim);
+      assert(3*mdim + m >= 0);
       imprt[m] = errimp[m];
       imprt[mdim + m] = ((diffmarg[m] > 0.0) ? diffmarg[m] : 0.0);
       imprt[2*mdim + m] = ((cntmarg[m] > 0.0) ? cntmarg[m] : 0.0);

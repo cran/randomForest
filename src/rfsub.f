@@ -19,7 +19,7 @@ c
 c     SUBROUTINE MAKEA
 
       subroutine makea(x,mdim,nsample,cat,isort,v,a,b,mred)
-      
+      implicit double precision(a-h,o-z)
       double precision x(mdim,nsample),v(nsample)
       integer cat(mdim),isort(nsample),a(mdim,nsample),
      1     b(mdim,nsample)
@@ -80,7 +80,7 @@ c     are 1,2,...).
 c     SUBROUTINE PREP
       
       subroutine prep(cl,nsample,nclass,ipi,pi,pid,nc,wtt)
-      
+      implicit double precision(a-h,o-z)      
       double precision pi(nclass),pid(nclass),wtt(nsample)
       integer nc(nclass),cl(nsample)
 
@@ -109,11 +109,9 @@ c     SUBROUTINE PREP
          else
             pid(j)=0
          end if
-         
          do n=1,nsample
             wtt(n)=pid(cl(n))
          end do
-         
  30   continue
 
       end
@@ -122,6 +120,7 @@ c     SUBROUTINE MODA
       
       subroutine moda(a,nuse,nsample,mdim,cat,maxcat,
      1     ncase,jin,ta)
+      implicit double precision(a-h,o-z)
       integer a(mdim,nsample),cat(mdim),jin(nsample),
      1     ncase(nsample),ta(nsample)
       
@@ -206,6 +205,7 @@ c ncur+2(right), ncur increases to ncur+2 and the next node to be split is
 c numbered k+1.  When no more nodes can be split, buildtree returns to the
 c main program.
       
+      implicit double precision(a-h,o-z)
       integer a(mdim,nsample),cl(nsample),cat(mdim),
      1     treemap(2,nrnodes),bestvar(nrnodes),
      1     bestsplit(nrnodes), nodestatus(nrnodes),ta(nsample),
@@ -367,26 +367,27 @@ c the coding into an integer of the categories going left.
       subroutine findbestsplit(a,b,cl,mdim,nsample,nclass,cat,
      1     ndstart,ndend,tclasspop,tclasscat,msplit,decsplit,nbest,
      1     ncase,jstat,jin,mtry,iv,win,wr,wc,wl,mred,kbuild)
-      
+      implicit double precision(a-h,o-z)      
       integer a(mdim,nsample),cl(nsample),cat(mdim),iv(mred),
      1     ncase(nsample),b(mdim,nsample),jin(nsample)
           
       double precision tclasspop(nclass),tclasscat(nclass,32),
      1     win(nsample),
-     1     wr(nclass),wc(nclass),wl(nclass)
-      real pno, pdo, rrd, rld
+     1     wr(nclass),wc(nclass),wl(nclass), xrand
+c      real pno, pdo, rrd, rld
       
 c     compute initial values of numerator and denominator of Gini
       
-      pno=0
-      pdo=0
+      pno=0.0
+      pdo=0.0
       do 10 j=1,nclass
          pno=pno+tclasspop(j)*tclasspop(j)
          pdo=pdo+tclasspop(j)
  10   continue
       crit0=pno/pdo
       jstat=0
-      zz=rrand()
+c      zz=rrand()
+c      call rrand(zz)
             
 c     start main loop through variables to find best split
       
@@ -394,7 +395,8 @@ c     start main loop through variables to find best split
       
       do 20 mt=1,mtry
  200     continue
-         mvar=int(mred*rrand())+1
+         call rrand(xrand)
+         mvar=int(mred*xrand)+1
          if(cat(mvar).eq.1) then
             rrn=pno
             rrd=pdo
@@ -418,7 +420,7 @@ c     start main loop through variables to find best split
                wr(k)=wr(k)-u
                               
                if (b(mvar,nc).lt.b(mvar,a(mvar,nsp+1))) then
-                  if(amin1(rrd,rld).gt.1.0e-5) then
+                  if(dmin1(rrd,rld).gt.1.0e-5) then
                      crit=(rln/rld)+(rrn/rrd)
                      if (crit.gt.critvar) then
                         nbestvar=nsp
@@ -492,6 +494,7 @@ c If lcat.ge.10, the exhaustive search gets slow and there is a faster
 c iterative algorithm we can add later.
       
       parameter(jmax=100)
+      implicit double precision(a-h,o-z)
       double precision tclasscat(nclass,32),tclasspop(nclass),
      1     tmpclass(jmax)
       integer icat(32) 
@@ -537,6 +540,7 @@ c right if it belongs to the right child.
 
       subroutine movedata(a,ta,mdim,nsample,ndstart,ndend,idmove,
      1     ncase,msplit,cat,nbest,ndendl)
+      implicit double precision(a-h,o-z)
       integer a(mdim,nsample),ta(nsample),idmove(nsample),
      1     ncase(nsample),cat(mdim),icat(32)
       
@@ -659,7 +663,7 @@ c the corresponding category goes left in the split.
       subroutine xtranslate(x,mdim,nrnodes,nsample,bestvar,
      1     bestsplit,bestsplitnext,xbestsplit,nodestatus,cat,
      1     ndbigtree)
-      
+      implicit double precision(a-h,o)      
       integer cat(mdim),bestvar(nrnodes),bestsplitnext(nrnodes),
      1     nodestatus(nrnodes),bestsplit(nrnodes)
       double precision x(mdim,nsample),xbestsplit(nrnodes)
@@ -684,6 +688,7 @@ C     SUBROUTINE TESTREEBAG
      1     xbestsplit,cbestsplit,bestvar,nodeclass,nrnodes,
      1     ndbigtree,cat,nclass,jts,nodex,maxcat)
       
+      implicit double precision (a-h,o-z)
       double precision xts(mdim,nts),xbestsplit(nrnodes)
       
       integer treemap(2,nrnodes),bestvar(nrnodes),
@@ -739,6 +744,7 @@ C     SUBROUTINE COMPTSERR
       
       subroutine comptserr(countts,jts,clts,jet,ntest,nclass,errts,
      1     pid,labelts)
+      implicit double precision (a-h,o-z)
       integer jts(ntest),clts(ntest),jet(ntest)
       double precision countts(nclass,ntest),pid(nclass),errts
       
@@ -765,7 +771,8 @@ C     SUBROUTINE UNIF & FUNCTION NSELECT
       
       subroutine createclass(x,cl,ns,nsample,mdim,tx,p,
      1     sm,ndble,iaddcl)
-      double precision x(mdim,nsample),tx(ns),sm(ns),p(ns)
+      implicit double precision (a-h,o-z)
+      double precision x(mdim,nsample),tx(ns),sm(ns),p(ns), xrand
       integer ndble(ns),cl(nsample)
       
       do n=1,ns
@@ -778,7 +785,8 @@ C     SUBROUTINE UNIF & FUNCTION NSELECT
       if(iaddcl.eq.1) then
          do n=ns+1,nsample
             do m=1,mdim
-               k=int(rrand()*ns)+1
+               call rrand(xrand)
+               k=int(xrand*ns)+1
                x(m,n)=x(m,k)
             end do
          end do
@@ -809,9 +817,9 @@ C     SUBROUTINE UNIF & FUNCTION NSELECT
       end
       
       integer function nselect(ns,sm)
-      double precision sm(ns)
+      double precision sm(ns), u
       nselect=0
-      u=rrand()
+      call rrand(u)
       kp=ns
       km=0
       do j=1,1000
@@ -834,7 +842,7 @@ C     SUBROUTINE OOB
       
       subroutine oob(nsample,nclass,jin,cl,jtr,jerr,counttr,out,
      1     errtr,errc,rmargin,q,jest,wtt)
-      
+      implicit double precision (a-h,o-z)      
       integer jin(nsample),cl(nsample),jtr(nsample),out(nsample),
      1     jerr(nsample),jest(nsample),counttr(nclass,nsample)
       double precision rmargin(nsample),q(nclass,nsample),wtt(nsample),
@@ -882,6 +890,7 @@ C     SUBROUTINE OOB
 C     SUBROUTINE PERMOBAR
       
       subroutine permobmr(mr,x,tp,tx,jin,nsample,mdim)
+      implicit double precision (a-h,o-z)
       dimension jin(nsample)
       double precision tp(nsample), x(mdim, nsample), tx(nsample)
       kout=0
@@ -910,7 +919,7 @@ C     Modified by A. Liaw 2/11/2002 (removed graph from argument)
       subroutine finishimp(rmissimp,countimp,out,cl,nclass,mdim,
      1     nsample, errimp,rimpmarg,diffmarg,cntmarg,
      1     rmargin,counttr,jest,errtr)
-      
+      implicit double precision (a-h,o-z)      
       integer cl(nsample),countimp(nclass,nsample,mdim),
      1     counttr(nclass,nsample),out(nsample),jest(nsample)
       
@@ -966,7 +975,7 @@ C     SUBROUTINE LOCATEOUT
       
       subroutine locateout(prox,cl,near,nsample,nclass,ncp,
      1     iaddcl,outlier,tout,isort,clp)
-      
+      implicit double precision (a-h,o-z)      
       double precision prox(near,near)
       double precision outlier(near),tout(near)
       integer ncp(near),cl(nsample),isort(nsample),ntt(0:30),
@@ -1036,21 +1045,25 @@ c cbestsplit  is a blank array of integers:  maxcat x nrnodes
 c jts is an integer vector of length ntest
 c jet is an integer vector of length ntest
 c nodexts is an integer vector of length ntest
-      
+c prox is 0 if proximity is not wanted, 1 if it is
+c proxmatrix is a matrix of dimension ntest x ntest
+c   if prox is 1, and is unused (and a single double) otherwise
+c
       subroutine runforest(mdim,ntest,nclass,maxcat,nrnodes,
      1     labelts,jbt,clts,xts,xbestsplit,pid,countts,treemap,
      1     nodestatus,cat,cbestsplit,nodeclass,jts,jet,bestvar,
-     1     nodexts,ndbigtree)
+     1     nodexts,ndbigtree, prox, proxmatrix)
       
+      implicit double precision (a-h,o-z)
       double precision xts(mdim,ntest),xbestsplit(nrnodes,jbt),
      1     pid(nclass),
-     1     countts(nclass,ntest),errts
+     1     countts(nclass,ntest),errts, proxmatrix(ntest, ntest)
       
       integer treemap(2,nrnodes,jbt),nodestatus(nrnodes,jbt),
      1     cat(mdim),cbestsplit(maxcat,nrnodes),
      1     nodeclass(nrnodes,jbt),
      1     bestvar(nrnodes,jbt),jts(ntest),clts(ntest),jet(ntest),
-     1     nodexts(ntest),ndbigtree(jbt)
+     1     nodexts(ntest),ndbigtree(jbt),prox,n1,n2
 
       call zermr(countts,nclass,ntest)
       do jb=1,jbt
@@ -1059,13 +1072,41 @@ c nodexts is an integer vector of length ntest
      1        xbestsplit(1,jb),cbestsplit,bestvar(1,jb),
      1        nodeclass(1,jb), 
      1        nrnodes, ndbigtree(jb),cat,nclass,jts,nodexts,maxcat)
-      
+c     
+c if desired, do proximities for this round
+c
+         if (prox.eq.1) then
+            do n1=1,ntest
+               do n2=1,ntest
+                  if(nodexts(n1).eq.nodexts(n2)) then
+                     proxmatrix(n1,n2)=proxmatrix(n1,n2) + 1.0
+                  end if
+               end do
+            end do
+         end if
          call comptserr(countts,jts,clts,jet,ntest,nclass,
      1        errts,pid,labelts)
-      
+         
       end do
+      
+c     
+c     if proximities requested, do the final adjustment
+c     (division by 2 * number of trees)
+c     
+      
+      if (prox.eq.1) then     
+         do n1=1,ntest
+            do n2=(n1+1),ntest
+               proxmatrix(n1,n2)=proxmatrix(n1,n2)/(2*jbt)
+               proxmatrix(n2,n1)=proxmatrix(n1,n2)
+            end do
+            proxmatrix(n1,n1) = 1.0
+         end do
+      end if
       return
       end
+
+
 
 
 C     SUBROUTINE QUICKSORT
@@ -1079,6 +1120,7 @@ c
 c     this is a modification of acm algorithm #347 by r. c. singleton,
 c     which is a modified hoare quicksort.
 c     
+      implicit double precision (a-h,o-z)
       dimension iperm(kk),iu(32),il(32)
       integer t,tt
       double precision v(kk)
@@ -1162,12 +1204,13 @@ c
 c     MISCELLANOUS SMALL SUBROUTINES
 
       subroutine perm(ns,ntp)
+      double precision rnd
       integer ntp(ns)
       do 1 n= 1,ns
          ntp(n)=n
  1    continue        
       j=ns
- 11   rnd = rrand()
+ 11   call rrand(rnd)
       k=int(j*rnd)+1
       jx=ntp(j)
       ntp(j)=ntp(k)
@@ -1258,9 +1301,10 @@ c ones corresponding to the coefficients in the binary expansion of npack.
       
 
       subroutine perm1(np,ns,tp)
-      double precision rnd, tp(ns)
+      implicit double precision (a-h,o-z)
+      double precision rnd, tp(ns), tx
       j=np
- 11   rnd = rrand()
+ 11   call rrand(rnd)
       k=int(j*rnd)+1
       tx=tp(j)
       tp(j)=tp(k)

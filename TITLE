@@ -1,1 +1,2 @@
-randomForest    Breiman's random forest classifier
+randomForest    Breiman's random forest for classification and
+                regression

@@ -1,2 +1,3 @@
-predict.randomForest     predict method for random forest objects
-randomForest             Breiman's Random Forest classifier
+predict.randomForest    predict method for random forest objects
+randomForest            Classification and Regression with Random
+                        Forest

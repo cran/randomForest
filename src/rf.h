@@ -47,3 +47,21 @@ extern void F77_NAME(locateout)(double *, int *, int *, int *, int *c, int *,
 extern void F77_NAME(finishimp)(double *, int *, int *, int * , int *, int *,
 				int *, double *, double *, double *, double *, 
 				double *, int *, int *, double *);
+
+/*************************************************************
+  Subroutines for the regression RF
+************************************************************/
+
+extern void F77_NAME(rbuildtree)(double *xb, double *yb, double *yl, int *mdim,
+				int *nls, int *nsample, int *treemap, 
+				int *jdex, double *upper, double *avnode, 
+				double *bestcrit, int *nodestatus, 
+				int *nodepop, int *nodestart, int *nrnodes, 
+				int *nthsize, double *rsnodecost, int *ncase, 
+				int *parent, double *ut, double *v, 
+				double *xt, int *mtry, int *ip, int *mbest, 
+				int *cat, double *tgini);
+extern void F77_NAME(rtestreebag)(double *x, int *nsample, int *mdim, 
+				 int *treemap, int *nodestatus, int *nrnodes,
+				 int *ndbigtree, double *ytr, double *upper, 
+				 double *avnode, int *mbest, int *cat);

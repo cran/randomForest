@@ -14,9 +14,12 @@ function(formula, data = NULL, subset, ...){
     m <- eval(m, sys.frame(sys.parent()))
     Terms <- attr(m, "terms")
     attr(Terms, "intercept") <- 0
-    x <- model.matrix(Terms, m)
-    y <- model.extract(m, response)
-    ret <- randomForest.default(x, y, ...)
+    y <- model.response(m)
+    if(!is.null(y)) m <- m[,-1]
+    for(i in seq(along=ncol(m))) {
+      if(is.ordered(m[[i]])) m[[i]] <- as.numeric(m[[i]])
+    }
+    ret <- randomForest.default(m, y, ...)
     ret[["call"]] <- call
     ret$terms <- Terms
     class(ret) <- c("randomForest.formula", "randomForest")

@@ -13,11 +13,17 @@
 }
 \usage{
 \method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
-\method{randomForest}{default}(x, y = NULL, xtest = NULL, ytest = NULL, addclass = 0, 
-    ntree = 500, mtry, classwt = NULL, cutoff, sampsize,
-    nodesize, importance = FALSE, 
-    proximity = FALSE, oob.prox = TRUE, outscale = FALSE, norm.votes = TRUE,
-    do.trace = FALSE, keep.forest = is.null(xtest), corr.bias=FALSE, ...) 
+\method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL,
+          addclass=0, ntree=500,
+          mtry=ifelse(!is.null(y) && !is.factor(y),
+               max(floor(ncol(x)/3), 1), floor(sqrt(ncol(x)))),
+          replace=TRUE, classwt=NULL, cutoff,
+          sampsize=if(replace) nrow(x) else ceiling(.632*nrow(x)),
+          nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
+          importance=FALSE, localImp=FALSE,
+          proximity=FALSE, oob.prox=proximity,
+          outscale=FALSE, norm.votes=TRUE, do.trace=FALSE,
+          keep.forest=is.null(xtest), corr.bias=FALSE, ...) 
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -49,7 +55,9 @@
     least a few times. }
   \item{mtry}{Number of variables randomly sampled as candidates at each
     split.  Note that the default values are different for
-    classification and regression}
+    classification (1) and regression (5)}
+  \item{replace}{Should sampling of cases be done with or without
+    replacement?} 
   \item{classwt}{Priors of the classes.  Need not add up to one.
     Ignored for regression.}
   \item{cutoff}{(Classification only)  A vector of length equal to
@@ -57,14 +65,17 @@
     one with the maximum ratio of proportion of votes to cutoff.
     Default is 1/k where k is the number of classes (i.e., majority vote
     wins).}
-  \item{sampsize}{(Classification only) Sizes of bootstrap sample to
-    take from the classes.  Use \code{table(y)} for simple stratified
-    samples.} 
+  \item{sampsize}{Size(s) of sample to draw.  For classification, if
+    sampsize is a vector of the length the number of classes, then
+    sampling is stratified by class, and the elements of sampsize
+    indicate the numbers to be drawn from the classes.}
   \item{nodesize}{Minimum size of terminal nodes.  Setting this number
     larger causes smaller trees to be grown (and thus take less time).
     Note that the default values are different for classification
     and regression.}
   \item{importance}{Should importance of predictors be assessed? }
+  \item{localImp}{Should casewise importance measure be computed?
+    (Setting this to \code{TRUE} will override \code{importance}.) }
   \item{proximity}{Should proximity measure among the rows be
     calculated?}
   \item{oob.prox}{Should proximity be calculated only on ``out-of-bag''
@@ -105,6 +116,13 @@
     the mean decrease in accuracy and the second the mean decrease in MSE.
     If \code{importance=FALSE}, the last measure is still returned as a
     vector.}
+  \item{importanceSD}{The ``standard errors'' of the permutation-based
+    importance measure.  For classification, a \code{p} by \code{nclass
+      + 1} matrix corresponding to the first \code{nclass + 1} columns
+    of the importance matrix.  For regression, a length \code{p} vector.} 
+  \item{localImp}{a p by n matrix containing the casewise importance
+    measures, the [i,j] element of which is the importance of i-th
+    variable on the j-th case. \code{NULL} if \code{localImp=FALSE}.}
   \item{ntree}{number of trees grown.}
   \item{mtry}{number of predictors sampled for spliting at each node.}
   \item{forest}{(a list that contains the entire forest; \code{NULL} if 
@@ -169,6 +187,12 @@
   impurities from splitting on the variable, averaged over all trees.
   For classification, the node impurity is measured by the Gini index.
   For regression, it is measured by residual sum of squares.
+
+  The ``local'' (or casewise) variable importance is computed as
+  follows:  For classification, it is the increase in percent of times a
+  case is OOB and misclassified when the variable is permuted.  For
+  regression, it is the average increase in squared OOB residuals when
+  the variable is permuted.
 }
 
 \references{
@@ -182,7 +206,7 @@
   \email{matthew\_wiener@merck.com}, based on original Fortran code by
   Leo Breiman and Adele Cutler.}
 
-\seealso{\code{\link{predict.randomForest}}, \code{\link{var.imp.plot}}}
+\seealso{\code{\link{predict.randomForest}}, \code{\link{varImpPlot}}}
 
 \examples{
 ## Classification:
@@ -192,9 +216,8 @@ iris.rf <- randomForest(Species ~ ., data=iris, importance=TRUE,
                         proximity=TRUE)
 print(iris.rf)
 ## Look at variable importance:
-print(round(iris.rf$importance, 2))
+round(importance(iris.rf), 2)
 ## Do MDS on 1 - proximity:
-require(mva)
 iris.mds <- cmdscale(1 - iris.rf$proximity, eig=TRUE)
 op <- par(pty="s")
 pairs(cbind(iris[,1:4], iris.mds$points), cex=0.6, gap=0, 
@@ -213,10 +236,11 @@ plot(iris.urf$out, type="h", ylab="",
 ## Regression:
 data(airquality)
 set.seed(131)
-ozone.rf <- randomForest(Ozone ~ ., data=airquality, mtry=3, importance=TRUE)
+ozone.rf <- randomForest(Ozone ~ ., data=airquality, mtry=3,
+                         importance=TRUE, na.action=na.omit)
 print(ozone.rf)
 ## Show "importance" of variables: higher value mean more important:
-print(round(ozone.rf$importance, 2))
+round(importance(ozone.rf), 2)
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

@@ -1,7 +1,7 @@
-\name{partial.plot}
-\alias{partial.plot}
-\alias{partial.plot.default}
-\alias{partial.plot.randomForest}
+\name{partialPlot}
+\alias{partialPlot}
+\alias{partialPlot.default}
+\alias{partialPlot.randomForest}
 
 \title{Partial dependence plot}
 
@@ -12,9 +12,11 @@ response (regression).
 }
 
 \usage{
-\method{partial.plot}{randomForest}(x, pred.data, x.var, which.class,
-    add=FALSE, n.pt=min(length(unique(pred.data[,deparse(substitute(x.var)])),
-       51), rug=TRUE, ...)
+\method{partialPlot}{randomForest}(x, pred.data, x.var, which.class,
+      add = FALSE, n.pt = min(length(unique(pred.data[, xname])), 51),
+      rug = TRUE, xlab=deparse(substitute(x.var)), ylab="",
+      main=paste("Partial Dependence on", deparse(substitute(x.var))),
+      ...) 
 }
 
 \arguments{
@@ -23,7 +25,7 @@ response (regression).
   \item{pred.data}{a data frame used for contructing the plot, usually
     the training data used to contruct the random forest.}
   \item{x.var}{name of the variable for which partial
-    dependence is to be examined (can be either character or unquoted name).}
+    dependence is to be examined.}
   \item{which.class}{For classification data, the class to focus on
     (default the first class).}
   \item{add}{whether to add to existing plot (\code{TRUE}) or create a
@@ -32,6 +34,9 @@ response (regression).
     grid for evaluating partial dependence.}
   \item{rug}{whether to draw hash marks at the bottom of the plot
     indicating the deciles of \code{x.var}.}
+  \item{xlab}{label for the x-axis.}
+  \item{ylab}{label for the y-axis.}
+  \item{main}{main title for the plot.}
   \item{...}{other graphical parameters to be passed on to \code{plot}
     or \code{lines}.}
 }
@@ -75,12 +80,12 @@ data(airquality)
 airquality <- na.omit(airquality)
 set.seed(131)
 ozone.rf <- randomForest(Ozone ~ ., airquality)
-partial.plot(ozone.rf, airquality, Temp)
+partialPlot(ozone.rf, airquality, Temp)
 
 data(iris)
 set.seed(543)
 iris.rf <- randomForest(Species~., iris)
-partial.plot(iris.rf, iris, Petal.Width, "versicolor")
+partialPlot(iris.rf, iris, Petal.Width, "versicolor")
 }
 \keyword{classif}
 \keyword{regression}

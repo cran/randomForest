@@ -1,6 +1,6 @@
 "predict.randomForest" <-
   function (object, newdata, type = "response", norm.votes = TRUE,
-            predict.all=FALSE, proximity = FALSE, ...) 
+            predict.all=FALSE, proximity = FALSE, nodes=FALSE, ...) 
 {
   if (!inherits(object, "randomForest")) 
     stop("object not of class randomForest")
@@ -16,7 +16,7 @@
     norm.votes <- TRUE
   if (missing(newdata)) {
     if (object$type == "regression") return(object$predicted)
-    if(proximity & is.null(object$proximity))
+    if (proximity & is.null(object$proximity))
       warning("cannot return proximity without new data if random forest object does not already have proximity")
     if (out.type == 1) {
       if (proximity) {
@@ -64,6 +64,12 @@
     if (!all(object$forest$ncat == cat.new)) 
       stop("Type of predictors in new data do not match that of the training data.")
   }
+  vname <- if (is.null(dim(object$importance))) {
+      names(object$importance)
+  } else {
+      rownames(object$importance)
+  }
+  if (any(colnames(x) != vname)) stop("names of predictor variables do not match")
   mdim <- ncol(x)
   ntest <- nrow(x)
   ntree <- object$forest$ntree
@@ -88,10 +94,13 @@
   } else {
     proxmatrix <- numeric(1)
   }
+
+  nodexts <- if (nodes) integer(ntest*ntree) else integer(ntest)
+  
   if(object$type == "regression") {
-    keepIndex <- 2
-    if (predict.all) keepIndex <- c(keepIndex, 15)
-    if (proximity) keepIndex <- c(keepIndex, 17)
+    keepIndex <- "ypred"
+    if (predict.all) keepIndex <- c(keepIndex, "treepred")
+    if (proximity) keepIndex <- c(keepIndex, "proximity")
     ans <- .C("runrforest",
               as.double(x),
               ypred = double(ntest),
@@ -153,12 +162,13 @@
              treepred = as.integer(treepred),
              jet = as.integer(numeric(ntest)), 
              bestvar = as.integer(object$forest$bestvar),
-             nodexts = as.integer(numeric(ntest)), 
+             nodexts = nodexts,
              ndbigtree = as.integer(object$forest$ndbigtree), 
              predict.all = as.integer(predict.all),
              prox = as.integer(proximity),
              proxmatrix = as.double(proxmatrix),
-             DUP=FALSE,
+             nodes = as.integer(nodes),
+             DUP=TRUE,
              PACKAGE = "randomForest")
     if (out.type > 1) {
       out.class.votes <- t(matrix(t1$countts, nr = nclass, nc = ntest))
@@ -169,13 +179,6 @@
       z[keep, ] <- out.class.votes
       res <- z
     } else {
-##      if (!norm.votes) {
-##        z <- sweep(z, 1, rowSums(z), "/")
-##      }
-##      out.class <- max.col(sweep(z, 2, object$forest$cutoff, "/"))
-##      out.class <- if (ncol(z) > 1) 
-##        levels(object$predicted)[max.col(z)]
-##      else levels(object$predicted)[1 + (z > 0.5)]
       out.class <- factor(rep(NA, length(rn)),
                           levels=1:length(object$classes),
                           labels=object$classes)
@@ -192,6 +195,8 @@
       res <- list(predicted = res, proximity = structure(t1$proxmatrix,
                                 dim = c(ntest, ntest),
                                 dimnames = list(rn[keep], rn[keep])))
+    if (nodes) attr(res, "nodes") <- matrix(t1$nodexts, ntest, ntree,
+                                            dimnames=list(rn[keep], 1:ntree))
   }
   res
 }

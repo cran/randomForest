@@ -8,7 +8,7 @@
   produced by \code{\link{randomForest}}.
 }
 \usage{
-\method{importance}{randomForest}(x, type=2, class, ...)
+\method{importance}{randomForest}(x, type=2, class, scale=TRUE, ...)
 }
 \arguments{
   \item{x}{an object of class \code{\link{randomForest}}}.
@@ -16,6 +16,8 @@
     (1=mean decrease in accuracy, 2=mean decrease in node impurity).}
   \item{class}{for classification problem, which class-specific measure
     to return.}
+  \item{scale}{For permutation based measures, should the measures be
+    divided their ``standard errors''?}
   \item{...}{not used.}
 }
 \value{
@@ -28,7 +30,7 @@
 %\references{
 %}
 \seealso{
-  \code{\link{randomForest}}, \code{\link{var.imp.plot}}
+  \code{\link{randomForest}}, \code{\link{varImpPlot}}
 }
 set.seed(4543)
 data(mtcars)

@@ -1,0 +1,48 @@
+43c43
+< 	double *imprt, int *nrnodes, int *ndbigtree, 
+---
+> 	double *imprt, double *impmat, int *nrnodes, int *ndbigtree, 
+83a84
+>      *  impmat:   matrix of local variable importance measures
+107c108
+< 	*tout, *tdx, *sm, *p, *iw, *sqsd, *sqsdall;
+---
+> 	*tout, *tdx, *sm, *p, *iw, *sqsd, *sqsdall, *impn;
+150a152
+>     impn =       (double *) S_alloc(nsample, sizeof(double));
+245a248,253
+> 	for (n = 0; n < nsample; ++n) {
+> 	    impn[n] = 0.0;
+> 	    for (m = 0; m < mdim; ++m) {
+> 		impmat[m + n*mdim] = 0.0;
+> 	    }
+> 	}
+329c337
+< 			for (n = 0; n < *sampsize; ++n) {
+---
+> 			for (n = 0; n < nsample; ++n) {
+340c348
+< 			for (n = 0; n < *sampsize; ++n) {
+---
+> 			for (n = 0; n < nsample; ++n) {
+461a470
+> 		    if(noutall > 0) impn[n] += 1./noutall;
+471c480
+< 		    /* Permute the n-th variable. */
+---
+> 		    /* Permute the m-th variable. */
+490a500
+> 			    if(noutall > 0) impmat[(m-1) + n*mdim] += 1./noutall;
+507a518,523
+> 		} else {
+> 		    for (n = 0; n < nsample; n++) {
+> 			if (jin[n] == 0 && cl[n] == jtr[n]) {
+> 			    if(noutall > 0) impmat[(m-1) + n*mdim] += 1./noutall;
+> 			}
+> 		    }
+602a619,623
+> 	for (n = 0; n < nsample; ++n) {
+> 	    for (m = 0; m < mdim; ++m) {
+> 		impmat[m + n*mdim] = ( impn[n] - impmat[m + n*mdim] ) / jbt;
+> 	    }
+> 	}

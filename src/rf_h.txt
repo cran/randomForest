@@ -16,7 +16,7 @@ void rf(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	int *sampsize, int *Options, int *ntree, int *nvar,
 	int *ipi, double *pi, double *cut, int *nodesize, 
         double *outlier, int *outcl, int *counttr, double *prox, 
-	double *imprt, double *, double *impmat, int *nrnodes, int *ndbigtree, 
+	double *imprt, double *impmat, int *nrnodes, int *ndbigtree, 
 	int *nodestatus, int *bestvar, int *treemap, int *nodeclass,
 	double *xbestsplit, double *pid, double *errtr, 
 	int *testdat, double *xts, int *clts, int *nts, double *countts,
@@ -29,7 +29,7 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 	       int *nodestatus, int *cat, int *cbestsplit,
 	       int *nodeclass, int *jts, int *jet, int *bestvar,
 	       int *nodexts, int *ndbigtree, int *keepPred, 
-	       int *prox, double *proxmatrix, int *nodes);
+	       int *prox, double *proxmatrix);
 
 /* Template of Fortran subroutines to be called from the C wrapper */
 extern void F77_NAME(createclass)(double *, int *, int *, int *, int *,

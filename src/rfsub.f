@@ -387,27 +387,27 @@ c      real pno, pdo, rrd, rld
       
 c     compute initial values of numerator and denominator of Gini
       
-      pno=0.0
-      pdo=0.0
-      do 10 j=1,nclass
-         pno=pno+tclasspop(j)*tclasspop(j)
-         pdo=pdo+tclasspop(j)
+      pno = 0.0
+      pdo = 0.0
+      do 10 j = 1, nclass
+         pno = pno + tclasspop(j) * tclasspop(j)
+         pdo = pdo + tclasspop(j)
  10   continue
-      crit0=pno/pdo
-      jstat=0
+      crit0 = pno / pdo
+      jstat = 0
 c      zz=rrand()
 c      call rrand(zz)
             
 c     start main loop through variables to find best split
       
-      critmax=-1.0e20
+      critmax = -1.0e20
       
       do k = 1, mred
          mind(k) = k
       end do
 
       nn = mred
-      do 20 mt=1,mtry
+      do 20 mt = 1, mtry
  200     continue
 c
 c  sampling mtry variables w/o replacement.
@@ -418,31 +418,31 @@ c
          mind(j) = mind(nn)
          nn = nn - 1
 c
-         if(cat(mvar).eq.1) then
-            rrn=pno
-            rrd=pdo
-            rln=0
-            rld=0
-            call zervr(wl,nclass)
-            do 50 j=1,nclass
-               wr(j)=tclasspop(j)
+         if(cat(mvar) .eq. 1) then
+            rrn = pno
+            rrd = pdo
+            rln = 0
+            rld = 0
+            call zervr(wl, nclass)
+            do 50 j = 1, nclass
+               wr(j) = tclasspop(j)
  50         continue
-            critvar=-1e20
+            critvar = -1e20
             
-            do 60 nsp=ndstart,ndend-1
-               nc=a(mvar,nsp)
-               u=win(nc)
-               k=cl(nc)
-               rln=rln+u*(2*wl(k)+u)
-               rrn=rrn+u*(-2*wr(k)+u)
-               rld=rld+u
-               rrd=rrd-u
+            do 60 nsp = ndstart, ndend-1
+               nc=a(mvar, nsp)
+               u = win(nc)
+               k = cl(nc)
+               rln = rln + u * (2 * wl(k) + u)
+               rrn = rrn + u * (-2 * wr(k) + u)
+               rld = rld + u
+               rrd = rrd - u
                wl(k) = wl(k) + u
                wr(k) = wr(k) - u
                               
-               if (b(mvar,nc) .lt. b(mvar,a(mvar,nsp+1))) then
-                  if(dmin1(rrd,rld) .gt. 1.0e-5) then
-                     crit = (rln/rld) + (rrn/rrd)
+               if (b(mvar, nc) .lt. b(mvar,a(mvar, nsp + 1))) then
+                  if(dmin1(rrd, rld) .gt. 1.0e-5) then
+                     crit = (rln / rld) + (rrn / rrd)
                      if (crit .gt. critvar) then
                         nbestvar=nsp
                         critvar=crit
@@ -453,8 +453,8 @@ c
                      if (crit .eq. critvar) then
                         call rrand(xrand)
                         if (xrand .gt. 0.5) then
-                           nbestvar=nsp
-                           critvar=crit
+                           nbestvar = nsp
+                           critvar = crit
                         end if
                      end if
 c
@@ -464,9 +464,9 @@ c
  65         continue
 
             if (critvar .gt. critmax) then
-               msplit=mvar
-               nbest=nbestvar
-               critmax=critvar
+               msplit = mvar
+               nbest = nbestvar
+               critmax = critvar
             end if
 c
 c Break ties at random:
@@ -484,26 +484,26 @@ c
 
 c     compute the decrease in impurity given by categorical splits
 
-            lcat=cat(mvar)
-            call zermr(tclasscat,nclass,32)
-            do 70 nsp=ndstart,ndend
-               nc=ncase(nsp)
-               l=a(mvar,ncase(nsp))
-               tclasscat(cl(nc),l)=tclasscat(cl(nc),l)+win(nc)
+            lcat = cat(mvar)
+            call zermr(tclasscat, nclass,32)
+            do 70 nsp = ndstart, ndend
+               nc = ncase(nsp)
+               l = a(mvar,ncase(nsp))
+               tclasscat(cl(nc), l) = tclasscat(cl(nc), l) + win(nc)
  70         continue
-            nnz=0
-            do i=1,lcat
-               su=0
-               do j=1,nclass
-                  su=su+tclasscat(j,i)
+            nnz = 0
+            do i = 1, lcat
+               su = 0
+               do j = 1, nclass
+                  su = su + tclasscat(j, i)
                end do
-               if(su .gt. 0) nnz=nnz+1
+               if(su .gt. 0) nnz = nnz + 1
             end do
             if (nnz.eq.1) then
                critvar = -1.0e25
             else
-               call catmax(pno,pdo,tclasscat,tclasspop,nclass,lcat,
-     1              nbestvar,critvar)
+               call catmax(pno, pdo, tclasscat, tclasspop, nclass, lcat,
+     1                     nbestvar, critvar)
             end if
                         
 c this last subroutine returns those categories going left in the best split. 
@@ -537,9 +537,9 @@ c
       
 C     SUBROUTINE CATMAX
 
-      subroutine catmax(pno,pdo,tclasscat,tclasspop,nclass,lcat,
-     1     ncatsplit,rmaxdec)
-            
+      subroutine catmax(pno, pdo, tclasscat, tclasspop, nclass, lcat,
+     1     ncatsplit, rmaxdec)
+      
 c this subroutine finds the best categorical split of a categorical variable
 c with lcat categories, nclass classes and tclasscat(j,l) is the number of 
 c cases in class j with category value l. The method used is an exhaustive 
@@ -548,7 +548,7 @@ c problem, there is a faster exact algorithm we will add later.
 c If lcat.ge.10, the exhaustive search gets slow and there is a faster 
 c iterative algorithm we can add later.
       
-      parameter(jmax=100)
+      parameter(jmax=1000)
       implicit double precision(a-h,o-z)
       double precision tclasscat(nclass,32),tclasspop(nclass),
      1     tmpclass(jmax), xrand
@@ -597,6 +597,161 @@ c
       return
       end
 
+c       
+c	-------------------------------------------------------
+	subroutine catmaxb(tclasscat,tclasspop,xc,cp,cm,kcat,
+	1    nclass,lcat,maxcat,ncatsplit,critmax,pdo,nhit,dn)
+        implicit double precision (a-h,o-z)
+	double precision tclasscat(nclass,maxcat),tclasspop(nclass),
+	1    xc(maxcat),cp(maxcat),cm(maxcat),dn(maxcat)
+	double precision critmax, pdo
+	integer kcat(maxcat),ncatsplit(maxcat)
+	integer nclass, lcat, maxcat, nhit, l, nk, j, n, i, k
+	double precision bestsplit, rrd, rld, rln, rrn, crit
+
+	nhit = 0
+ 	do l = 1, lcat
+	   if (dn(l) .gt. 0) then
+	      xc(l) = tclasscat(1,l) / dn(l)
+	   else
+	      xc(l)=0
+	   end if
+	end do
+	do nk = 1, lcat
+	   kcat(nk) = nk
+	enddo
+	call quicksort(xc, kcat, 1, lcat, maxcat)
+	do j = 1, nclass
+	   cp(j) = 0
+	   cm(j) = tclasspop(j)
+	end do
+	rrd = pdo
+	rld = 0
+	do n = 1, lcat - 1
+	   rld = rld + dn(kcat(n))
+	   rrd = rrd - dn(kcat(n))
+	   do k = 1, nclass
+	      cp(k) = cp(k) + tclasscat(k,kcat(n))
+	      cm(k) = cm(k) - tclasscat(k,kcat(n))
+	   end do
+	   rln = 0
+	   rrn = 0
+	   do k = 1, nclass
+	      rln = rln + cp(k)**2
+	      rrn = rrn + cm(k)**2
+	   end do
+	   if (xc(n) .lt. xc(n+1)) then
+	      if(dmin1(rrd, rld) .gt. 1) then
+		 crit = (rln / rld) + (rrn / rrd)
+		 if (crit .gt. critmax) then
+		    critmax = crit
+		    bestsplit = .5*(xc(n) + xc(n+1))
+		    nhit = 1
+		 end if
+	      end if
+	   end if
+	end do			!n
+	if (nhit.eq.1) then
+	   call zerv(ncatsplit,maxcat)
+	   do l = 1, lcat
+	      if (dn(l) .gt. 0) then
+		 xc(l) = tclasscat(1,l) / dn(l)
+	      else
+		 xc(l) = 0
+	      end if
+	   end do
+	   do i = 1, lcat
+	      if(xc(i) .lt. bestsplit) ncatsplit(i) = 1
+	   end do
+	end if
+        return
+	end
+
+c	-------------------------------------------------------
+	subroutine catmaxap(tclasscat,kcat,
+	1    nclass,lcat,maxcat,critmax,dn,nhit)
+c       
+c	this returns those categories going left in the best split. 
+c	This is coded into a vector of length maxcat (see under catmax 
+c       below for details). 
+c       
+        implicit double precision (a-h, o-z)
+	double precision tclasscat(nclass,maxcat),dn(maxcat),ncr0(100),
+	1    ncl(100),ncr(100),ncl0(100),ntr,ntl,ntl0,ntr0
+c       
+	integer kcat(maxcat)
+c       
+	double precision critmax, crit, critnew
+	integer nclass, lcat, maxcat, nhit, l, j, k, nchange
+        double precision xrand
+
+	nhit = 0
+	do l = 1, lcat
+           call rrand(xrand)
+	   if (xrand .le. 0.5) then
+	      kcat(l) = -1
+	   else
+	      kcat(l) = 1
+	   end if
+	end do
+	do j = 1, nclass
+	   ncl(j) = 0
+	   ncr(j) = 0
+	   ntl = 0
+	   ntr = 0
+	end do
+	do l = 1, lcat
+	   do j = 1, nclass
+	      if (kcat(l) .eq. -1) then
+		 ncl(j) = ncl(j) + tclasscat(j,l)
+		 ntl = ntl + dn(l)
+	      else
+		 ncr(j) = ncr(j) + tclasscat(j,l)
+		 ntr = ntr + dn(l)
+	      end if
+	   end do
+	end do
+	crit = 0
+	do j = 1, nclass
+	   crit = crit + (ncl(j) * ncl(j) / ntl) + (ncr(j) * ncr(j) / ntr)
+	end do
+	do k = 1, 1000
+	   nchange = 0
+	   do l = 1, lcat
+	      do j = 1, nclass
+		 ncl0(j) = ncl(j)
+		 ncr0(j) = ncr(j)
+		 ntl0 = ntl
+		 ntr0 = ntr
+		 ncl(j) = ncl(j) + kcat(l) * tclasscat(j,l)
+		 ncr(j) = ncr(j) - kcat(l) * tclasscat(j,l)
+		 ntl = ntl + kcat(l) * dn(l)
+		 ntr = ntr - kcat(l) * dn(l)
+	      end do
+	      critnew = 0
+	      do j = 1, nclass
+		 critnew = critnew + (ncl(j) * ncl(j) / ntl) + 
+     1                (ncr(j) * ncr(j) / ntr)
+	      end do
+	      if(critnew .gt. critmax) then
+		 critmax = critnew
+		 nchange = nchange + 1
+		 kcat(l) = -kcat(l)
+		 nhit = 1
+	      else
+		 do j = 1, nclass
+		    ncl(j) = ncl0(j)
+		    ncr(j) = ncr0(j)
+		    ntl = ntl0
+		    ntr = ntr0
+		 end do
+	      end if
+	   end do	!l
+	   if (nchange .eq. 0) goto 101
+	end do			!k
+ 101	continue
+        return
+	end
       
 c     SUBROUTINE MOVEDATA     
 
@@ -767,13 +922,15 @@ C     SUBROUTINE TESTREEBAG
       call zerv(nodex,nts)
       
       do k = 1, ndbigtree
-         if(bestvar(k).gt.0) l=cat(bestvar(k))
-         if(l .gt. 1) then
-            ncat=nint(xbestsplit(k))
-            call myunpack(l,ncat,icat)
-            do j = 1, l 
-               cbestsplit(j,k) = icat(j)
-            end do
+         if (nodestatus(k) .ne. -1) then
+            l = cat(bestvar(k))
+            if (l .gt. 1) then
+               ncat=nint(xbestsplit(k))
+               call myunpack(l,ncat,icat)
+               do j = 1, l 
+                  cbestsplit(j,k) = icat(j)
+               end do
+            end if
          end if
       end do
             
@@ -1004,7 +1161,8 @@ c            pth=q(cl(n),n)
 c            rmargin(n)=pth-smax
          end if
       end do
-      errtr=rmiss/noob
+      errtr = rmiss / noob
+      return
       end
       
 C     SUBROUTINE PERMOBAR

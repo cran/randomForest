@@ -1,0 +1,91 @@
+Changes in 4.3-0:
+
+* Thanks to Adele Cutler, there's now casewise variable importance 
+  measures in classification.  Similar feature is also added for 
+  regression.  Use the new localImp option in randomForest().
+
+* The `importance' component of randomForest object has been changed:  
+  The permutation-based measures are not divided by their `standard 
+  errors'.  Instead, the `standard errors' are stored in the 
+  `importanceSD' component.  One should use the importance() extractor 
+  function rather than something like rf.obj$importance for extracting 
+  the importance measures.
+
+* The importance() extractor function has been updated:  If the 
+  permutation-based measures are available, calling importance() 
+  with only a randomForest object returns the matrix of variable 
+  importance measures.  There is the `scale' argument, which defaults 
+  to TRUE.
+
+* In predict.randomForest, there is a new argument `nodes' (default to 
+  FALSE).  For classification, if nodes=TRUE, the returned object has an
+  attribute `nodes', which is an n by ntree matrix of terminal node
+  indicators.  This is ignored for regression.
+
+Changes in 4.2-1:
+
+* There is now a package name space.  Only generics are exported.
+
+* Some function names have been changed: 
+    partial.plot -> partialPlot
+    var.imp.plot -> varImpPlot
+    var.used     -> varUsed
+
+* There is a new option `replace' in randomForest() (default to TRUE)
+  indicating whether the sampling of cases is with or without
+  replacement. 
+
+* In randomForest(), the `sampsize' option now works for both
+  classification and regression, and indicate the number of cases to be 
+  drawn to grow each tree.  For classification, if sampsize is a vector of
+  length the number of classes, then sampling is stratified by class.
+
+* With the formula interface for randomForest(), the default na.action,	
+  na.fail, is effective.  I.e., an error is given if there are NAs present
+  in the data.  If na.omit is desired, it must be given explicitly.
+
+* For classification, the err.rate component of the randomForest object
+  (and the corresponding one for test set) now is a ntree by (nclass + 1)
+  matrix, the first column of which contains the overall error rate, and
+  the remaining columns the class error rates.  The running output now
+  also prints class error rates.  The plot method for randomForest will
+  plot the class error rates as well.
+
+* The predict() method now checks whether the variable names in newdata 
+  match those from the training data (if the randomForest object is not
+  created from the formula interface).
+
+* partialPlot() and varImpPlot() now have optional arguments xlab, ylab
+  and main for more flexible labelling.  Also, if a factor is given as
+  the variable, a real bar plot is produced.
+
+* partialPlot() will now remove rows with NAs from the data frame given.
+
+* For regression, if proximity=FALSE, an n by n array of integers is 
+  erroneously allocated but not used (it's only used for proximity 
+  calculation, so not needed otherwise).
+
+* Updated combine() to conform to the new randomForest object.
+
+* na.roughfix() was not working correctly for matrices, which in turns 
+  causes problem in rfImpute().
+
+ 
+Changes in 4.1-0:
+
+* In randomForest(), if sampsize is given, the sampling is now done
+  without replacement, in addition to stratified by class.  Therefore 
+  sampsize can not be larger than the class frequencies.
+
+* In classification randomForest, checks are added to avoid trees with 
+  only the root node.
+
+* Fixed a bug in the Fortran code for classification that caused segfault 
+  on some system when encountering a tree with only root node.
+
+* The help page for predict.randomForest() now states the fact that when 
+  newdata is not specified, the OOB predictions from the randomForest 
+  object is returned.
+
+* plot.randomForest() and print.randomForest() were not checking for 
+  existence of performance (err.rate or mse) on test data correctly.

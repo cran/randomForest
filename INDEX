@@ -6,7 +6,7 @@ margin                  Margins of randomForest Classifier
 MDSplot                 Multi-dimensional Scaling Plot of Proximity
                         matrix from randomForest
 na.roughfix             Rough Imputation of Missing Values
-partial.plot            Partial dependence plot
+partialPlot             Partial dependence plot
 plot.randomForest       Plot method for randomForest objects
 predict.randomForest    predict method for random forest objects
 randomForest            Classification and Regression with Random
@@ -15,5 +15,5 @@ rfImpute                Missing Value Imputations by randomForest
 treesize                Size of trees in an ensemble
 tuneRF                  Tune randomForest for the optimal mtry
                         parameter
-var.imp.plot            Variable Importance Plot
-var.used                Variables used in a random forest
+varImpPlot              Variable Importance Plot
+varUsed                 Variables used in a random forest

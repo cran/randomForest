@@ -7,6 +7,8 @@ MDSplot <- function(rf, fac, k=2, ...) {
   }
   op <- par(pty="s")
   on.exit(par(op))
+  Rver <- substring(paste(R.version[c("major", "minor")], collapse="."), 1, 3)
+  cmdscale <- if (as.numeric(Rver) >= 1.9) stats:::cmdscale else mva:::cmdscale
   rf.mds <- cmdscale(1 - rf$proximity, eig=TRUE, k=k)
   colnames(rf.mds$points) <- paste("Dim", 1:k)
   nlevs <- length(levels(fac))

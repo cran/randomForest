@@ -5,7 +5,7 @@ tuneRF <- function(x, y, mtryStart=if(is.factor(y)) floor(sqrt(ncol(x))) else
   classRF <- is.factor(y)
   errorOld <- if (classRF) {
     randomForest(x, y, mtry=mtryStart, ntree=ntreeTry,
-                 keep.forest=FALSE, ...)$err.rate[ntreeTry]
+                 keep.forest=FALSE, ...)$err.rate[ntreeTry,1]
   } else {
     randomForest(x, y, mtry=mtryStart, ntree=ntreeTry,
                  keep.forest=FALSE, ...)$mse[ntreeTry]
@@ -34,7 +34,7 @@ tuneRF <- function(x, y, mtryStart=if(is.factor(y)) floor(sqrt(ncol(x))) else
       if (mtryCur == mtryOld) break
       errorCur <- if (classRF) {
         randomForest(x, y, mtry=mtryCur, ntree=ntreeTry,
-                     keep.forest=FALSE, ...)$err.rate[ntreeTry]
+                     keep.forest=FALSE, ...)$err.rate[ntreeTry,"OOB"]
       } else {
         randomForest(x, y, mtry=mtryCur, ntree=ntreeTry,
                      keep.forest=FALSE, ...)$mse[ntreeTry]
@@ -46,6 +46,7 @@ tuneRF <- function(x, y, mtryStart=if(is.factor(y)) floor(sqrt(ncol(x))) else
       }
       oobError[[as.character(mtryCur)]] <- errorCur
       Improve <- 1 - errorCur/errorOld
+      cat(Improve, improve, "\n")
       if (Improve > improve) {
         errorOld <- errorCur
         mtryBest <- mtryCur

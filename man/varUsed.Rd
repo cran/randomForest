@@ -1,11 +1,11 @@
-\name{var.used}
-\alias{var.used}
+\name{varUsed}
+\alias{varUsed}
 \title{Variables used in a random forest}
 \description{
   Find out which predictor variables are actually used in the random forest.
 }
 \usage{
-var.used(x, by.tree=FALSE, count=TRUE)
+varUsed(x, by.tree=FALSE, count=TRUE)
 }
 \arguments{
   \item{x}{An object of class \code{randomForest}.}
@@ -31,7 +31,7 @@ var.used(x, by.tree=FALSE, count=TRUE)
 \examples{
 data(iris)
 set.seed(17)
-var.used(randomForest(Species~., iris, ntree=100))
+varUsed(randomForest(Species~., iris, ntree=100))
 }
 \author{Andy Liaw}
 \keyword{tree}

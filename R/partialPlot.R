@@ -1,12 +1,14 @@
-partial.plot <- function(x, ...) UseMethod("partial.plot")
+partialPlot <- function(x, ...) UseMethod("partialPlot")
 
-partial.plot.default <- function(x, ...)
-  stop("partial dependence plot not implemented for this class of objects.\n")
+partialPlot.default <- function(x, ...)
+    stop("partial dependence plot not implemented for this class of objects.\n")
 
-partial.plot.randomForest <-
-  function (x, pred.data, x.var, which.class, add = FALSE,
-            n.pt = min(length(unique(pred.data[, xname])), 51), rug = TRUE,
-            ...) 
+partialPlot.randomForest <-
+    function (x, pred.data, x.var, which.class, add = FALSE,
+              n.pt = min(length(unique(pred.data[, xname])), 51), rug = TRUE,
+              xlab=deparse(substitute(x.var)), ylab="",
+              main=paste("Partial Dependence on", deparse(substitute(x.var))),
+              ...) 
 {
     classRF <- x$type != "regression"
     if (is.null(x$forest)) 
@@ -32,25 +34,21 @@ partial.plot.randomForest <-
             x.data[, xname] <- factor(rep(x.pt[i], n), levels = x.pt)
             if (classRF) {
                 pr <- predict(x, x.data, type = "prob")
-                y.pt[i] <- mean(log(ifelse(pr[, focus] > 0, pr[, 
-                  focus], 1)) - rowMeans(log(ifelse(pr > 0, pr, 
-                  1))))
-            }
-            else {
+                y.pt[i] <- mean(log(ifelse(pr[, focus] > 0,
+                                           pr[, focus], 1)) -
+                                rowMeans(log(ifelse(pr > 0, pr, 1))))
+            } else {
                 y.pt[i] <- mean(predict(x, x.data))
             }
         }
         if (add) {
             points(1:length(x.pt), y.pt, type = "h", lwd = 2, 
-                ...)
+                   ...)
+        } else {
+            barplot(1:length(x.pt), y.pt, col="blue", xlab = xlab, 
+                    ylab = ylab, main=main, ...)
         }
-        else {
-            plot(1:length(x.pt), y.pt, type = "h", lwd = 2, xlab = xname, 
-                ylab = "", main = paste("Partial Dependence of", 
-                  xname), ...)
-        }
-    }
-    else {
+    } else {
         if (is.ordered(xv)) 
             xv <- as.numeric(xv)
         x.pt <- seq(min(xv), max(xv), length = n.pt)
@@ -60,27 +58,22 @@ partial.plot.randomForest <-
             x.data[, xname] <- rep(x.pt[i], n)
             if (classRF) {
                 pr <- predict(x, x.data, type = "prob")
-                y.pt[i] <- mean(log(ifelse(pr[, focus] == 0, 
-                  1, pr[, focus])) - rowMeans(log(ifelse(pr == 
-                  0, 1, pr))))
-            }
-            else {
+                y.pt[i] <- mean(log(ifelse(pr[, focus] == 0, 1, pr[, focus]))
+                                - rowMeans(log(ifelse(pr == 0, 1, pr))))
+            } else {
                 y.pt[i] <- mean(predict(x, x.data))
             }
         }
         if (add) {
             lines(x.pt, y.pt, ...)
-        }
-        else {
-            plot(x.pt, y.pt, xlab = xname, ylab = "", type = "l", 
-                main = paste("Partial Dependence of", xname), 
-                ...)
+        } else {
+            plot(x.pt, y.pt, type = "l", 
+                 xlab=xlab, ylab=ylab, main = main, ...)
         }
         if (rug) {
             if (n.pt > 10) {
                 rug(quantile(xv, seq(0.1, 0.9, by = 0.1)), side = 1)
-            }
-            else {
+            } else {
                 rug(unique(xv, side = 1))
             }
         }

@@ -6,12 +6,13 @@
 }
 \usage{
 \method{predict}{randomForest}(object, newdata, type="response",
-  norm.votes=TRUE, predict.all=FALSE, proximity=FALSE, ...)
+  norm.votes=TRUE, predict.all=FALSE, proximity=FALSE, nodes=FALSE, ...)
 }
 \arguments{
   \item{object}{an object of class \code{randomForest}, as that
     created by the function \code{randomForest}.}
-  \item{newdata}{a data frame or matrix containing new data.}
+  \item{newdata}{a data frame or matrix containing new data.  (Note: If
+    not given, the out-of-bag prediction in \code{object} is returned.}
   \item{type}{one of \code{response}, \code{prob}. or \code{votes},
   indicating the type of output: predicted values, matrix of class
   probabilities, or matrix of vote counts.  \code{class} is allowed, but
@@ -22,6 +23,9 @@
   \item{predict.all}{Should the predictions of all trees be kept?}
   \item{proximity}{Should proximity measures be computed?  An error is
     issued if \code{object$type} is \code{regression}.}
+  \item{nodes}{Should the terminal node indicators (an n by ntree
+    matrix) be return?  If so, it is in the ``nodes'' attribute of the
+    returned object.}
   \item{...}{not used currently.}
 }
 
@@ -50,6 +54,10 @@ If \code{proximity=TRUE}, the returned object is a list with two
 components: \code{pred} is the prediction (as described above) and
 \code{proximity} is the proximitry matrix.  An error is issued if
 \code{object$type} is \code{regression}.
+
+If \code{nodes=TRUE}, the returned object has a ``nodes'' attribute,
+which is an n by ntree matrix, each column containing the node number
+that the cases fall in for that tree.
 }
 \references{
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),

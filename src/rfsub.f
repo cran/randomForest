@@ -1,21 +1,20 @@
-c       Copyright (C) 2001  Leo Breiman and Adele Cutler
+c     Copyright (C) 2001  Leo Breiman and Adele Cutler
+c     This program is free software; you can redistribute it and/or
+c     modify it under the terms of the GNU General Public License
+c     as published by the Free Software Foundation; either version 2
+c     of the License, or (at your option) any later version.
 
-c       This program is free software; you can redistribute it and/or
-c       modify it under the terms of the GNU General Public License
-c       as published by the Free Software Foundation; either version 2
-c       of the License, or (at your option) any later version.
-
-c       This program is distributed in the hope that it will be useful,
-c       but WITHOUT ANY WARRANTY; without even the implied warranty of
-c       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-c       GNU General Public License for more details.
-c
-c  Modified by Andy Liaw and Matt Wiener:
-c  The main program is re-written as a C function to be called from R.
-c  All calls to the uniform RNG is replaced with R's RNG.  Some subroutines
-c  not called are excluded.  Variables and arrays declared as double as 
-c  needed.  Unused variables are deleted.
-c
+c     This program is distributed in the hope that it will be useful,
+c     but WITHOUT ANY WARRANTY; without even the implied warranty of
+c     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+c     GNU General Public License for more details.
+c     
+c     Modified by Andy Liaw and Matt Wiener:
+c     The main program is re-written as a C function to be called from R.
+c     All calls to the uniform RNG is replaced with R's RNG.  Some subroutines
+c     not called are excluded.  Variables and arrays declared as double as 
+c     needed.  Unused variables are deleted.
+c     
 c     SUBROUTINE BUILDTREE
       
       subroutine buildtree(a,b,cl,cat,mdim,nsample,nclass,treemap,
@@ -25,20 +24,20 @@ c     SUBROUTINE BUILDTREE
      1     win,wr,wc,wl,mred,nuse,mind)
       
 
-c Buildtree consists of repeated calls to two subroutines, Findbestsplit
-c and Movedata.  Findbestsplit does just that--it finds the best split of
-c the current node.  Movedata moves the data in the split node right and
-c left so that the data corresponding to each child node is contiguous.
-c The buildtree bookkeeping is different from that in Friedman's original
-c CART program.  ncur is the total number of nodes to date.
-c nodestatus(k)=1 if the kth node has been split.  nodestatus(k)=2 if the
-c node exists but has not yet been split, and =-1 of the node is terminal.
-c A node is terminal if its size is below a threshold value, or if it is
-c all one class, or if all the x-values are equal.  If the current node k
-c is split, then its children are numbered ncur+1 (left), and
-c ncur+2(right), ncur increases to ncur+2 and the next node to be split is
-c numbered k+1.  When no more nodes can be split, buildtree returns to the
-c main program.
+c     Buildtree consists of repeated calls to two subroutines, Findbestsplit
+c     and Movedata.  Findbestsplit does just that--it finds the best split of
+c     the current node.  Movedata moves the data in the split node right and
+c     left so that the data corresponding to each child node is contiguous.
+c     The buildtree bookkeeping is different from that in Friedman's original
+c     CART program.  ncur is the total number of nodes to date.
+c     nodestatus(k)=1 if the kth node has been split.  nodestatus(k)=2 if the
+c     node exists but has not yet been split, and =-1 of the node is terminal.
+c     A node is terminal if its size is below a threshold value, or if it is
+c     all one class, or if all the x-values are equal.  If the current node k
+c     is split, then its children are numbered ncur+1 (left), and
+c     ncur+2(right), ncur increases to ncur+2 and the next node to be split is
+c     numbered k+1.  When no more nodes can be split, buildtree returns to the
+c     main program.
       
       implicit double precision(a-h,o-z)
       integer a(mdim,nsample),cl(nsample),cat(mdim),
@@ -106,10 +105,10 @@ c     initialize for next call to findbestsplit
                bestsplitnext(kbuild) = 0
             endif
          endif
-                  
+         
          call movedata(a,ta,mdim,nsample,ndstart,ndend,idmove,ncase,
      1        msplit,cat,nbest,ndendl)
-                  
+         
 c     leftnode no.= ncur+1, rightnode no. = ncur+2.
 
          nodepop(ncur+1) = ndendl - ndstart + 1
@@ -175,9 +174,9 @@ c     check on nodestatus
                   nodeclass(kn)=j
                   pp=classpop(j,kn)
                end if
-c
-c Break ties at random:
-c
+c     
+c     Break ties at random:
+c     
                if (classpop(j,kn) .eq. pp) then
                   call rrand(xrand)
                   if (xrand .gt. 0.5) then
@@ -189,17 +188,17 @@ c
             end do
          end if
       end do
-            
+      
       end
 
 
 c     SUBROUTINE FINDBESTSPLIT
 
-c For the best split, msplit is the variable split on. decsplit is the
-c dec. in impurity.  If msplit is numerical, nsplit is the case number
-c of value of msplit split on, and nsplitnext is the case number of the
-c next larger value of msplit.  If msplit is categorical, then nsplit is
-c the coding into an integer of the categories going left.
+c     For the best split, msplit is the variable split on. decsplit is the
+c     dec. in impurity.  If msplit is numerical, nsplit is the case number
+c     of value of msplit split on, and nsplitnext is the case number of the
+c     next larger value of msplit.  If msplit is categorical, then nsplit is
+c     the coding into an integer of the categories going left.
 
       subroutine findbestsplit(a,b,cl,mdim,nsample,nclass,cat,
      1     ndstart,ndend,tclasspop,tclasscat,msplit,decsplit,nbest,
@@ -211,7 +210,7 @@ c the coding into an integer of the categories going left.
      1     win(nsample),
      1     wr(nclass),wc(nclass),wl(nclass), xrand
       integer mind(mred)
-c      real pno, pdo, rrd, rld
+c     real pno, pdo, rrd, rld
       
 c     compute initial values of numerator and denominator of Gini
       
@@ -223,9 +222,9 @@ c     compute initial values of numerator and denominator of Gini
  10   continue
       crit0 = pno / pdo
       jstat = 0
-c      zz=rrand()
-c      call rrand(zz)
-            
+c     zz=rrand()
+c     call rrand(zz)
+      
 c     start main loop through variables to find best split
       
       critmax = -1.0e20
@@ -237,16 +236,16 @@ c     start main loop through variables to find best split
       nn = mred
       do 20 mt = 1, mtry
  200     continue
-c
-c  sampling mtry variables w/o replacement.
-c
+c     
+c     sampling mtry variables w/o replacement.
+c     
          call rrand(xrand)
          j = int(nn * xrand) + 1
          mvar = mind(j)
          mind(j) = mind(nn)
          mind(nn) = mvar
          nn = nn - 1
-c
+c     
          if(cat(mvar) .eq. 1) then
             rrn = pno
             rrd = pdo
@@ -268,7 +267,7 @@ c
                rrd = rrd - u
                wl(k) = wl(k) + u
                wr(k) = wr(k) - u
-                              
+               
                if (b(mvar, nc) .lt. b(mvar,a(mvar, nsp + 1))) then
                   if(dmin1(rrd, rld) .gt. 1.0e-5) then
                      crit = (rln / rld) + (rrn / rrd)
@@ -276,9 +275,9 @@ c
                         nbestvar=nsp
                         critvar=crit
                      endif
-c
-c  Break ties at random:
-c                     
+c     
+c     Break ties at random:
+c     
                      if (crit .eq. critvar) then
                         call rrand(xrand)
                         if (xrand .gt. 0.5) then
@@ -286,7 +285,7 @@ c
                            critvar = crit
                         end if
                      end if
-c
+c     
                   end if
                end if
  60         continue
@@ -297,9 +296,9 @@ c
                nbest = nbestvar
                critmax = critvar
             end if
-c
-c Break ties at random:
-c            
+c     
+c     Break ties at random:
+c     
             if (critvar .eq. critmax) then
                call rrand(xrand)
                if (xrand .gt. 0.5) then
@@ -332,21 +331,21 @@ c     compute the decrease in impurity given by categorical splits
                critvar = -1.0e25
             else
                call catmax(pno, pdo, tclasscat, tclasspop, nclass, lcat,
-     1                     nbestvar, critvar)
+     1              nbestvar, critvar)
             end if
-                        
-c this last subroutine returns those categories going left in the best split. 
-c This is coded into a long integer (see under subroutine catmax below for 
-c details). 
-          
+            
+c     this last subroutine returns those categories going left in the best split. 
+c     This is coded into a long integer (see under subroutine catmax below for 
+c     details). 
+            
             if (critvar .gt. critmax) then
                msplit = mvar
                nbest = nbestvar
                critmax = critvar
             endif
-c
-c  Break ties at random:
-c            
+c     
+c     Break ties at random:
+c     
             if (critvar .eq. critmax) then
                call rrand(xrand)
                if (xrand .gt. 0.5) then
@@ -369,13 +368,13 @@ C     SUBROUTINE CATMAX
       subroutine catmax(pno, pdo, tclasscat, tclasspop, nclass, lcat,
      1     ncatsplit, rmaxdec)
       
-c this subroutine finds the best categorical split of a categorical variable
-c with lcat categories, nclass classes and tclasscat(j,l) is the number of 
-c cases in class j with category value l. The method used is an exhaustive 
-c search over all partitions of the category values.  For the two class 
-c problem, there is a faster exact algorithm we will add later.  
-c If lcat.ge.10, the exhaustive search gets slow and there is a faster 
-c iterative algorithm we can add later.
+c     this subroutine finds the best categorical split of a categorical variable
+c     with lcat categories, nclass classes and tclasscat(j,l) is the number of 
+c     cases in class j with category value l. The method used is an exhaustive 
+c     search over all partitions of the category values.  For the two class 
+c     problem, there is a faster exact algorithm we will add later.  
+c     If lcat.ge.10, the exhaustive search gets slow and there is a faster 
+c     iterative algorithm we can add later.
       
       parameter(jmax=1000)
       implicit double precision(a-h,o-z)
@@ -410,9 +409,9 @@ c iterative algorithm we can add later.
             rmaxdec=tdec
             ncatsplit=n
          endif
-c
-c Break ties at random:
-c
+c     
+c     Break ties at random:
+c     
          if (tdec .eq. rmaxdec) then
             call rrand(xrand)
             if (xrand .gt. 0.5) then
@@ -426,18 +425,18 @@ c
       return
       end
 
-c       
-c	-------------------------------------------------------
+c     
+c     -------------------------------------------------------
       subroutine catmaxb(tclasscat,tclasspop,xc,cp,cm,kcat,
-     $     nclass,lcat,maxcat,ncatsplit,critmax,pdo,nhit,dn)
+     1     nclass,lcat,maxcat,ncatsplit,critmax,pdo,nhit,dn)
       implicit double precision (a-h,o-z)
       double precision tclasscat(nclass,maxcat),tclasspop(nclass),
-     1     xc(maxcat),cp(maxcat),cm(maxcat),dn(maxcat)
+     $     xc(maxcat),cp(maxcat),cm(maxcat),dn(maxcat)
       double precision critmax, pdo
       integer kcat(maxcat),ncatsplit(maxcat)
       integer nclass, lcat, maxcat, nhit, l, nk, j, n, i, k
       double precision bestsplit, rrd, rld, rln, rrn, crit
-
+      
       nhit = 0
       do l = 1, lcat
          if (dn(l) .gt. 0) then
@@ -498,8 +497,8 @@ c	-------------------------------------------------------
       
 c     -------------------------------------------------------
       subroutine catmaxap(tclasscat,kcat,
-     1     nclass,lcat,maxcat,critmax,dn,nhit)
-c       
+     $     nclass,lcat,maxcat,critmax,dn,nhit)
+c     
 c     this returns those categories going left in the best split. 
 c     This is coded into a vector of length maxcat (see under catmax 
 c     below for details). 
@@ -703,7 +702,7 @@ c     compute case nos. for right and left nodes.
       
       end
       
-
+      
 C     SUBROUTINE LOCATEOUT
       
       subroutine locateout(prox,cl,near,nsample,nclass,ncp,
@@ -764,7 +763,7 @@ C     SUBROUTINE LOCATEOUT
          
       end do
       end
-
+      
 C     SUBROUTINE QUICKSORT
       
       subroutine quicksort (v,iperm,ii,jj,kk)
@@ -871,8 +870,8 @@ c     corresponding whose binary expansion is icat.
       
       subroutine myunpack(l,npack,icat)
       
-c npack is a long integer.  The sub. returns icat, an integer of zeroes and
-c ones corresponding to the coefficients in the binary expansion of npack.
+c     npack is a long integer.  The sub. returns icat, an integer of zeroes and
+c     ones corresponding to the coefficients in the binary expansion of npack.
       
       integer icat(32),npack
       do j=1,32

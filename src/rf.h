@@ -11,6 +11,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.                            
 *******************************************************************/
+#ifndef RF_H
+#define RF_H
 
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
 	int *sampsize, int *Options, int *ntree, int *nvar,
@@ -32,9 +34,9 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 	       int *prox, double *proxmatrix, int *nodes);
 
 void regTree(double *x, double *y, int mdim, int nsample, 
-	     int *treemap, double *upper, double *avnode, int *nodestatus, 
-	     int nrnodes, int nthsize, int mtry, int *mbest, int *cat, 
-	     double *tgini, int *varUsed);
+	     int *lDaughter, int *rDaughter, double *upper, double *avnode, 
+             int *nodestatus, int nrnodes, int nthsize, int mtry, int *mbest, 
+             int *cat, double *tgini, int *varUsed);
 
 void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample, 
 		   int ndstart, int ndend, int *msplit, double *decsplit, 
@@ -42,14 +44,14 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		   double sumnode, int nodecnt, int *cat);
 
 void predictRegTree(double *x, int nsample, int mdim, int *doPred,
-		    int *treemap, int *nodestatus, int nrnodes, 
-		    int ndbigtree, double *ypred, double *split, 
-		    double *nodepred, int *bestvar, int *cat, int *nodex);
+		    int *lDaughter, int *rDaughter, int *nodestatus, 
+                    double *ypred, double *split, double *nodepred, 
+                    int *splitVar, int *cat, int *nodex);
 
 void predictClassTree(double *x, int n, int mdim, int *doPred, int *treemap,
 		      int *nodestatus, double *xbestsplit,
 		      int *cbestsplit, int *bestvar, int *nodeclass,
-		      int nrnodes, int ndbigtree, int *cat, int nclass,
+		      int ndbigtree, int *cat, int nclass,
 		      int *jts, int *nodex, int maxcat);
 
 double pack(int l, int *icat);
@@ -81,3 +83,10 @@ extern void F77_NAME(buildtree)(int *, int *, int *, int *, int *, int *, int
 				int *, int *, int *, int *, int *, double *,
 				double *, double *, double *, int *, int *,
 				int *); 
+
+/* Node status */
+#define NODE_TERMINAL -1
+#define NODE_TOSPLIT -2
+#define NODE_INTERIOR -3
+
+#endif /* RF_H */

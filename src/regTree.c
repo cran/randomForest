@@ -25,7 +25,8 @@
 #include <R.h>
 #include "rf.h"
 
-void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
+void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
+             int *rDaughter,
              double *upper, double *avnode, int *nodestatus, int nrnodes, 
              int nthsize, int mtry, int *mbest, int *cat,  
 	     double *tgini, int *varUsed) {
@@ -37,23 +38,18 @@ void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
     nodepop   = (int *) Calloc(nrnodes, int);
     
     /* initialize some arrays for the tree */
-    for (i = 0; i < nrnodes; ++i) {
-	nodestatus[i] = 0;
-	nodestart[i] = 0;
-	nodepop[i] = 0;
-	avnode[i] = 0;
-    }
+    zeroInt(nodestatus, nrnodes);
+    zeroInt(nodestart, nrnodes);
+    zeroInt(nodepop, nrnodes);
+    zeroDouble(avnode, nrnodes);
     
     jdex = (int *) Calloc(nsample, int);
-    for (i = 1; i <= nsample; ++i) {
-	jdex[i-1] = i;
-    }
-    zeroDouble(tgini, mdim);
+    for (i = 1; i <= nsample; ++i) jdex[i-1] = i;
 
     ncur = 0;
     nodestart[0] = 0;
     nodepop[0] = nsample;
-    nodestatus[0] = 2;
+    nodestatus[0] = NODE_TOSPLIT;
     
     /* compute mean and sum of squares for Y */
     av=0.0;
@@ -66,10 +62,10 @@ void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
     avnode[0] = av;
     
     /* start main loop */
-    for (k = 0; k < nrnodes; ++k) {
-	if (k > ncur) break;
-	/* Rprintf("k=%i, status=%i, ncur=%i\n", k, nodestatus[k], ncur); */
-	if (nodestatus[k] != 2) continue;
+    for (k = 0; k < nrnodes - 2; ++k) {
+	if (k > ncur || ncur >= nrnodes) break;
+	/* skip if the node is not to be split */
+	if (nodestatus[k] != NODE_TOSPLIT) continue; 
 	
 	/* initialize for next call to findbestsplit */         
 	ndstart = nodestart[k];
@@ -84,16 +80,15 @@ void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
 		      &ndendl, &jstat, mtry, sumnode, nodecnt, cat);
 	if (jstat == 1) {
 	    /* Node is terminal: Mark it as such and move on to the next. */
-	    nodestatus[k] = -1;
+	    nodestatus[k] = NODE_TERMINAL;
 	    continue;
-	} else {
-	    /* Found the best split. */
-	    mbest[k] = msplit;
-            varUsed[msplit - 1] = 1;
-	    upper[k] = ubest;
-/*	    bestcrit[k] = decsplit; */
-	}
+	} 
+        /* Found the best split. */
+        mbest[k] = msplit;
+        varUsed[msplit - 1] = 1;
+	upper[k] = ubest;
 	tgini[msplit - 1] += decsplit;
+	nodestatus[k] = NODE_INTERIOR;
 	
 	/* leftnode no.= ncur+1, rightnode no. = ncur+2. */
 	nodepop[ncur + 1] = ndendl - ndstart + 1;
@@ -110,15 +105,10 @@ void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
 	    ss += m * (av - d) * (av - d) / (m + 1);
 	    av = (m * av + d) / (m+1);
 	}
- 	/* Rprintf("node %i, av=%f, count=%i, start=%i, end=%i\n", ncur+1, av, 
-	   nodepop[ncur+1], ndstart, ndendl); 
-	   for (j = ndstart; j <= ndendl; ++j) {
-	   Rprintf("j=%i, y[%i]=%f\n", j, jdex[j] - 1, y[jdex[j]-1]);
-	  } */
 	avnode[ncur+1] = av;
-	nodestatus[ncur+1] = 2;
+	nodestatus[ncur+1] = NODE_TOSPLIT;
 	if (nodepop[ncur + 1] <= nthsize) {
-	    nodestatus[ncur + 1] = -1;
+	    nodestatus[ncur + 1] = NODE_TERMINAL;
 	}
 	
 	/* compute mean and sum of squares for the right daughter node */
@@ -130,30 +120,23 @@ void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
 	    ss += m * (av - d) * (av - d) / (m + 1);
 	    av = (m * av + d) / (m + 1);
 	}
- 	/* Rprintf("node %i, av=%f, count=%i, start=%i, end=%i\n", ncur+2, av, 
-	   nodepop[ncur+2], ndendl+1, ndend); 
-	   for (j = ndendl + 1; j <= ndend; ++j) {
-	   Rprintf("y[%i]=%f\n", jdex[j] - 1, y[jdex[j]-1]);
-	  } */
 	avnode[ncur + 2] = av;
-	nodestatus[ncur+2] = 2;
+	nodestatus[ncur+2] = NODE_TOSPLIT;
 	if (nodepop[ncur + 2] <= nthsize) {
-	    nodestatus[ncur + 2] = -1;
+	    nodestatus[ncur + 2] = NODE_TERMINAL;
 	}
 	
 	/* map the daughter nodes */
-	treemap[k * 2] = ncur + 1 + 1;
-	treemap[1 + k * 2] = ncur + 2 + 1;
-	nodestatus[k] = 1;
+	lDaughter[k] = ncur + 1 + 1;
+	rDaughter[k] = ncur + 2 + 1;
+	/* nodestatus[k] = 1; */
 	/* Augment the tree by two nodes. */
 	ncur += 2;
-	/* if tree size limit has been reach, stop */
-	if (ncur >= nrnodes) break;
     }
 
+    Free(nodestart);
     Free(jdex);
     Free(nodepop);
-    Free(nodestart);
 }
 
 /*--------------------------------------------------------------*/
@@ -178,10 +161,8 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     *decsplit = 0.0;
     critmax = 0.0;
     ubestt = 0.0;
-    non=0;
-    for (i=0; i < mdim; ++i) {
-	mind[i] = i;
-    }
+    non = 0;
+    for (i=0; i < mdim; ++i) mind[i] = i;
     
     last = mdim - 1;
     for (i = 0; i < mtry; ++i) {
@@ -198,48 +179,35 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	    for (j = ndstart; j <= ndend; ++j) {
 		 xt[j] = x[kv + (jdex[j]-1) * mdim];
 		 yl[j] = y[jdex[j]-1];
-		 /* Rprintf("j=%i, xt=%f, yl=%f\n", j, xt[j], yl[j]); */
+		 if (j >= 4463 || jdex[j] > 4463) 
+			 Rprintf("j=%i, jdex=%i\n", j, jdex[j]);
 	    } 
 	} else {
 	    /* categorical variable */
-	    for (j=0; j < 32; ++j) {
-		sumcat[j] = 0.0;
-		ncat[j] = 0;
-	    }
+            zeroInt(ncat, 32);
+	    zeroDouble(sumcat, 32);
 	    for (j = ndstart; j <= ndend; ++j) {
 		l = (int) x[kv + (jdex[j]-1) * mdim];
-		d = y[jdex[j]-1];
-		sumcat[l-1] += d;
+		sumcat[l-1] += y[jdex[j]-1];
 		ncat[l-1] ++;
 	    }
 	    for (j = 0; j < lc; ++j) {
-		if (ncat[j] > 0) {
-		    avcat[j] = sumcat[j] / ncat[j];
-		} else {
-		    avcat[j] = 0.0;
-		}
+		avcat[j] = ncat[j] ? sumcat[j] / ncat[j] : 0.0;
 	    }
 	    for (j = 0; j < nsample; ++j) {
 		xt[j] = avcat[(int) x[kv + (jdex[j]-1) * mdim]];
 		yl[j] = y[jdex[j]-1];
 	    }
 	}
-	for (j = ndstart; j <= ndend; ++j) {
-	    v[j] = xt[j];
-	}
-	
-	for (j = 1; j <= nsample; ++j) {
-	    ncase[j-1] = j;
-	}
-	
+        /* copy the x data in this node. */
+	for (j = ndstart; j <= ndend; ++j) v[j] = xt[j];
+	for (j = 1; j <= nsample; ++j) ncase[j-1] = j;
 	R_qsort_I(v, ncase, ndstart+1, ndend+1);
-	for (j = ndstart; j <= ndend; ++j) {
-	}
 	if (v[ndstart] >= v[ndend]) {
 	    non++;
-	    if (non >= 3*mtry) {
+	    if (non >= 3 * mdim) {
 		*jstat = 1;
-		return;
+		break;
 	    }
 	}
 	    
@@ -251,10 +219,8 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	npopl = 0;
 	npopr = nodecnt;
 	crit = 0.0;
-	/* Rprintf("start=%i   end=%i\n", ndstart, ndend); */
 	/* Search through the "gaps" in the x-variable. */
 	for (j = ndstart; j <= ndend-1; ++j) {
-	  /* Rprintf("yl[ncase[%i]]=%f\n", j, yl[ncase[j]-1]); */
 	    d = yl[ncase[j]-1];
 	    suml += d;
 	    sumr -= d;
@@ -266,134 +232,91 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		if (crit > critvar) {
 		    ubestt = (v[j] + v[j+1]) / 2.0;
 		    critvar = crit;
-		    /* nbestt = j; */
 		}
 	    }
 	}
 	if (critvar > critmax) {
 	    *ubest = ubestt;
-	    /* nbest = nbestt; */
 	    *msplit = kv + 1;
 	    critmax = critvar;
 	    for (j = ndstart; j <= ndend; ++j) {
 		ut[j] = xt[j];
 	    }
 	    if (cat[kv] > 1) {
-		ic = cat[kv];
-		for (j = 0; j < ic; ++j) {
-		    tavcat[j] = avcat[j];
-		}
+		for (j = 0; j < cat[kv]; ++j) tavcat[j] = avcat[j];
 	    }
 	}
-	/* Rprintf("var %i: crit=%f, critmax=%f\n", kv+1, critvar, critmax);*/
     }
     *decsplit = critmax; 
     
     /* If best split can not be found, set to terminal node and return. */
-    if (*msplit == -1) {
+    if (*msplit != -1) {
+	    nl = ndstart;
+	    for (j = ndstart; j <= ndend; ++j) {
+		    if (ut[j] <= *ubest) {
+			    nl++;
+			    ncase[nl-1] = jdex[j];
+		    }
+	    }
+	    *ndendl = imax2(nl - 1, ndstart);
+	    nr = *ndendl + 1;
+	    for (j = ndstart; j <= ndend; ++j) {
+		    if (ut[j] > *ubest) {
+			    if (nr >= nsample) break;
+			    nr++;
+			    ncase[nr-1] = jdex[j];
+		    }
+	    } 
+	    if (*ndendl >= ndend) *ndendl = ndend - 1; 
+	    
+	    for (j = ndstart; j <= ndend; ++j) {
+		    jdex[j] = ncase[j];
+	    }
+	    
+	    lc = cat[*msplit-1];
+	    if (lc > 1) {
+		    for (j = 0; j < lc; ++j) {
+			    icat[j] =  (tavcat[j] < *ubest) ? 1 : 0;
+		    }
+		    *ubest = pack(lc, icat);
+	    }
+    } else {
 	*jstat = 1;
-	return;
     }
 
-    nl = ndstart;
-    for (j = ndstart; j <= ndend; ++j) {
-	if (ut[j] <= *ubest) {
-	    nl++;
-	    ncase[nl-1] = jdex[j];
-	}
-    }
-    *ndendl = imax2(nl - 1, ndstart);
-    nr = *ndendl + 1;
-    for (j = ndstart; j <= ndend; ++j) {
-	if (ut[j] > *ubest) {
-	    if (nr >= nsample) break;
-	    nr++;
-	    ncase[nr-1] = jdex[j];
-	}
-    } 
-    if (*ndendl >= ndend) *ndendl = ndend - 1; 
-
-    for (j = ndstart; j <= ndend; ++j) {
-      jdex[j] = ncase[j];
-    }
-
-    lc = cat[*msplit-1];
-    if (lc > 1) {
-	for (j = 0; j < lc; ++j) {
-	    icat[j] =  (tavcat[j] < *ubest) ? 1 : 0;
-	}
-	*ubest = pack(lc, icat);
-    }
-
-      Free(ncase);
-      Free(mind);
-      Free(v);
-      Free(yl);
-      Free(xt);
-      Free(ut); 
+    Free(ncase);
+    Free(mind);
+    Free(v);
+    Free(yl);
+    Free(xt);
+    Free(ut); 
 }
 
 /*====================================================================*/
 void predictRegTree(double *x, int nsample, int mdim, int *doPred,
-		    int *treemap, int *nodestatus, int nrnodes, 
-		    int ndbigtree, double *ypred, double *split, 
-		    double *nodepred, int *bestvar, int *cat, int *nodex) {
-    int icat[32], i, j, k, kt, m, mm, lc;
+		    int *lDaughter, int *rDaughter, int *nodestatus, 
+                    double *ypred, double *split, double *nodepred, 
+                    int *splitVar, int *cat, int *nodex) {
+    int icat[32], i, kt, m;
     
     zeroInt(nodex, nsample);
     for (i = 0; i < nsample; ++i) {
 	if (doPred[i] > 0) continue; /* skip to the next case */
 	kt = 0;
-	for (j = 0; j < ndbigtree; ++j) {
-	    if (nodestatus[kt] == -1) {
-		/* terminal node: assign prediction and move on to next */
-		ypred[i] = nodepred[kt];
-		nodex[i] = kt + 1;
-		/* Rprintf("ypred[%i]=%f\n", i+1, ypred[i]); */
-		break;
-	    }
-	    m = bestvar[kt] - 1;
-	    lc = cat[m];
-	    if (lc == 1) {
+	while (nodestatus[kt] != NODE_TERMINAL) { /* start going down the tree */
+	    m = splitVar[kt] - 1;
+	    if (cat[m] == 1) {
 		kt = (x[m + i*mdim] <= split[kt]) ? 
-		    treemap[kt * 2] - 1 : treemap[1 + kt * 2] - 1;
+		    lDaughter[kt] - 1 : rDaughter[kt] - 1;
 	    } else {
 		/* Should change this part to using bit manipulations... */
-		mm = (int) split[kt];
-		unpack(lc, mm, icat);
-		k = (int) x[m + i * mdim];
-		kt = icat[k-1] ? treemap[kt * 2] - 1 : treemap[1 + kt * 2] - 1;
+		unpack(cat[m], (int) split[kt], icat);
+		kt = icat[(int) x[m + i*mdim] - 1] ? 
+		  lDaughter[kt] - 1 : rDaughter[kt] - 1;
 	    }
 	}
-    }
-}
-
-
-double pack(int l, int *icat) {
-    /* icat is a binary integer with ones for categories going left 
-     * and zeroes for those going right.  The sub returns npack- the integer */
-    int k;
-    double pack = 0.0;
-
-    for (k = 0; k < l; ++k) {
-	if (icat[k]) pack += R_pow_di(2.0, k);
-    }
-    return(pack);
-}
-
-
-void unpack(int l, int npack, int *icat) {
-/*      
- * npack is a long integer.  The sub. returns icat, an integer of zeroes and
- * ones corresponding to the coefficients in the binary expansion of npack.
- */   
-    int i;
-    for (i = 0; i < 32; ++i) {
-	icat[i] = 0;
-    }
-    icat[0] = npack % 2;
-    for (i = 1; i < l; ++i) {
-	npack = (npack - icat[i-1]) / 2;
-	icat[i] = npack % 2;
+	/* terminal node: assign prediction and move on to next */
+	ypred[i] = nodepred[kt];
+	nodex[i] = kt + 1;
     }
 }

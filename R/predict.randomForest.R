@@ -83,9 +83,9 @@
 
   if (predict.all) {
     if (object$type == "regression") {
-      treepred <- double(ntest * ntree)
+      treepred <- matrix(double(ntest * ntree), ncol=ntree)
     } else {
-      treepred <- integer(ntest * ntree)
+      treepred <- matrix(integer(ntest * ntree), ncol=ntree)
     }
   } else {
     treepred <- numeric(ntest)
@@ -110,7 +110,8 @@
               as.integer(ntest),
               as.integer(ntree),
               as.integer(object$forest$ndbigtree),
-              as.integer(aperm(object$forest$treemap, c(2, 1, 3))),
+              as.integer(object$forest$leftDaughter),
+              as.integer(object$forest$rightDaughter),
               as.integer(object$forest$nodestatus),
               as.integer(object$forest$nrnodes),
               as.double(object$forest$xbestsplit),

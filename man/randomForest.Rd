@@ -197,7 +197,7 @@
 
 \examples{
 ## Classification:
-data(iris)
+##data(iris)
 set.seed(71)
 iris.rf <- randomForest(Species ~ ., data=iris, importance=TRUE,
                         proximity=TRUE)
@@ -219,7 +219,7 @@ iris.urf <- randomForest(iris[, -5])
 MDSplot(iris.urf, iris$Species)
 
 ## Regression:
-data(airquality)
+## data(airquality)
 set.seed(131)
 ozone.rf <- randomForest(Ozone ~ ., data=airquality, mtry=3,
                          importance=TRUE, na.action=na.omit)

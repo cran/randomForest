@@ -85,21 +85,21 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
     int nsample0, mdim, nclass, addClass, jbt, mtry, ntest, nsample, ndsize,
         mimp, nimp, near, nuse, noutall, nrightall, nrightimpall;
-    int i, jb, j, n, m, k, arrayindex, imp, localImp, iprox, 
-	oobprox, noutlier, keepf, replace, stratify, trace, *nright, 
+    int jb, j, n, m, k, arrayindex, imp, localImp, iprox, 
+	oobprox, keepf, replace, stratify, trace, *nright, 
 	*nrightimp, *nout, *nclts;
 
     int *out, *bestsplitnext, *bestsplit, *zeroes,
 	*nodepop, *parent, *jin, *nodex,
-	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed, *clp,
+	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
 	*jtr, *nc, *idmove, *jvr,
 	*at, *a, *b, *cbestsplit, *mind, *nind, *jts, *oobpair;
     int **class_idx, *class_size, last, tmp, ktmp, anyEmpty, ntry;
 
-    double av=0.0, se=0.0;
+    double av=0.0;
     
     double *tgini, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
-        *tp, *wc, *wr, *wtt, *tout, *p, *iw;
+        *tp, *wc, *wr, *wtt, *iw;
 
     addClass = Options[0];
     imp      = Options[1];
@@ -343,7 +343,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
             predictClassTree(xts, ntest, mdim, zeroes, treemap + 2*arrayindex,
                              nodestatus + arrayindex, xbestsplit + arrayindex,
                              cbestsplit, bestvar + arrayindex, 
-                             nodeclass + arrayindex, *nrnodes, ndbigtree[jb], 
+                             nodeclass + arrayindex, ndbigtree[jb], 
                              cat, nclass, jts, nodexts, *maxcat);
 	    TestSetError(countts, jts, clts, outclts, ntest, nclass, jb+1,
 			 errts + jb*(nclass+1), pid, *labelts, nclts, cut);
@@ -353,7 +353,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
         predictClassTree(x, nsample, mdim, jin, treemap + 2*arrayindex,
                          nodestatus + arrayindex, xbestsplit + arrayindex,
                          cbestsplit, bestvar + arrayindex, 
-                         nodeclass + arrayindex, *nrnodes, ndbigtree[jb], 
+                         nodeclass + arrayindex, ndbigtree[jb], 
                          cat, nclass, jtr, nodex, *maxcat);
 	
 	zeroInt(nout, nclass);
@@ -423,7 +423,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
                                      cbestsplit, 
                                      bestvar + arrayindex, 
                                      nodeclass + arrayindex,
-                                     *nrnodes, ndbigtree[jb], cat, nclass,
+                                     ndbigtree[jb], cat, nclass,
                                      jvr, nodex, *maxcat);
 
 		    /* Count how often correct predictions are made with 
@@ -580,7 +580,7 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 	       int *nodeclass, int *jts, int *jet, int *bestvar,
 	       int *nodexts, int *ndbigtree, int *keepPred,
 	       int *prox, double *proxmatrix, int *nodes) {
-    int i, j, jb, n, n1, n2, idxNodes, idxSample1, idxSample2, *zeroes;
+    int j, jb, n, n1, n2, idxNodes, idxSample1, idxSample2, *zeroes;
     double crit, cmax;
 
     zeroes = (int *) S_alloc(*ntest, sizeof(int));
@@ -595,7 +595,7 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
         predictClassTree(xts, *ntest, *mdim, zeroes, treemap + 2*idxNodes,
 			 nodestatus + idxNodes, xbestsplit + idxNodes,
 			 cbestsplit, bestvar + idxNodes, nodeclass + idxNodes,
-			 *nrnodes, ndbigtree[jb], cat, *nclass,
+			 ndbigtree[jb], cat, *nclass,
 			 jts + idxSample1, nodexts + idxSample2, *maxcat);
 
 	/* accumulate votes: */

@@ -26,7 +26,6 @@
   \code{\link{randomForest}}
 }
 \examples{
-data(iris)
 set.seed(1)
 iris.rf <- randomForest(iris[,-5], iris[,5], proximity=TRUE)
 plot(outlier(iris.rf), type="h",

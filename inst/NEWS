@@ -1,6 +1,14 @@
-Changes in 4.4-1:
+Changes in 4.4-2:
 
-* Fixed a memory problem introduced in 4.3-3.
+* Fixed two memory leaks in the regression code (introduced in 4.3-1).
+
+* Fixed a bug that sometimes caused crash in regression when nodesize
+  is set to something larger than default (5).
+
+* Changed the tree structure in regression slightly: "treemap" is replaced
+  by "leftDaughter" and "rightDaughter".
+
+Changes in 4.4-1:
 
 * Made slight change in regression code so that it won't split `pure' 
   nodes.  Also fixed the `increase in node purity' importance measure 

@@ -2,11 +2,15 @@
 #include "rf.h"
 
 void zeroInt(int *x, int length) {
-    memset(x, 0, length * sizeof(int));
+	int i;
+	for (i=0; i < length; ++i) x[i] = 0;
+	/* memset(x, 0, length * sizeof(int)); */
 }
 
 void zeroDouble(double *x, int length) {
-    memset(x, 0, length * sizeof(double));
+	int i;
+	for (i=0; i < length; ++i) x[i] = 0.0;
+	/* memset(x, 0, length * sizeof(double)); */
 }
 
 void createClass(double *x, int realN, int totalN, int mdim) {
@@ -203,4 +207,33 @@ void permuteOOB(int m, double *x, int *in, int nsample, int mdim) {
 	}
     }
     Free(tp);
+}
+
+double pack(int l, int *icat) {
+    /* icat is a binary integer with ones for categories going left 
+     * and zeroes for those going right.  The sub returns npack- the integer */
+    int k;
+    double pack = 0.0;
+
+    for (k = 0; k < l; ++k) {
+	if (icat[k]) pack += R_pow_di(2.0, k);
+    }
+    return(pack);
+}
+
+
+void unpack(int l, int npack, int *icat) {
+/*      
+ * npack is a long integer.  The sub. returns icat, an integer of zeroes and
+ * ones corresponding to the coefficients in the binary expansion of npack.
+ */   
+    int i;
+    for (i = 0; i < 32; ++i) {
+	icat[i] = 0;
+    }
+    icat[0] = npack % 2;
+    for (i = 1; i < l; ++i) {
+	npack = (npack - icat[i-1]) / 2;
+	icat[i] = npack % 2;
+    }
 }

@@ -39,6 +39,7 @@
         mtry <- p
         warning("mtry can not be larger than number of predictors.  Reset to equal to number of predictors")
     }
+    mtry <- max(1, min(p, round(mtry)))
     if (!is.null(y)) {
         if (length(y) != n) stop("length of response must be the same as predictors")
         addclass <- FALSE
@@ -164,7 +165,7 @@
         nrnodes <- 2 * trunc(nsum / nodesize) + 1
     } else {
         ## For regression trees, need to do this to get maximal trees.
-        nrnodes <- 2 * trunc(sampsize/max(1, nodesize - 3)) + 1
+        nrnodes <- 2 * trunc(sampsize/max(1, nodesize - 4)) + 1
     }
     
 
@@ -348,11 +349,12 @@
                     impSD = impSD,
                     prox = prox,
                     ndbigtree = integer(ntree),
-                    nodestatus = integer(nt * nrnodes),
-                    treemap = integer(nt * 2 * nrnodes),
-                    nodepred = double(nt * nrnodes),
-                    bestvar = integer(nt * nrnodes),
-                    xbestsplit = double(nt * nrnodes),
+                    nodestatus = matrix(integer(nrnodes * nt), ncol=nt),
+                    leftDaughter = matrix(integer(nrnodes * nt), ncol=nt),
+                    rightDaughter = matrix(integer(nrnodes * nt), ncol=nt),
+                    nodepred = matrix(double(nrnodes * nt), ncol=nt),
+                    bestvar = matrix(integer(nrnodes * nt), ncol=nt),
+                    xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
                     mse = double(ntree),
                     keepf = as.integer(keep.forest),
                     replace = as.integer(replace),
@@ -367,21 +369,22 @@
                     coef = double(2),
                     oob.times = integer(n),
                     DUP=FALSE,
-                    PACKAGE="randomForest")[c(16:27, 35:39)]
+                    PACKAGE="randomForest")[c(16:28, 36:40)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)
             rfout$nodestatus <-
-                matrix(rfout$nodestatus, ncol=ntree)[1:max.nodes, , drop=FALSE]
+                rfout$nodestatus[1:max.nodes, , drop=FALSE]
             rfout$bestvar <-
-                matrix(rfout$bestvar, ncol=ntree)[1:max.nodes, , drop=FALSE]
+                rfout$bestvar[1:max.nodes, , drop=FALSE]
             rfout$nodepred <-
-                matrix(rfout$nodepred, ncol=ntree)[1:max.nodes, , drop=FALSE]
+                rfout$nodepred[1:max.nodes, , drop=FALSE]
             rfout$xbestsplit <-
-                matrix(rfout$xbestsplit, ncol=ntree)[1:max.nodes, , drop=FALSE]
-            rfout$treemap <- aperm(array(rfout$treemap,
-                                         dim = c(2, nrnodes, ntree)),
-                                   c(2, 1, 3))[1:max.nodes, , , drop=FALSE]
+                rfout$xbestsplit[1:max.nodes, , drop=FALSE]
+            rfout$leftDaughter <-
+                rfout$leftDaughter[1:max.nodes, , drop=FALSE]
+            rfout$rightDaughter <-
+                rfout$rightDaughter[1:max.nodes, , drop=FALSE]
         }
         
         out <- list(call = match.call(),
@@ -403,8 +406,9 @@
                     ntree = ntree,
                     mtry = mtry,
                     forest = if (keep.forest)
-                    c(rfout[c("ndbigtree", "nodestatus", "treemap",
-                              "nodepred", "bestvar", "xbestsplit")],
+                    c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
+                              "rightDaughter", "nodepred", "bestvar",
+                              "xbestsplit")],
                       list(ncat = ncat), list(nrnodes=max.nodes),
                       list(ntree=ntree)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,

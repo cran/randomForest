@@ -43,7 +43,8 @@ getTree(rfobj, k=1)
 }
 \examples{
 data(iris)
-getTree(randomForest(Species ~ ., iris, ntree=10), 3)
+## Look at the third trees in the forest.
+getTree(randomForest(iris[,-5], iris[,5], ntree=10), 3)
 }
 \author{Andy Liaw \email{andy\_liaw@merck.com}}
 \keyword{tree}

@@ -52,12 +52,12 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
     nodestatus[0] = NODE_TOSPLIT;
     
     /* compute mean and sum of squares for Y */
-    av=0.0;
-    ss=0.0;
-    for (i=0; i < nsample; ++i) {
+    av = 0.0;
+    ss = 0.0;
+    for (i = 0; i < nsample; ++i) {
 	d = y[jdex[i] - 1];
 	ss += i * (av - d) * (av - d) / (i + 1);
-	av = (i * av + d) / (i+1);
+	av = (i * av + d) / (i + 1);
     }
     avnode[0] = av;
     
@@ -70,7 +70,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 	/* initialize for next call to findbestsplit */         
 	ndstart = nodestart[k];
 	ndend = ndstart + nodepop[k] - 1;
-	nodecnt = nodepop[k]; 
+	nodecnt = nodepop[k];
 	sumnode = nodecnt * avnode[k];
 	jstat = 0;
 	decsplit = 0.0;
@@ -121,7 +121,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 	    av = (m * av + d) / (m + 1);
 	}
 	avnode[ncur + 2] = av;
-	nodestatus[ncur+2] = NODE_TOSPLIT;
+	nodestatus[ncur + 2] = NODE_TOSPLIT;
 	if (nodepop[ncur + 2] <= nthsize) {
 	    nodestatus[ncur + 2] = NODE_TERMINAL;
 	}
@@ -184,30 +184,32 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	if (lc == 1) {
 	    /* numeric variable */
 	    for (j = ndstart; j <= ndend; ++j) {
-		 xt[j] = x[kv + (jdex[j]-1) * mdim];
-		 yl[j] = y[jdex[j]-1];
-	    } 
+		 xt[j] = x[kv + (jdex[j] - 1) * mdim];
+		 yl[j] = y[jdex[j] - 1];
+	    }
 	} else {
 	    /* categorical variable */
             zeroInt(ncat, 32);
 	    zeroDouble(sumcat, 32);
 	    for (j = ndstart; j <= ndend; ++j) {
-		l = (int) x[kv + (jdex[j]-1) * mdim];
-		sumcat[l-1] += y[jdex[j]-1];
-		ncat[l-1] ++;
+		l = (int) x[kv + (jdex[j] - 1) * mdim];
+		sumcat[l - 1] += y[jdex[j] - 1];
+		ncat[l - 1] ++;
 	    }
+            /* Compute means of Y by category. */
 	    for (j = 0; j < lc; ++j) {
 		avcat[j] = ncat[j] ? sumcat[j] / ncat[j] : 0.0;
 	    }
+            /* Make the category mean the `pseudo' X data. */
 	    for (j = 0; j < nsample; ++j) {
-		xt[j] = avcat[(int) x[kv + (jdex[j]-1) * mdim]];
-		yl[j] = y[jdex[j]-1];
+		xt[j] = avcat[(int) x[kv + (jdex[j] - 1) * mdim] - 1];
+		yl[j] = y[jdex[j] - 1];
 	    }
 	}
         /* copy the x data in this node. */
 	for (j = ndstart; j <= ndend; ++j) v[j] = xt[j];
-	for (j = 1; j <= nsample; ++j) ncase[j-1] = j;
-	R_qsort_I(v, ncase, ndstart+1, ndend+1);
+	for (j = 1; j <= nsample; ++j) ncase[j - 1] = j;
+	R_qsort_I(v, ncase, ndstart + 1, ndend + 1);
 	if (v[ndstart] >= v[ndend]) continue;	    
 	/* ncase(n)=case number of v nth from bottom */
 	/* Start from the right and search to the left. */
@@ -218,8 +220,8 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	npopr = nodecnt;
 	crit = 0.0;
 	/* Search through the "gaps" in the x-variable. */
-	for (j = ndstart; j <= ndend-1; ++j) {
-	    d = yl[ncase[j]-1];
+	for (j = ndstart; j <= ndend - 1; ++j) {
+	    d = yl[ncase[j] - 1];
 	    suml += d;
 	    sumr -= d;
 	    npopl++;
@@ -246,7 +248,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	}
     }
     *decsplit = critmax; 
-    
+
     /* If best split can not be found, set to terminal node and return. */
     if (*msplit != -1) {
         nl = ndstart;
@@ -262,19 +264,16 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
             if (ut[j] > *ubest) {
                 if (nr >= nsample) break;
                 nr++;
-                ncase[nr-1] = jdex[j];
+                ncase[nr - 1] = jdex[j];
             }
 	    } 
         if (*ndendl >= ndend) *ndendl = ndend - 1; 
+        for (j = ndstart; j <= ndend; ++j) jdex[j] = ncase[j];
 	
-        for (j = ndstart; j <= ndend; ++j) {
-            jdex[j] = ncase[j];
-        }
-	
-        lc = cat[*msplit-1];
+        lc = cat[*msplit - 1];
         if (lc > 1) {
             for (j = 0; j < lc; ++j) {
-                icat[j] =  (tavcat[j] < *ubest) ? 1 : 0;
+                icat[j] = (tavcat[j] < *ubest) ? 1 : 0;
             }
             *ubest = pack(lc, icat);
         }

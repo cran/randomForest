@@ -9,6 +9,15 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-4:
+
+* Fixed a bug in regression when there are categorical predictors.  (The 
+  splits can be completely wrong!)
+
+Changes in 4.5-3:
+
+* Fixed predict.randomForest() so that it uses the class labels stored in
+  the randomForest object (for classification).
 
 Changes in 4.5-2:
 

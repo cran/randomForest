@@ -186,7 +186,8 @@
             if (norm.votes) 
                 out.class.votes <-
                     sweep(out.class.votes, 1, rowSums(out.class.votes), "/")
-            z <- matrix(NA, ntest, nclass, dimnames = list(rn, levels(object$predicted)))
+            z <- matrix(NA, length(rn), nclass,
+                        dimnames=list(rn, object$classes))
             z[keep, ] <- out.class.votes
             res <- z
         } else {

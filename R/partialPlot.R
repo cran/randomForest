@@ -36,14 +36,13 @@ partialPlot.randomForest <-
                 pr <- predict(x, x.data, type = "prob")
                 y.pt[i] <- mean(log(ifelse(pr[, focus] > 0,
                                            pr[, focus], 1)) -
-                                rowMeans(log(ifelse(pr > 0, pr, 1))))
-            } else {
-                y.pt[i] <- mean(predict(x, x.data))
-            }
+                                rowMeans(log(ifelse(pr > 0, pr, 1))),
+                                na.rm=TRUE)
+            } else y.pt[i] <- mean(predict(x, x.data), na.rm=TRUE)
+
         }
         if (add) {
-            points(1:length(x.pt), y.pt, type = "h", lwd = 2, 
-                   ...)
+            points(1:length(x.pt), y.pt, type="h", lwd=2, ...)
         } else {
             barplot(y.pt, width=rep(1, length(y.pt)), col="blue", xlab = xlab, 
                     ylab = ylab, main=main, names.arg=x.pt, ...)
@@ -59,9 +58,10 @@ partialPlot.randomForest <-
             if (classRF) {
                 pr <- predict(x, x.data, type = "prob")
                 y.pt[i] <- mean(log(ifelse(pr[, focus] == 0, 1, pr[, focus]))
-                                - rowMeans(log(ifelse(pr == 0, 1, pr))))
+                                - rowMeans(log(ifelse(pr == 0, 1, pr))),
+                                na.rm=TRUE)
             } else {
-                y.pt[i] <- mean(predict(x, x.data))
+                y.pt[i] <- mean(predict(x, x.data), na.rm=TRUE)
             }
         }
         if (add) {

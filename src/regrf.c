@@ -6,11 +6,10 @@
       It comes with no guarantee.  
  *************************************************************************/
 #include <R.h>
-#include <Rmath.h>
 #include "rf.h"
 
-/*  Define the R RNG for use from Fortran. */
-/* void F77_SUB(rrand)(double *r) { *r = unif_rand(); } */
+void regCorrect(int nsample, double *avnode, int *nodex, double *y);
+
 
 void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize, 
 	   int *nrnodes, int *jbt, int *mtry, int *imp, int *cat, int *jprint,
@@ -47,7 +46,8 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     *yl, *xa, *utr, *predimp, *za, *ytree, *tgini, maximp;
   
   int i, k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx, ntest;
-  
+  int correctBias = 0;
+
   int *jdex, *nodepop, *npert, *ip, *nperm, *parent, *nout, *jin, *isort, 
     *nodestart, *ncase, *nbrterm, *jperm, *incl, *mind, *nodex, *nodexts;
   
@@ -91,9 +91,8 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   incl       = (int *) R_alloc(*mdim, sizeof(int));
   mind       = (int *) R_alloc(*mdim, sizeof(int)); 
   nodex      = (int *) R_alloc(*nsample, sizeof(double));
-  if(*testdat == 1)  nodexts = (int *) R_alloc(ntest, sizeof(double));
+  nodexts = (int *) R_alloc(ntest, sizeof(double));
 
-    
   averrb = 0.0;
 	
   avy = 0.0;
@@ -158,14 +157,14 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   /*************************************
    Start the loop over trees.
   *************************************/
-  for(jb = 0; jb < *jbt; ++jb) {
+  for (jb = 0; jb < *jbt; ++jb) {
     idx = (*keepf == 1) ? jb * *nrnodes : 0;
-    for(n = 0; n < *nsample; ++n) {
+    for (n = 0; n < *nsample; ++n) {
       jin[n] = 0;
       nodex[n] = 0;
     }
 
-    for(n = 0; n < *nsample; ++n) {
+    for (n = 0; n < *nsample; ++n) {
       xrand = unif_rand();
       k = xrand * *nsample;
       jin[k] = 1;
@@ -174,15 +173,14 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	xb[m + n * *mdim] = x[m + k * *mdim];
       }
     }
-
     nls = *nsample;
     
     F77_CALL(rbuildtree)(xb, yb, yl, mdim, &nls, nsample, treemap + (2*idx), 
-			jdex, upper + idx, avnode + idx, bestcrit, 
-			nodestatus + idx, nodepop,
-			nodestart, nrnodes, nthsize, rsnodecost, ncase, 
-			parent, ut, v, xt, mtry, ip, mbest + idx, cat, 
-			tgini, mind);
+			 jdex, upper + idx, avnode + idx, bestcrit, 
+			 nodestatus + idx, nodepop,
+			 nodestart, nrnodes, nthsize, rsnodecost, ncase, 
+			 parent, ut, v, xt, mtry, ip, mbest + idx, cat, 
+			 tgini, mind);
 
     ndbigtree[jb] = *nrnodes;
     for(k = *nrnodes-1; k >= 0; --k) {
@@ -190,11 +188,17 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
       if (nodestatus[k + idx]==2) nodestatus[k + idx] = -1;
     }
 
-    for(n = 0; n < *nsample; ++n) ytr[n] = 0.0;
+    for(n = 0; n < *nsample; ++n) {
+      ytr[n] = 0.0;
+    }
     
     F77_CALL(rtestreebag)(x, nsample, mdim, treemap + 2*idx, nodestatus + idx, 
 			 nrnodes, ndbigtree + jb, ytr, upper + idx, 
 			 avnode + idx, mbest + idx, cat, nodex);
+
+    if(correctBias) {
+      regCorrect(*nsample, avnode + idx, nodex, yb);
+    }
     
     errb = 0.0;
     jout = 0;
@@ -280,7 +284,6 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	  }
 	  em += (y[n] - predimp[n + mr* *nsample]) *
 	    (y[n] - predimp[n + mr* *nsample]);
-	  /*	  if(mr==0) Rprintf("%i %10.5f\n", n+1, predimp[n]);*/
 	}
 	errimp[mr] = em / *nsample;
       }
@@ -291,19 +294,24 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   /* end of tree iterations=======================================*/
   *rsq = 1.0 - errb/vary;
   maximp = 0.0;
+  /*
   for(m = 0; m < *mdim; ++m) {
     if(tgini[m] > maximp) maximp = tgini[m];
   }
+  */
 
   if (*imp == 1) {
     for (m = 0; m < *mdim; ++m) {
       errimp[m] = 100 * ((errimp[m] / errb) - 1);
-      if(errimp[m] <= 0.0) errimp[m] = 0.0;
-      errimp[m + *mdim] = tgini[m] / maximp;
+      /* if(errimp[m] <= 0.0) errimp[m] = 0.0;
+         errimp[m + *mdim] = tgini[m] / maximp;  */
+      errimp[m + *mdim] = tgini[m];
     }
   } else {
-    for(m = 0; m < *mdim; ++m) 
-      errimp[m] = tgini[m] / maximp;
+    for (m = 0; m < *mdim; ++m) {
+      /* errimp[m] = tgini[m] / maximp; */
+      errimp[m] = tgini[m];
+    }
   }
   
 }
@@ -361,4 +369,31 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree,
       }
     }
   }
+}
+
+void regCorrect(int nsample, double *avnode, int *nodex, double *y) {
+  int i;
+  double sxx=0.0, sxy=0.0, a=0.0, b=0.0, xbar=0.0, ybar=0.0;
+  double dx = 0.0, dy = 0.0;
+
+  for (i = 0; i < nsample; ++i) {
+    xbar += avnode[nodex[i] - 1];
+    ybar += y[i];
+  }
+  xbar /= nsample;
+  ybar /= nsample;
+
+  for (i=0; i < nsample; ++i) {
+    dx = avnode[nodex[i] - 1] - xbar;
+    dy = y[i] - ybar;
+    sxx += dx * dx;
+    sxy += dx * dy;
+  }
+  b = sxy / sxx;
+  a = b * xbar - ybar;
+
+  for (i = 0; i < nsample; ++i) {
+    avnode[nodex[i]] = a + b * avnode[nodex[i]];
+  }
+  return;
 }

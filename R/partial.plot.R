@@ -29,9 +29,10 @@ partial.plot.randomForest <-
         x.data <- pred.data
         x.data[,xname] <- factor(rep(x.pt[i], n), levels = x.pt)
         if(classRF) {
-##          pr <- predict(x, x.data, type="prob")
-##          y.pt[i] <- mean(log(pr[,focus]) - rowMeans(log(pr)))
-          y.pt[i] <- mean(predict(x, x.data, type="prob")[,focus])
+          pr <- predict(x, x.data, type="prob")
+          y.pt[i] <- mean(log(ifelse(pr[,focus] > 0, pr[,focus], 1)) -
+            rowMeans(log(ifelse(pr > 0, pr, 1))))
+##          y.pt[i] <- mean(predict(x, x.data, type="prob")[,focus])
         } else {
           y.pt[i] <- mean(predict(x, x.data))
         }
@@ -40,7 +41,7 @@ partial.plot.randomForest <-
         points(1:length(x.pt),  y.pt, type="h", lwd=2, ...)
       } else {
         plot(1:length(x.pt), y.pt, type="h", lwd=2, xlab=xname, ylab="",
-             main = paste("Partial Dependence of", xname))
+             main = paste("Partial Dependence of", xname), ...)
       }
     } else {
       x.pt <- seq(min(xv), max(xv), length=n.pt)
@@ -49,21 +50,28 @@ partial.plot.randomForest <-
         x.data <- pred.data
         x.data[, xname] <- rep(x.pt[i], n)
         if(classRF) {
-##          pr <- predict(x, x.data, type="prob")
-##          y.pt[i] <- mean(log(pr[,focus]) - rowMeans(log(pr)))
-          y.pt[i] <- mean(predict(x, x.data, type="prob")[,focus])
+          pr <- predict(x, x.data, type="prob")
+          y.pt[i] <- mean(log(ifelse(pr[,focus] == 0, 1, pr[,focus])) -
+                          rowMeans(log(ifelse(pr == 0, 1, pr))))
+##          y.pt[i] <- mean(predict(x, x.data, type="prob")[,focus])
         } else {
           y.pt[i] <- mean(predict(x, x.data))
         }
       }
 
-      if(add) {
+      if (add) {
         lines(x.pt, y.pt, ...)
       } else {
         plot(x.pt, y.pt, xlab=xname, ylab="", type="l",
-             main=paste("Partial Dependence of", xname))
+             main=paste("Partial Dependence of", xname), ...)
       }
-      if(rug & n.pt > 10) rug(quantile(xv, seq(.1, .9, by=.1)), side=1)
+      if (rug) {
+        if (n.pt > 10) {
+          rug(quantile(xv, seq(.1, .9, by=.1)), side=1)
+        } else {
+          rug(unique(xv, side=1))
+        }
+      }
     }
     invisible(list(x=x.pt, y=y.pt))
   }

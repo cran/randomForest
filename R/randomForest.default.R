@@ -4,16 +4,23 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
            floor(sqrt(ncol(x)))), classwt=NULL, cutoff,
          nodesize= ifelse(!is.null(y) && !is.factor(y), 5, 1),
          importance=FALSE, proximity=FALSE, outscale=FALSE, norm.votes=TRUE,
-         do.trace=FALSE, keep.forest=is.null(xtest), ...)
+         do.trace=FALSE, keep.forest=is.null(xtest), corr.bias=FALSE, ...)
 {
   classRF <- is.null(y) || is.factor(y)
+  if (!classRF && length(unique(y)) <= 5) {
+    warning("The response has five or fewer unique values.  Are you sure you want to do regression?")
+  }
   n <- nrow(x)
   p <- ncol(x)
   if(n == 0)
     stop("data (x) has 0 rows")
   x.row.names <- rownames(x)
-  x.col.names <- colnames(x)
-
+  if(is.null(colnames(x))) {
+    x.col.names <- 1:ncol(x)
+  } else {
+    x.col.names <- colnames(x)
+  }
+  
   ## bypass R's lazy evaluation:
   keep.forest <- keep.forest
 
@@ -104,17 +111,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
   }
   
   if(importance) {
-    if(classRF) {
-      impout <- matrix(0, p, 4)
-    } else {
       impout <- matrix(0, p, 2)
-    }
   } else {
-##    if(classRF) {
       impout <- numeric(p)
-##    } else {
-##      impout <- 0
-##    }
   }
 
   nsample <- if(addclass == 0) n else 2*n
@@ -212,7 +211,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
         testcon <- cbind(testcon,
                          class.error = 1 - diag(testcon)/rowSums(testcon))
       }
-    }    
+    }
     out <- list(call = match.call(),
                 type = ifelse(addclass == 0, "classification",
                   "unsupervised"),
@@ -221,8 +220,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 confusion = if(addclass == 0) con else NULL,
                 votes = out.votes,
                 importance = if(importance) 
-                  matrix(rfout$impout, p, 4, dimnames = list(x.col.names,
-                                               paste("Measure", 1:4)))
+                  matrix(rfout$impout, p, 2, dimnames = list(x.col.names,
+                                               c("MeanDecreaseMargin",
+                                                 "MeanDecreaseGini")))
                 else structure(rfout$impout, names=x.col.names),
                 proximity = if(proximity) matrix(rfout$prox, n, n,
                   dimnames = list(x.row.names, x.row.names)) else NULL,
@@ -287,6 +287,16 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 msets = as.double(error.test),
                 DUP=FALSE,
                 PACKAGE="randomForest")[c(13:23, 30:32)]
+    ## Do bias correction: regress residual on yhat.
+    if (corr.bias) {
+      coefs <- lsfit(rfout$ypred, y - rfout$ypred)$coef
+      yhat <- rfout$ypred + (coefs[1] + coefs[2] * rfout$ypred)
+      if (testdat) yhatt <- rfout$ytestpred + (coefs[1] +
+                                               coefs[2]*rfout$ytestpred)
+    } else {
+      yhat <- rfout$ypred
+      if (testdat) yhatt <- rfout$ytestpred
+    }
     ## Format the forest component, if present.
     if(keep.forest) {
       rfout$nodestatus <- matrix(rfout$nodestatus, ncol = ntree)
@@ -295,9 +305,10 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
       rfout$xbestsplit <- matrix(rfout$xbestsplit, ncol = ntree)
       rfout$treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
     }
+
     out <- list(call = match.call(),
                 type = "regression",
-                predicted = structure(rfout$ypred, names=x.row.names),
+                predicted = structure(yhat, names=x.row.names),
                 mse = rfout$mse,
                 rsq = 1 - rfout$mse / (var(y)*(n-1)/n),
                 importance = if(importance) structure(matrix(rfout[[2]],p,2),
@@ -308,9 +319,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 mtry = mtry,
                 forest = if(keep.forest) c(rfout[4:9], list(ncat = ncat),
                   list(nrnodes=nrnodes), list(ntree=ntree)) else NULL,
+                coefs = if (corr.bias) coefs else NULL,
                 test = if(testdat) {
-                  list(predicted = structure(rfout$ytestpred,
-                         names=xts.row.names),
+                  list(predicted = structure(yhat, names=xts.row.names),
                   mse = if(labelts) rfout$msets else NULL,
                   rsq = if(labelts) 1 - rfout$msets / (var(ytest)*(n-1)/n) else NULL,
                   proximity = if(proximity) 

@@ -1,10 +1,15 @@
 combine                 Combine Ensembles of Trees
 grow                    Add trees to an ensemble
+margin                  Margins of randomForest Classifier
+MDSplot                 Multi-dimensional Scaling Plot of Proximity
+                        matrix from randomForest
+na.roughfix             Rough Imputation of Missing Values
 partial.plot            Partial dependence plot
 plot.randomForest       Plot method for randomForest objects
 predict.randomForest    predict method for random forest objects
 randomForest            Classification and Regression with Random
                         Forest
+rfImpute                Missing Value Imputations by randomForest
 treesize                Size of trees in an ensemble
 var.imp.plot            Variable Importance Plot
 var.used                Variables used in a random forest

@@ -96,10 +96,15 @@
               proximity = as.double(proxmatrix),
               DUP=FALSE,
               PACKAGE = "randomForest")[c(2, 15)]
-    if(!proximity) {
-      res <- ans$ypred
+    if (!is.null(object$coefs)) {
+      yhat <- ans$ypred + (object$coefs[1] + object$coefs[2] * ans$ypred)
     } else {
-      res <- list(pred = ans$ypred, proximity = structure(ans$proximity,
+      yhat <- ans$ypred
+    }
+    if (!proximity) {
+      res <- yhat
+    } else {
+      res <- list(pred = yhat, proximity = structure(ans$proximity,
                                      dim=c(ntest, ntest),
                                      dimnames=list(rn, rn)))
     }

@@ -85,7 +85,8 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     *jtr, *nc, *msum, *idmove, *jvr, *countimp,
     *at, *a, *b, *cbestsplit, *mind, *jts;
   
-  double errc, maxgini = 0.0;
+  double errc;
+  /* double maxgini = 0.0; */
 
   double *tgini, *v, *tx, *wl, *classpop, *errimp,
     *rimpmarg, *tclasscat, *tclasspop, *rmargin, *win, *tp,
@@ -236,7 +237,10 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
       jin[k] = 1;
     }
     
-    F77_CALL(eqm)(a, at, &mdim, &nsample);
+    for (n = 0; n < mdim*nsample; ++n) {
+      a[n] = at[n];
+    }
+    /*    F77_CALL(eqm)(a, at, &mdim, &nsample); */
     F77_CALL(moda)(a, &nuse, &nsample, &mdim, cat, maxcat, ncase, jin, ta);
     
     F77_CALL(buildtree)(a, b, cl, cat, &mdim, &nsample, &nclass, 
@@ -371,7 +375,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   /*  IMP DATA ++++++++++++++++++++++++++++++++++*/
   for(m = 0; m < mdim; m++) {
     tgini[m] = tgini[m] / jbt;
-    if(tgini[m] > maxgini) maxgini = tgini[m];
+    /* if(tgini[m] > maxgini) maxgini = tgini[m]; */
   }
   if (*imp == 1) {
     F77_CALL(finishimp)(rmissimp, countimp, out, cl, &nclass, &mdim,
@@ -379,14 +383,17 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
                         rmargin, counttr, outcl, errtr + jbt - 1, cut);
 
     for(m = 0; m < mdim; m++) {
-      imprt[m] = errimp[m];
-      imprt[mdim + m] = ((diffmarg[m] > 0.0) ? diffmarg[m] : 0.0);
-      imprt[2*mdim + m] = ((cntmarg[m] > 0.0) ? cntmarg[m] : 0.0);
-      imprt[3*mdim + m] = tgini[m] / maxgini;
+      /* imprt[m] = errimp[m];
+         imprt[m] = (diffmarg[m] > 0.0) ? diffmarg[m] : 0.0; */
+      imprt[m] = diffmarg[m];
+      /* imprt[2*mdim + m] = ((cntmarg[m] > 0.0) ? cntmarg[m] : 0.0);
+         imprt[mdim + m] = tgini[m] / maxgini;  */
+      imprt[mdim + m] = tgini[m];
     }
   } else {
     for(m = 0; m < mdim; ++m) {
-      imprt[m] = tgini[m] / maxgini;
+      /* imprt[m] = tgini[m] / maxgini; */
+      imprt[m] = tgini[m];
     }
   }
 }

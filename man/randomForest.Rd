@@ -18,7 +18,7 @@
         max(floor(ncol(x)/3), 1), floor(sqrt(ncol(x)))), classwt = NULL, cutoff,
     nodesize = ifelse(!is.null(y) && !is.factor(y), 5, 1), importance = FALSE, 
     proximity = FALSE, outscale = FALSE, norm.votes = TRUE, do.trace = FALSE, 
-    keep.forest = is.null(xtest), ...) 
+    keep.forest = is.null(xtest), corr.bias=FALSE, ...) 
 NULL
 
 \method{print}{randomForest}(x, ...)
@@ -79,6 +79,8 @@ NULL
   \item{keep.forest}{If set to \code{FALSE}, the forest will not be
     retained in the output object.  If \code{xtest} is given, defaults
     to \code{FALSE}.}
+  \item{corr.bias}{perform bias correction for regression?  Note:
+    Experimental.  Use at your own risk.}
   \item{...}{optional parameters to be passed to the low level function
     \code{randomForest.default}.}
 }
@@ -92,13 +94,10 @@ NULL
     {unsupervised}.}
   \item{predicted}{the predicted values of the input data based on
     out-of-bag samples.}
-  \item{importance}{for classification problem, a matrix with four
-    columns, each a different measure of importance of the predictors;
-    for regression problem, a vector (\code{NULL} if
-    \code{importance=FALSE} when \code{randomForest} is called, this
-    component is set to \code{NULL}).  For classification problem, if
-    \code{importance=FALSE}, the fourth measure is still returned.  This
-    measure corresponds to average increase in node purity caused by
+  \item{importance}{a matrix with two columns, each a different measure
+    of importance of the predictors.  If
+    \code{importance=FALSE}, the last measure is still returned.  This
+    measure corresponds to average decrease in node impurity caused by
     splitting on the variables, and is always computed.}
   \item{ntree}{number of trees grown.}
   \item{mtry}{number of predictors sampled for spliting at each node.}
@@ -145,6 +144,18 @@ NULL
   \code{do.trace} trees, the test set error is printed.  Results for the
   test set is returned in the \code{test} component of the resulting
   \code{randomForest} object.
+
+  Here are the definitions of the variable importance measures.  For
+  classification, define the margin of a case as the proportion of votes
+  for the correct class minus the maximum proportion of votes for the
+  other classes.  The first measure is the percent decrease in average
+  margin when the out-of-bag portion of the data are permuted one
+  variable at a time.  The second measure is the total decrease in Gini
+  index in nodes split by the variable, averaged over all trees.  For
+  regression, the first measure is the percent increase in mean squared
+  residuals when the out-of-bag portion of the data are permuted one
+  variable at a time.  The second measure is the total decrease in sum
+  of squares in nodes split by the variable, averaged over all trees.
 }
 
 \references{
@@ -158,7 +169,7 @@ NULL
   \email{matthew\_wiener@merck.com}, based on original Fortran code by
   Leo Breiman and Adele Cutler.}
 
-\seealso{\code{\link{predict.randomForest}}, \code{link{var.imp.plot}}}
+\seealso{\code{\link{predict.randomForest}}, \code{\link{var.imp.plot}}}
 
 \examples{
 ## Classification:
@@ -171,15 +182,13 @@ print(iris.rf)
 print(round(iris.rf$importance, 2))
 ## Do MDS on 1 - proximity:
 require(mva)
-iris.mds <- cmdscale(1 - iris.rf$proximity)
+iris.mds <- cmdscale(1 - iris.rf$proximity, eig=TRUE)
 op <- par(pty="s")
-pairs(cbind(iris[,1:4], iris.mds), cex=0.6, gap=0, 
+pairs(cbind(iris[,1:4], iris.mds$points), cex=0.6, gap=0, 
       col=c("red", "green", "blue")[codes(iris$Species)],
       main="Iris Data: Predictors and MDS of Proximity Based on RandomForest")
 par(op)
-## Examine the stress of MDS:
-print( sum((as.dist(1 - iris.rf$proximity) - dist(iris.mds))^2) /
-       sum((as.dist(1 - iris.rf$proximity)^2)) )
+print(iris.mds$GOF)
 
 ## The `unsupervised' case:
 set.seed(17)

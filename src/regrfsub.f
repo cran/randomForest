@@ -62,19 +62,17 @@ c     initialize for next call to findbestsplit
          nodecnt=nodepop(kbuild)
          sumnode=nodecnt*avnode(kbuild)
          jstat=0
-         
+         decsplit=0.0
          
          call rfindbestsplit(x,xt,ut,jdex,y,mdim,nsample,
      $        ndstart,ndend,msplit,decsplit,ubest,ncase,ndendl,
      $        jstat,v,mtry,ip,sumnode,nodecnt,yl,cat, mind)
-
 c         iprint=0
 c         if(iprint.eq.1) then
 c            write(*,*) kbuild,decsplit,ubest
 c            write(*,*) ndstart,ndendl,ndend
 c            write(*,*) ""
 c         end if
-         
          
          if (jstat.eq.1) then
             nodestatus(kbuild)=-1
@@ -85,8 +83,8 @@ c         end if
             bestcrit(kbuild)=decsplit
          end if
          
-         tgini(msplit)=tgini(msplit)+decsplit
-                  
+         tgini(msplit) = tgini(msplit) + decsplit
+
 c     leftnode no.= ncur+1, rightnode no. = ncur+2.
          
          nodepop(ncur+1)=ndendl-ndstart+1
@@ -159,6 +157,8 @@ c	SUBROUTINE FINDBESTSPLIT
 	
 c       START BIG LOOP
       
+      msplit = 0
+      decsplit = 0.0
       critmax=0
       ubestt = 0.0
 c 200  call zerv(ip,mdim)
@@ -169,7 +169,7 @@ c 200  call zerv(ip,mdim)
 
       nn = mdim
       do mt=1,mtry
-         critvar=0
+         critvar=0.0
  100     call rrand(rnd)
 	 j = int(rnd * nn) + 1
 	 kv = mind(j)
@@ -210,13 +210,15 @@ c	 ip(kv) = 1
          do n=ndstart,ndend
             v(n)=xt(n)
          end do
+
          do n=1,nsample
             ncase(n)=n
          end do
+
          call quicksort (v,ncase,ndstart,ndend,nsample)
          if(v(ndstart).ge.v(ndend)) then
             non=non+1
-            if(non.ge.3*mdim) then
+            if(non .ge. 3*mdim) then
                jstat=1
                return
             end if
@@ -226,20 +228,20 @@ c            goto 100
          
 c     ncase(n)=case number of v nth from bottom
          
-         suml=0
+         suml=0.0
          sumr=sumnode
          npopl=0
          npopr=nodecnt
-         
+	 crit = 0.0
 	 do nsp=ndstart,ndend-1
             d=yl(ncase(nsp))
             suml=suml+d
             sumr=sumr-d
             npopl=npopl+1
             npopr=npopr-1
-            if (v(nsp).lt.v(nsp+1)) then
+            if (v(nsp) .lt. v(nsp+1)) then
                crit=(suml*suml/npopl)+(sumr*sumr/npopr)
-               if (crit.gt.critvar) then
+               if (crit .gt. critvar) then
                   ubestt=(v(nsp)+v(nsp+1))/2.0
                   critvar=crit
                   nbestt=nsp
@@ -262,8 +264,17 @@ c     ncase(n)=case number of v nth from bottom
                end do
             end if
          end if
+
       end do
-      
+      decsplit = critmax - (sumnode*sumnode / nodecnt)      
+c
+c If best split can not be found, set to terminal node and return.
+c
+      if (msplit .eq. 0) then
+	 jstat = 1
+	 return
+      end if
+
       nl=ndstart-1
       do nsp=ndstart,ndend
          if(ut(nsp).le.ubest) then
@@ -302,7 +313,6 @@ c     ncase(n)=case number of v nth from bottom
          ubest=dble(nubest)
       end if
       
-      decsplit=critmax-(sumnode*sumnode/nodecnt)
       return
       end
 

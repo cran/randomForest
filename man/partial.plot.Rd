@@ -48,12 +48,12 @@ used in the plot.
   }
   where \eqn{x} is the variable for which partial dependence is sought,
   and \eqn{x_{iC}} is the other variables in the data.  The summand is
-  the predicted regression function for regression, and predicted
-  probabilities (i.e., fraction of votes) for \code{which.class} for
-  classification.  For classification, Friedman (2001) proposed the
-  logit, but as the estimated probabilities could be 0, for which the
-  logit is undefined, we chose to use just the probabilities for the
-  class of interest instead.
+  the predicted regression function for regression, and logits
+  (i.e., log of fraction of votes) for \code{which.class} for
+  classification:
+\deqn{ f(x) = \log p_k(x) - \frac{1}{K} \sum_{j=1}^K \log p_j(x),}
+where \eqn{K} is the number of classes, \eqn{k} is \code{which.class},
+and \eqn{p_j} is the proportion of votes for class \eqn{j}.
 }
 \note{
   The \code{randomForest} object must contain the \code{forest}

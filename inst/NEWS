@@ -1,3 +1,9 @@
+Changes in 4.3-3:
+
+* Fixed randomForest.formula() so that update() will work.
+
+* Fixed up problem in importance(), which was broken in a couple of ways.
+
 Changes in 4.3-2:
 
 * Fixed a bug that caused crashes in classification if test set data

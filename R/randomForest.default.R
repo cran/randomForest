@@ -253,7 +253,7 @@
         ## deal with the random forest outputs
                 max.nodes <- max(rfout$ndbigtree)
                 treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
-                treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,]
+                treemap <- aperm(treemap, c(2,1,3))[1:max.nodes, , ,drop=FALSE]
             }
             ## Turn the predicted class into a factor like y.
             out.class <- factor(rfout$outcl, levels=1:nclass,
@@ -383,12 +383,19 @@
                     PACKAGE="randomForest")[c(16:27, 35:39)]
         ## Format the forest component, if present.
         if (keep.forest) {
-            rfout$nodestatus <- matrix(rfout$nodestatus, ncol = ntree)
-            rfout$bestvar <- matrix(rfout$bestvar, ncol = ntree)
-            rfout$nodepred <- matrix(rfout$nodepred, ncol = ntree)
-            rfout$xbestsplit <- matrix(rfout$xbestsplit, ncol = ntree)
-            rfout$treemap <- aperm(array(rfout$treemap, dim = c(2, nrnodes, ntree)),
-                                   c(2, 1, 3))
+            max.nodes <- max(rfout$ndbigtree)
+            
+            rfout$nodestatus <-
+              matrix(rfout$nodestatus, ncol = ntree)[1:max.nodes,,drop=FALSE]
+            rfout$bestvar <-
+              matrix(rfout$bestvar, ncol = ntree)[1:max.nodes,,drop=FALSE]
+            rfout$nodepred <-
+              matrix(rfout$nodepred, ncol = ntree)[1:max.nodes,,drop=FALSE]
+            rfout$xbestsplit <-
+              matrix(rfout$xbestsplit, ncol = ntree)[1:max.nodes,,drop=FALSE]
+            rfout$treemap <- aperm(array(rfout$treemap,
+                                         dim = c(2, nrnodes, ntree)),
+                                   c(2, 1, 3))[1:max.nodes, , ,drop=FALSE]
         }
         
         out <- list(call = match.call(),
@@ -412,7 +419,7 @@
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "treemap",
                               "nodepred", "bestvar", "xbestsplit")],
-                      list(ncat = ncat), list(nrnodes=nrnodes),
+                      list(ncat = ncat), list(nrnodes=max.nodes),
                       list(ntree=ntree)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
                     test = if(testdat) {

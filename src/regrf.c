@@ -430,33 +430,13 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest,
     int i, j, k, n, idx, *nodex, *ind;
     double *ytree;
 
-    ytree = (double *) R_alloc(*ntest, sizeof(double));
-    nodex = (int *) R_alloc(*ntest, sizeof(int));
-    ind   = (int *) R_alloc(*ntest, sizeof(int));
-
-    for (i = 0; i < *ntest; ++i) {
-	ytree[i] = 0.0;
-	nodex[i] = 0;
-	ind[i] = 0;
-    }
-
-    if (*iprox) {
-	for (i = 0; i < *ntest; ++i) {
-	    for (j = 0; j < *ntest; ++j) {
-		proximity[i + j * *ntest] = 0.0;
-		proximity[j + i * *ntest] = 0.0;
-	    }
-	}
-    }
+    ytree = (double *) S_alloc(*ntest, sizeof(double));
+    nodex = (int *) S_alloc(*ntest, sizeof(int));
+    ind   = (int *) S_alloc(*ntest, sizeof(int));
+    if (*iprox) zeroDouble(proximity, *ntest * *ntest);
+    if (*keepPred) zeroDouble(allpred, *ntest * *ntree);
 
     for(i = 0; i < *ntree; ++i) {
-
-	if (*keepPred) {
-	    for (j = 0; j < *ntest; ++j) {
-		allpred[j + i * *ntest] = 0.0;
-	    }
-	}
-
 	idx = i * *nrnodes;
 	for (j = 0; j < *ntest; j++) ytree[j] = 0.0;
 	predictRegTree(xts, *ntest, *mdim, ind, treemap + 2*idx, 

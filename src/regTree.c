@@ -353,10 +353,8 @@ void predictRegTree(double *x, int nsample, int mdim, int *doPred,
 		    int ndbigtree, double *ypred, double *split, 
 		    double *nodepred, int *bestvar, int *cat, int *nodex) {
     int icat[32], i, j, k, kt, m, mm, lc;
-    
-    for (i = 0; i < nsample; ++i) {
-	nodex[i] = 0;
-    }
+
+    zeroInt(nodex, nsample);
 
     for (i = 0; i < nsample; ++i) {
 	if (doPred[i] > 0) continue; /* skip to the next case */
@@ -366,7 +364,6 @@ void predictRegTree(double *x, int nsample, int mdim, int *doPred,
 		/* terminal node: assign prediction and move on to next */
 		ypred[i] = nodepred[kt];
 		nodex[i] = kt + 1;
-		/* Rprintf("ypred[%i]=%f\n", i+1, ypred[i]); */
 		break;
 	    }
 	    m = bestvar[kt] - 1;

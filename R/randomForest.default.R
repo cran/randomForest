@@ -78,17 +78,18 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
       classwt <- rep(1, nclass)
       ipi <- 0
     }
-    if(outscale) {
-      outscale <- 1
-      proximity <- TRUE
-      outlier <- rep(0, n)
-    } else {
-      outlier <- 0
-      outscale <- 0
-      outcl <- rep(0, n)
-    }
-    if(proximity) prox <- matrix(0, n, n) else prox <- 0
   } else addclass <- 0  
+  
+  if(outscale) {
+    outscale <- 1
+    proximity <- TRUE
+    outlier <- rep(0, n)
+  } else {
+    outlier <- 0
+    outscale <- 0
+  }
+
+  if(proximity) prox <- matrix(0, n, n) else prox <- 0
   
   if(importance) {
     if(classRF) {
@@ -232,8 +233,10 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 as.integer(importance),
                 as.integer(ncat),
                 as.integer(do.trace),
-                as.double(ypred),
-                as.double(impout),
+                as.integer(proximity),
+                ypred = as.double(ypred),
+                impout = as.double(impout),
+                prox = as.integer(prox),
                 ndbigtree = as.integer(numeric(ntree)),
                 nodestatus = as.integer(numeric(nt * nrnodes)),
                 treemap = as.integer(numeric(nt * 2 * nrnodes)),
@@ -250,13 +253,15 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 labelts = as.integer(labelts),
                 ytestpred = as.double(numeric(ntest)),
                 DUP=FALSE,
-                PACKAGE="randomForest")[c(12:21, 28)]
+                PACKAGE="randomForest")[c(13:23, 30)]
     out <- list(call = match.call(),
                 type = "regression",
-                predicted = structure(rfout[[1]], names=x.row.names),
+                predicted = structure(rfout$ypred, names=x.row.names),
                 mse = rfout$mse,
                 rsq = rfout$rsq,
                 importance = if(importance) structure(rfout[[2]], names=x.col.names) else NULL,
+                proximity = if(proximity) structure(rfout$prox/ntree,
+                  dim = c(n, n), dimnames = list(x.row.names, x.row.names)) else NULL,
                 ntree = ntree,
                 mtry = mtry,
                 forest = if(keep.forest) c(rfout[3:8], list(ncat = ncat),

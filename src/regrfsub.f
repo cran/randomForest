@@ -308,20 +308,25 @@ c     ncase(n)=case number of v nth from bottom
 	
 		
       subroutine rtestreebag(x,nsample,mdim,treemap,nodestatus,
-     1    nrnodes,ndbigtree,ytree,upper,avnode,mbest,cat)
+     1    nrnodes,ndbigtree,ytree,upper,avnode,mbest,cat,nodex)
 	
       implicit double precision (a-h,o-z)	
       double precision x(mdim,nsample),
      1    upper(nrnodes),avnode(nrnodes),ytree(nsample)
 	
       integer treemap(2,nrnodes),nodestatus(nrnodes),
-     1    mbest(nrnodes),cat(mdim),icat(32)
+     1    mbest(nrnodes),cat(mdim),icat(32), nodex(nsample)
+
+	do n = 1, nsample
+	   nodex(n) = 0
+	end do
      	
 	do n=1,nsample
 	   kt=1
 	   do k=1,ndbigtree
 	      if(nodestatus(kt).eq.-1) then
 		 ytree(n)=avnode(kt)
+		 nodex(n)=kt
 		 goto 100
 	      end if
 	      m=mbest(kt)

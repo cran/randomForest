@@ -14,9 +14,9 @@
 
 void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize, 
 	   int *nrnodes, int *jbt, int *mtry, int *imp, int *cat, int *jprint,
-	   double *yptr, double *errimp, int *ndbigtree, int *nodestatus, 
-	   int *treemap, double *avnode, int *mbest, double *upper, 
-	   double *mse, double *rsq, int *keepf, int *testdat,
+	   int *iprox, double *yptr, double *errimp, int *prox, int *ndbigtree,
+	   int *nodestatus, int *treemap, double *avnode, int *mbest, 
+	   double *upper, double *mse, double *rsq, int *keepf, int *testdat,
 	   double *xts, int *nts, double *yts, int *labelts,
 	   double *ypred)
 {
@@ -49,7 +49,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   int i, k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx, ntest;
   
   int *jdex, *nodepop, *npert, *ip, *nperm, *parent, *nout, *jin, *isort, 
-    *nodestart, *ncase, *nbrterm, *jperm, *incl, *mind;
+    *nodestart, *ncase, *nbrterm, *jperm, *incl, *mind, *nodex, *nodexts;
   
   nimp = (*imp == 1) ? (*imp * *nsample) : 1;
   mimp = (*imp == 1) ? (*imp * *mdim) : 1;
@@ -90,7 +90,10 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   jperm      = (int *) R_alloc(*jbt, sizeof(int));
   incl       = (int *) R_alloc(*mdim, sizeof(int));
   mind       = (int *) R_alloc(*mdim, sizeof(int)); 
+  nodex      = (int *) R_alloc(*nsample, sizeof(double));
+  if(*testdat == 1)  nodexts = (int *) R_alloc(ntest, sizeof(double));
 
+    
   averrb = 0.0;
 	
   avy = 0.0;
@@ -168,7 +171,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     
     F77_CALL(rtestreebag)(x, nsample, mdim, treemap + 2*idx, nodestatus + idx, 
 			 nrnodes, ndbigtree + jb, ytr, upper + idx, 
-			 avnode + idx, mbest + idx, cat);
+			 avnode + idx, mbest + idx, cat, nodex);
     
     errb = 0.0;
     jout = 0;
@@ -188,7 +191,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
       F77_CALL(rtestreebag)(xts, &ntest, mdim, treemap + 2*idx, 
 			    nodestatus + idx, nrnodes, ndbigtree + jb,
 			    ytree, upper + idx, avnode + idx, 
-			    mbest + idx, cat);
+			    mbest + idx, cat, nodexts);
       errts = 0.0;
       for(n = 0; n < ntest; ++n) {
 	ypred[n] = (jb * ypred[n] + ytree[n]) / (jb + 1);
@@ -200,9 +203,9 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 
     if ((jb + 1) % *jprint == 0) {
       Rprintf("%d: ", jb + 1);
-      if(*labelts == 1) Rprintf("MSE(Test)=%f  %%Var(y)=%5.2f  ", 
+      if(*labelts == 1) Rprintf("MSE(Test)=%f  %%Var(y)=%7.2f  ", 
 				errts, 100.0 * errts / varyts);
-      Rprintf("MSE(OOB)=%f  %%Var(y)=%5.2f\n", errb, 100*errb/vary);
+      Rprintf("MSE(OOB)=%f  %%Var(y)=%7.2f\n", errb, 100*errb/vary);
     }
 	   
     if(*imp == 1) { 
@@ -212,7 +215,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	F77_CALL(rtestreebag)(x, nsample, mdim, treemap + 2*idx, 
 			     nodestatus + idx, nrnodes, 
 			     ndbigtree + jb, ytr, upper + idx, avnode + idx, 
-			     mbest + idx, cat);
+			     mbest + idx, cat, nodex);
 	for (n = 0; n < *nsample; ++n) {
 	  x[mr + n * *mdim] = xt[n];
 	}
@@ -229,6 +232,15 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	errimp[mr] = em / *nsample;
       }
     }
+    /*  DO PROXIMITIES */
+    if(*iprox == 1) {
+      for(n = 0; n < *nsample; n++) {
+	for(k = 0; k < *nsample; k++) {
+	  if(nodex[k] == nodex[n]) prox[k * *nsample + n] ++;
+	}
+      }
+    }
+
   }
   PutRNGstate();
 
@@ -253,17 +265,18 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree,
 		int *ndbigtree, int *treemap, int *nodestatus, int *nrnodes, 
 		double *upper, double *avnodes, int *mbest, int *cat) {
   
-  int i, j, idx;
+  int i, j, idx, *nodex;
   double *ytree;
 
   ytree = (double *) R_alloc(*ntest, sizeof(double));
+  nodex = (int *) R_alloc(*ntest, sizeof(double));
 
   for(i = 0; i < *ntree; ++i) {
     idx = i * *nrnodes;
     for(j = 0; j < *ntest; j++) ytree[j] = 0.0;
     F77_CALL(rtestreebag)(xts, ntest, mdim, treemap + 2*idx, nodestatus + idx,
 			 nrnodes, ndbigtree + i, ytree, upper + idx, 
-			 avnodes + idx, mbest + idx, cat);
+			 avnodes + idx, mbest + idx, cat, nodex);
     for(j = 0; j < *ntest; ++j) ypred[j] += ytree[j];
   }
   for(i = 0; i < *ntest; ++i) ypred[i] /= *ntree;

@@ -67,4 +67,5 @@ extern void F77_NAME(rbuildtree)(double *xb, double *yb, double *yl, int *mdim,
 extern void F77_NAME(rtestreebag)(double *x, int *nsample, int *mdim, 
 				 int *treemap, int *nodestatus, int *nrnodes,
 				 int *ndbigtree, double *ytr, double *upper, 
-				 double *avnode, int *mbest, int *cat);
+				 double *avnode, int *mbest, int *cat,
+				  int *nodex);

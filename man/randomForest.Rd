@@ -57,7 +57,7 @@
     and regression.}
   \item{importance}{Should importance of predictors be assessed? }
   \item{proximity}{Should proximity measure among the rows be
-    calculated?  Ignored for regression.}
+    calculated?}
   \item{outscale}{Should outlyingness of rows be assessed?  Ignored for
     regression.}
   \item{norm.votes}{If \code{TRUE} (default), the final result of votes
@@ -83,6 +83,7 @@
 \value{
   An object of class \code{randomForest}, which is a list with the
   following components:
+
   \item{call}{the original call to \code{randomForest}}
   \item{type}{one of \code{regression}, \code{classification}, or
     {unsupervised}.}
@@ -98,35 +99,31 @@
   \item{forest}{(a list that contains the entire forest; \code{NULL} if 
     \code{randomForest} is run in unsupervised mode or if
     \code{keep.forest=FALSE}.} 
-  For classification problem, the following are also included:
-  \item{err.rate}{final error rate of the prediction on the input data.}
-  \item{confusion}{the confusion matrix of the prediction.}
-  \item{votes}{a matrix with one row for each input data point and one
-    column for each class, giving the fraction or number of `votes' from
-    the random forest.}
-  \item{proximity}{if \code{proximity=TRUE} when \code{randomForest} is
-    called, a matrix of proximity measures among the input (based on the
-    frequency that pairs of data points are in the same terminal
-    nodes).}
-  \item{outlier}{if \code{outscale=TRUE} when \code{randomForest} is
-    called, a vector indicating how outlying the data points are (based
-    on the proximity measures).}
-  For regression problem, the following are included:
-  \item{mse}{mean square error: sum of squared residuals divided by
-    \code{n}.}
-  \item{rsq}{``pseudo R-squared'': 1 - \code{mse} / Var(y).}
-  If test set is given (through the \code{xtest} or additionally
-  \code{ytest} arguments), then there is also a \code{test} component,
-  which is a list with the following components:
-  \item{predicted}{predicted classes/values for the test set.}
-  \item{confusion}{(for classification) if \code{ytest} is given,
-  confusion matrix for the test set.}
-  \item{votes}{(for classification) the vote counts for the test set.}
-  \item{mse}{(for regression) if \code{ytest} is given, the test set
-  MSE.}
-  \item{rsq}{(for regression) if \code{ytest} is given, the test set
-  ``pseudo R-squared'' (1 - MSE/var(y), where var(y) is the variance of
-  \code{ytest} using n as divisor).}
+  \item{err.rate}{(classification only) final error rate of the
+    prediction on the input data.} 
+  \item{confusion}{(classification only) the confusion matrix of the
+    prediction.}
+  \item{votes}{(classification only) a matrix with one row for each
+    input data point and one column for each class, giving the fraction
+    or number of `votes' from the random forest.}
+  \item{proximity}{if \code{proximity=TRUE} when
+    \code{randomForest} is called, a matrix of proximity measures among
+    the input (based on the frequency that pairs of data points are in
+    the same terminal nodes).}
+  \item{outlier}{(classification only) if \code{outscale=TRUE} when
+    \code{randomForest} is called, a vector indicating how outlying the
+    data points are (based on the proximity measures).}
+
+  \item{mse}{(regression only) mean square error: sum of squared
+    residuals divided by \code{n}.}
+  \item{rsq}{(regression only) ``pseudo R-squared'': 1 - \code{mse} /
+    Var(y).} 
+  \item{test}{if test set is given (through the \code{xtest} or additionally
+  \code{ytest} arguments), this component is a list which contains the
+  corresponding \code{predicted}, \code{confusion}, \code{votes} (for
+  classification) or \code{predicted}, \code{mse} and \code{rsq} (for
+  regression) for the test set.}
+
   Note:  The \code{forest} structure is slightly different between
   classification and regression.
 }

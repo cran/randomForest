@@ -1,0 +1,2 @@
+predict.randomForest     predict method for random forest objects
+randomForest             Breiman's Random Forest classifier

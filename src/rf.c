@@ -29,7 +29,7 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
          int *counttr, int *out, double *errtr, int *jest, double *cutoff);
 
 void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
-		  int nclass, int nvote, double *errts, double *pid, 
+		  int nclass, int nvote, double *errts,  
 		  int labelts, int *nclts, double *cutoff);
 
 /*  Define the R RNG for use from Fortran. */
@@ -37,11 +37,11 @@ void F77_SUB(rrand)(double *r) { *r = unif_rand(); }
 
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
 	     int *sampsize, int *Options, int *ntree, int *nvar,
-	     int *ipi, double *pi, double *cut, int *nodesize, 
+	     int *ipi, double *classwt, double *cut, int *nodesize, 
 	     int *outcl, int *counttr, double *prox, 
 	     double *imprt, double *impsd, double *impmat, int *nrnodes, 
 	     int *ndbigtree, int *nodestatus, int *bestvar, int *treemap, 
-	     int *nodeclass, double *xbestsplit, double *pid, double *errtr, 
+	     int *nodeclass, double *xbestsplit, double *errtr, 
 	     int *testdat, double *xts, int *clts, int *nts, double *countts,
 	     int *outclts, int *labelts, double *proxts, double *errts) {
     /******************************************************************
@@ -91,14 +91,14 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
     int *out, *bestsplitnext, *bestsplit, *nodepop, *jin, *nodex,
 	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
-	*jtr, *nc, *idmove, *jvr,
+	*jtr, *classFreq, *idmove, *jvr,
 	*at, *a, *b, *mind, *nind, *jts, *oobpair;
     int **class_idx, *class_size, last, ktmp, anyEmpty, ntry;
 
     double av=0.0;
     
     double *tgini, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
-        *tp, *wc, *wr, *wtt, *iw;
+        *tp, *wc, *wr;
 
     addClass = Options[0];
     imp      = Options[1];
@@ -132,8 +132,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     tx =         (double *) S_alloc(nsample, sizeof(double));
     win =        (double *) S_alloc(nsample, sizeof(double));
     tp =         (double *) S_alloc(nsample, sizeof(double));
-    wtt =        (double *) S_alloc(nsample, sizeof(double));
-    iw =         (double *) S_alloc(nsample, sizeof(double));
 
     out =           (int *) S_alloc(nsample, sizeof(int));
     bestsplitnext = (int *) S_alloc(*nrnodes, sizeof(int));
@@ -149,7 +147,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     varUsed =       (int *) S_alloc(mdim, sizeof(int)); 
     jtr =           (int *) S_alloc(nsample, sizeof(int));
     jvr =           (int *) S_alloc(nsample, sizeof(int));
-    nc =            (int *) S_alloc(nclass, sizeof(int));
+    classFreq =     (int *) S_alloc(nclass, sizeof(int));
     jts =           (int *) S_alloc(ntest, sizeof(int));
     idmove =        (int *) S_alloc(nsample, sizeof(int));
     at =            (int *) S_alloc(mdim*nsample, sizeof(int));
@@ -163,7 +161,11 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	oobpair = (int *) S_alloc(near*near, sizeof(int));
     }
 
-    prepare(cl, nsample, nclass, *ipi, pi, pid, nc, wtt);    
+    /* Count number of cases in each class. */
+    zeroInt(classFreq, nclass);
+    for (n = 0; n < nsample; ++n) classFreq[cl[n] - 1] ++;
+    /* Normalize class weights. */
+    normClassWt(cl, nsample, nclass, *ipi, classwt, classFreq);
 
     if (stratify) {
         /* Create the array of pointers, each pointing to a vector 
@@ -171,7 +173,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
         class_size = (int  *) S_alloc(nclass, sizeof(int));
 	class_idx =  (int **) S_alloc(nclass, sizeof(int *));
 	for (n = 0; n < nclass; ++n) {
-	    class_idx[n] = (int *) S_alloc(nc[n], sizeof(int));
+	    class_idx[n] = (int *) S_alloc(classFreq[n], sizeof(int));
 	}
 	for (n = 0; n < nsample; ++n) {
 	    class_size[cl[n] - 1] ++;
@@ -207,7 +209,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
     R_CheckUserInterrupt();
 
-    /*   START RUN   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
+    /* Starting the main loop over number of trees. */
     GetRNGstate(); 
     if (trace <= Ntree) {
 	/* Print header for running output. */
@@ -239,10 +241,10 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		if (replace) {
 		    for (n = 0; n < nclass; ++n) {
 			for (j = 0; j < sampsize[n]; ++j) {
-			    ktmp = (int) (unif_rand() * nc[n]);
+			    ktmp = (int) (unif_rand() * classFreq[n]);
 			    k = class_idx[n][ktmp];
-			    tclasspop[cl[k] - 1] += wtt[k];
-			    win[k] += wtt[k];
+			    tclasspop[cl[k] - 1] += classwt[cl[k] - 1];
+			    win[k] += classwt[cl[k] - 1];
 			    jin[k] = 1;
 			}
 		    }
@@ -251,11 +253,11 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
   		    zeroInt(class_size, nclass);
 		    for (j = 0; j < nsample; ++j) {
 			class_size[cl[j] - 1] ++;
-			class_idx[cl[j]-1][class_size[cl[j]-1] - 1] = j;
+			class_idx[cl[j] - 1][class_size[cl[j] - 1] - 1] = j;
 		    }
 		    /* sampling without replacement */
 		    for (n = 0; n < nclass; ++n) {
-			last = nc[n] - 1;
+			last = classFreq[n] - 1;
 			for (j = 0; j < sampsize[n]; ++j) {
 			    ktmp = (int) (unif_rand() * (last+1));
 			    k = class_idx[n][ktmp];
@@ -264,8 +266,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
                                class_idx[n][last] = class_idx[n][ktmp];
                                class_idx[n][ktmp] = tmp; */
 			    last--;
-			    tclasspop[cl[k] - 1] += wtt[k];
-			    win[k] += wtt[k];
+			    tclasspop[cl[k] - 1] += classwt[cl[k]-1];
+			    win[k] += classwt[cl[k]-1];
 			    jin[k] = 1;
 			}
 		    }
@@ -277,8 +279,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		    if (replace) {
 			for (n = 0; n < *sampsize; ++n) {
 			    k = unif_rand() * nsample;      
-			    tclasspop[cl[k] - 1] += wtt[k];
-			    win[k] += wtt[k];
+			    tclasspop[cl[k] - 1] += classwt[cl[k]-1];
+			    win[k] += classwt[cl[k]-1];
 			    jin[k] = 1;
 			}
 		    } else {
@@ -291,8 +293,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			    /* nind[ktmp] = nind[last];
                                nind[last] = k; */
 			    last--;
-			    tclasspop[cl[k] - 1] += wtt[k];
-			    win[k] += wtt[k];
+			    tclasspop[cl[k] - 1] += classwt[cl[k]-1];
+			    win[k] += classwt[cl[k]-1];
 			    jin[k] = 1;
 			}
 		    }
@@ -333,7 +335,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
                              nodeclass + offset, ndbigtree[jb], 
                              cat, nclass, jts, nodexts, *maxcat);
 	    TestSetError(countts, jts, clts, outclts, ntest, nclass, jb+1,
-			 errts + jb*(nclass+1), pid, *labelts, nclts, cut);
+			 errts + jb*(nclass+1), *labelts, nclts, cut);
 	}
     
 	/*  Get out-of-bag predictions and errors. */
@@ -526,7 +528,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
                  int *nodestatus, int *cat, int *nodeclass, int *jts, 
                  int *jet, int *bestvar, int *node, int *treeSize, 
                  int *keepPred, int *prox, double *proxMat, int *nodes) {
-    int j, jb, n, n1, n2, idxNodes, offset1, offset2, *junk;
+    int j, n, n1, n2, idxNodes, offset1, offset2, *junk;
     double crit, cmax;
 
     zeroDouble(countts, *nclass * *ntest);
@@ -631,7 +633,7 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 
 
 void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
-		  int nclass, int nvote, double *errts, double *pid, 
+		  int nclass, int nvote, double *errts,
 		  int labelts, int *nclts, double *cutoff) {
     int j, n;
     double cmax, crit;

@@ -33,24 +33,21 @@ void createClass(double *x, int realN, int totalN, int mdim) {
     }
 }
 
-void prepare(int *cl, const int nsample, const int nclass, const int ipi, 
-	     double *pi, double *pid, int *nc, double *wtt) {
-    int i, j;
-    double sump=0.0;
+void normClassWt(int *cl, const int nsample, const int nclass, 
+                 const int useWt, double *classwt, int *classFreq) {
+    int i;
+    double sumwt = 0.0;
     
-    zeroInt(nc, nclass);
-    for (i = 0; i < nsample; ++i) nc[cl[i] - 1] ++;
-
-    if (ipi == 0) {
-       for (j = 0; j < nclass; ++j) pi[j] = ((double) nc[j]) / nsample;
+    if (useWt) {
+        /* Normalize user-supplied weights so they sum to one. */
+        for (i = 0; i < nclass; ++i) sumwt += classwt[i];
+        for (i = 0; i < nclass; ++i) classwt[i] /= sumwt;
+    } else {
+       for (i = 0; i < nclass; ++i) classwt[i] = 1.0 / nclass;
     }   
-    for (i = 0; i < nclass; ++i) sump += pi[i];
-    for (i = 0; i < nclass; ++i) pi[i] = pi[i] / sump;
-
     for (i = 0; i < nclass; ++i) {
-        pid[i] = nc[i] ? pi[i] * nsample / nc[i] : 0.0;
+        classwt[i] = classFreq[i] ? classwt[i] * nsample / classFreq[i] : 0.0;
     }
-    for (j = 0; j < nsample; ++j) wtt[j] = pid[cl[i]-1];
 }
 
 void makeA(double *x, const int mdim, const int nsample, int *cat, int *a, 

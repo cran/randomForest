@@ -13,16 +13,16 @@
 }
 \usage{
 \method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
-\method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL,
-          ntree=500, mtry=ifelse(!is.null(y) && !is.factor(y),
-               max(floor(ncol(x)/3), 1), floor(sqrt(ncol(x)))),
-          replace=TRUE, classwt=NULL, cutoff,
-          sampsize=if(replace) nrow(x) else ceiling(.632*nrow(x)),
-          nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
-          importance=FALSE, localImp=FALSE, nPerm=1,
-          proximity=FALSE, oob.prox=proximity,
-          norm.votes=TRUE, do.trace=FALSE,
-          keep.forest=is.null(xtest), corr.bias=FALSE, ...) 
+\method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
+             mtry=if (!is.null(y) && !is.factor(y)) 
+             max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
+             replace=TRUE, classwt=NULL, cutoff,
+             sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
+             nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
+             importance=FALSE, localImp=FALSE, nPerm=1,
+             proximity=FALSE, oob.prox=proximity,
+             norm.votes=TRUE, do.trace=FALSE,
+             keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE, ...)
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -47,7 +47,8 @@
     least a few times. }
   \item{mtry}{Number of variables randomly sampled as candidates at each
     split.  Note that the default values are different for
-    classification (1) and regression (5)}
+    classification (sqrt(p) where p is number of variables in \code{x})
+    and regression (p/3)}
   \item{replace}{Should sampling of cases be done with or without
     replacement?} 
   \item{classwt}{Priors of the classes.  Need not add up to one.
@@ -63,8 +64,8 @@
     indicate the numbers to be drawn from the classes.}
   \item{nodesize}{Minimum size of terminal nodes.  Setting this number
     larger causes smaller trees to be grown (and thus take less time).
-    Note that the default values are different for classification
-    and regression.}
+    Note that the default values are different for classification (1)
+    and regression (5).}
   \item{importance}{Should importance of predictors be assessed? }
   \item{localImp}{Should casewise importance measure be computed?
     (Setting this to \code{TRUE} will override \code{importance}.) }

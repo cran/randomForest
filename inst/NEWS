@@ -1,3 +1,28 @@
+TODO (not promised):
+
+* Implement the new scheme of handling classwt in classification.
+
+* Allow categorical predictors with more than 32 categories.
+
+* Use more compact storage of proximity matrix.
+
+* Allow case weights by using the weights in sampling?
+
+========================================================================
+
+Changes in 4.5-2:
+
+* New argument `cutoff' added to predict.randomForest().  The usage is 
+  analogous to the same argument to randomForest().
+
+* Added `palette' and `pch' arguments to MDSplot() to allow more user control.
+
+* In randomForest(), allow the forest to be returned in `unsupervised' mode.
+
+* Fixed some inaccuracies in help pages.
+
+* Fixed the way version number of the package is found at start-up.
+
 Changes in 4.5-1:
 
 * In classification, split on a categorical predictor with more than 10

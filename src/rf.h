@@ -18,7 +18,7 @@
 #define isBitOn(x,pos) (((x) & (1 << (pos))) > 0)
 /* swap two integers */
 #define swapInt(a, b) ((a ^= b), (b ^= a), (a ^= b))
-
+/*
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
 	int *sampsize, int *Options, int *ntree, int *nvar,
 	int *ipi, double *pi, double *cut, int *nodesize, 
@@ -28,6 +28,10 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	double *xbestsplit, double *pid, double *errtr, 
 	int *testdat, double *xts, int *clts, int *nts, double *countts,
 	int *outclts, int *labelts, double *proxts, double *errts);
+*/
+
+void normClassWt(int *cl, const int nsample, const int nclass, 
+                 const int useWt, double *classwt, int *classFreq);
 
 void classForest(int *mdim, int *ntest, int *nclass, int *maxcat, 
                  int *nrnodes, int *jbt, double *xts, double *xbestsplit, 

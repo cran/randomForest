@@ -1,23 +1,21 @@
 "randomForest.default" <-
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
-             mtry=ifelse(!is.null(y) && !is.factor(y),
-             max(floor(ncol(x)/3), 1), 
-             floor(sqrt(ncol(x)))), replace=TRUE, classwt=NULL, cutoff,
+             mtry=if (!is.null(y) && !is.factor(y)) 
+             max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
+             replace=TRUE, classwt=NULL, cutoff,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity=FALSE, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
-             keep.forest=is.null(xtest), corr.bias=FALSE, ...)
-{
+             keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE, ...) {
     addclass <- is.null(y)
     classRF <- addclass || is.factor(y)
     if (!classRF && length(unique(y)) <= 5) {
         warning("The response has five or fewer unique values.  Are you sure you want to do regression?")
     }
-    if (classRF && !addclass && length(unique(y)) < 2) {
+    if (classRF && !addclass && length(unique(y)) < 2) 
         stop("Need at least two classes to do classification.")
-    }
     n <- nrow(x)
     p <- ncol(x)
     if (n == 0) stop("data (x) has 0 rows")
@@ -34,11 +32,8 @@
         ntest <- nrow(xtest)
         xts.row.names <- rownames(xtest)
     }
-    
-    if(mtry > p) {
-        mtry <- p
-        warning("mtry can not be larger than number of predictors.  Reset to equal to number of predictors")
-    }
+
+    ## Make sure mtry is in reasonable range.
     mtry <- max(1, min(p, round(mtry)))
     if (!is.null(y)) {
         if (length(y) != n) stop("length of response must be the same as predictors")
@@ -47,9 +42,9 @@
         if (!addclass) addclass <- TRUE
         y <- factor(c(rep(1, n), rep(2, n)))
         x <- rbind(x, x)
-        keep.forest <- FALSE
     }
-  
+
+    ## Check for NAs.
     if (any(is.na(x))) stop("NA not permitted in predictors")
     if (testdat && any(is.na(xtest))) stop("NA not permitted in xtest")
     if (any(is.na(y))) stop("NA not permitted in response")
@@ -78,6 +73,8 @@
     
     if (classRF) {
         nclass <- length(levels(y))
+        ## Check for empty classes:
+        if (any(table(y) == 0)) stop("Can't have empty classes in y.")
         if (!is.null(ytest)) {
             if (!is.factor(ytest)) stop("ytest must be a factor")
             if (!all(levels(y) == levels(ytest)))
@@ -102,8 +99,8 @@
                 stop("length of classwt not equal to number of classes")
             ## If classwt has names, match to class labels.
             if (!is.null(names(classwt))) {
-                if (!all(names(cutoff) %in% levels(y))) {
-                    stop("Wrong name(s) for cutoff")
+                if (!all(names(classwt) %in% levels(y))) {
+                    stop("Wrong name(s) for classwt")
                 }
                 classwt <- classwt[levels(y)]
             }
@@ -118,7 +115,7 @@
     if (addclass) proximity <- TRUE
     if (proximity) {
         prox <- matrix(0.0, n, n)
-        proxts <- if (testdat) matrix(ntest, ntest + n) else double(1)
+        proxts <- if (testdat) matrix(0, ntest, ntest + n) else double(1)
     } else {
         prox <- proxts <- double(1)
     }
@@ -226,7 +223,6 @@
                     treemap = integer(nt * 2 * nrnodes),
                     nodepred = integer(nt * nrnodes),
                     xbestsplit = double(nt * nrnodes),
-                    pid = double(max(2, nclass)),
                     errtr = double((nclass+1) * ntree),
                     testdat = as.integer(testdat),
                     xts = as.double(xtest),
@@ -305,17 +301,17 @@
                     dimnames = list(x.row.names, x.row.names)) else NULL,
                     ntree = ntree,
                     mtry = mtry,
-                    forest = if (addclass || !keep.forest) NULL else {
+                    forest = if (!keep.forest) NULL else {
                         list(ndbigtree = rfout$ndbigtree, 
                              nodestatus = matrix(rfout$nodestatus,
-                             nc = ntree)[1:max.nodes,],
-                             bestvar = matrix(rfout$bestvar, nc = ntree)[1:max.nodes,],
+                             nc = ntree)[1:max.nodes,, drop=FALSE],
+                             bestvar = matrix(rfout$bestvar, nc = ntree)[1:max.nodes,, drop=FALSE],
                              treemap = treemap,
                              nodepred = matrix(rfout$nodepred,
                              nc = ntree)[1:max.nodes,],
                              xbestsplit = matrix(rfout$xbestsplit,
                              nc = ntree)[1:max.nodes,],
-                             pid = rfout$pid, cutoff = cutoff, ncat = ncat, maxcat = maxcat, 
+                             pid = rfout$classwt, cutoff = cutoff, ncat = ncat, maxcat = maxcat, 
                              nrnodes = max.nodes, ntree = ntree, nclass = nclass)
                     },
                     y = if (addclass) NULL else y,

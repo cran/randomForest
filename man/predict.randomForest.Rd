@@ -6,7 +6,8 @@
 }
 \usage{
 \method{predict}{randomForest}(object, newdata, type="response",
-  norm.votes=TRUE, predict.all=FALSE, proximity=FALSE, nodes=FALSE, ...)
+  norm.votes=TRUE, predict.all=FALSE, proximity=FALSE, nodes=FALSE,
+  cutoff, ...)
 }
 \arguments{
   \item{object}{an object of class \code{randomForest}, as that
@@ -26,6 +27,12 @@
   \item{nodes}{Should the terminal node indicators (an n by ntree
     matrix) be return?  If so, it is in the ``nodes'' attribute of the
     returned object.}
+  \item{cutoff}{(Classification only)  A vector of length equal to
+    number of classes.  The `winning' class for an observation is the
+    one with the maximum ratio of proportion of votes to cutoff.
+    Default is taken from the \code{forest$cutoff} component of
+    \code{object} (i.e., the setting used when running
+    \code{\link{randomForest}}).} 
   \item{...}{not used currently.}
 }
 

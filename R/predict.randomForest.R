@@ -1,6 +1,6 @@
 "predict.randomForest" <-
     function (object, newdata, type = "response", norm.votes = TRUE,
-              predict.all=FALSE, proximity = FALSE, nodes=FALSE, ...) 
+              predict.all=FALSE, proximity = FALSE, nodes=FALSE, cutoff, ...) 
 {
     if (!inherits(object, "randomForest")) 
         stop("object not of class randomForest")
@@ -31,6 +31,20 @@
         } else {
             if (proximity) return(list(pred = object$votes, proximity = object$proximity))
             else return(object$votes)
+        }
+    }
+    if (missing(cutoff)) {
+        cutoff <- object$forest$cutoff
+    } else {
+        if (sum(cutoff) > 1 || sum(cutoff) < 0 || !all(cutoff > 0) ||
+            length(cutoff) != length(object$classes)) {
+            stop("Incorrect cutoff specified.")
+        }
+        if (!is.null(names(cutoff))) {
+            if (!all(names(cutoff) %in% object$classes)) {
+                stop("Wrong name(s) for cutoff")
+            }
+            cutoff <- cutoff[object$classes]
         }
     }
 
@@ -149,7 +163,7 @@
                  xts = as.double(x),
                  xbestsplit = as.double(object$forest$xbestsplit), 
                  pid = as.double(object$forest$pid),
-                 cutoff = as.double(object$forest$cutoff),
+                 cutoff = as.double(cutoff),
                  countts = as.double(countts),
                  treemap = as.integer(aperm(object$forest$treemap, 
                  c(2, 1, 3))),

@@ -9,6 +9,16 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-6:
+
+* Fixed a bug introduced in 4.5-2 that used the wrong default class weights.
+
+Changes in 4.5-5:
+
+* Fixed a couple of bugs in C/Fortran code for splitting on categorical
+  variables in classification trees, which lead to negative or Inf 
+  decrease in the Gini index.
+
 Changes in 4.5-4:
 
 * Fixed a bug in regression when there are categorical predictors.  (The 

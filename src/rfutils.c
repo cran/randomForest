@@ -43,7 +43,9 @@ void normClassWt(int *cl, const int nsample, const int nclass,
         for (i = 0; i < nclass; ++i) sumwt += classwt[i];
         for (i = 0; i < nclass; ++i) classwt[i] /= sumwt;
     } else {
-       for (i = 0; i < nclass; ++i) classwt[i] = 1.0 / nclass;
+        for (i = 0; i < nclass; ++i) {
+            classwt[i] = ((double) classFreq[i]) / nsample;
+        }
     }   
     for (i = 0; i < nclass; ++i) {
         classwt[i] = classFreq[i] ? classwt[i] * nsample / classFreq[i] : 0.0;

@@ -78,16 +78,17 @@ c     initialize for next call to findbestsplit
          jstat = 0
 
          call findbestsplit(a,b,cl,mdim,nsample,nclass,cat,maxcat,
-     1        ndstart, ndend,tclasspop,tclasscat,msplit,decsplit,
+     1        ndstart, ndend,tclasspop,tclasscat,msplit, decsplit,
      1        nbest,ncase, jstat,jin,mtry,win,wr,wc,wl,mred,kbuild,
      1        mind)
-         if (jstat .eq. 1) then
+         if (jstat .eq. -1) then
             nodestatus(kbuild) = -1
             goto 30 
          else
             bestvar(kbuild) = msplit
             iv(msplit) = 1
-            tgini(msplit) = decsplit + tgini(msplit)
+            if (decsplit < 0.0) decsplit = 0.0
+            tgini(msplit) = tgini(msplit) + decsplit
             if (cat(msplit) .eq. 1) then
                bestsplit(kbuild) = a(msplit,nbest)
                bestsplitnext(kbuild) = a(msplit,nbest+1)
@@ -201,7 +202,7 @@ c     compute initial values of numerator and denominator of Gini
       jstat = 0
       
 c     start main loop through variables to find best split
-      critmax = -1.0e20      
+      critmax = -1.0e25
       do k = 1, mred
          mind(k) = k
       end do
@@ -236,6 +237,7 @@ c     Split on a numerical predictor.
                wl(k) = wl(k) + u
                wr(k) = wr(k) - u               
                if (b(mvar, nc) .lt. b(mvar, a(mvar, nsp + 1))) then
+c     If neither nodes is empty, check the split.
                   if (dmin1(rrd, rld) .gt. 1.0e-5) then
                      crit = (rln / rld) + (rrn / rrd)
                      if (crit .gt. critmax) then
@@ -272,23 +274,23 @@ c     Split on a categorical predictor.  Compute the decrease in impurity.
                dn(i) = su
                if(su .gt. 0) nnz = nnz + 1
             end do
-            if (nnz .eq. 1) then
-               critmax = -1.0e25
-            else
-               nhit=0
+            nhit = 0
+            if (nnz .gt. 1) then
                if (nclass .eq. 2 .and. lcat .gt. ncmax) then
                   call catmaxb(pdo, tclasscat, tclasspop, nclass,
-     &                 lcat, nbest, critmax, nhit, maxcat, dn)
+     &                 lcat, nbest, critmax, nhit, dn)
                else
                   call catmax(pdo, tclasscat, tclasspop, nclass, lcat,
      &                 nbest, critmax, nhit, maxcat, ncmax, ncsplit)
                end if
                if (nhit .eq. 1) msplit = mvar
+c            else
+c               critmax = -1.0e25
             end if
          end if
       end do
+      if (critmax .lt. -1.0e10 .or. msplit .eq. 0) jstat = -1
       decsplit = critmax - crit0
-      if (critmax .lt. -1.0e10 .or. msplit .eq. 0) jstat = 1
       return
       end
 

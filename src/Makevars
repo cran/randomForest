@@ -1,3 +1,0 @@
-CFLAG=--pedantic
-## PKG_LIBS=-lefence
-

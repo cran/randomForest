@@ -1,3 +1,40 @@
+Changes in 4.5-1:
+
+* In classification, split on a categorical predictor with more than 10
+  categories is made more efficient:  For two-class problems, the 
+  heuristic presented in Section 4.2.2 of the CART book is used.  
+  Otherwise 512 randomly sampled (not necessarily unique) splits are 
+  tested, instead of all possible splits.
+
+* New function classCenter() has been added.  It takes a proximity matrix and
+  a vector of class labels and compute one prototype per class.
+
+* Added the `Automobile' data from UCI Machine Learning Repository.
+
+* Fixed partialPlot() for categorical predictors (wrong barplot was produced).
+
+* Some re-organization and clean-up of internal C/Fortran code is on-going.
+
+Changes in 4.4-3:
+
+* Added the nPerm argument to randomForest(), which controls the number
+  of times the out-of-bag part of each variable is permuted, per tree,
+  for computing variable importance.  (Currently only implemented for
+  regression.)
+
+* When computing the out-of-bag MSE for each tree for assessing variable
+  importance in regression, the total number of cases was wrongly used as 
+  the divisor.
+
+* Fixed the default and formula methods of randomForest(), so that the
+  `call' component of the returned object calls the generic.
+
+* The `% increase in MSE' measure of variable importance in regression was
+  not being computed correctly (should divide sum of squares by number of
+  out-of-bag samples rather than total number of samples, for each tree).
+
+* Fixed a bug in na.roughfix.default() that gave warning with matrix input.
+
 Changes in 4.4-2:
 
 * Fixed two memory leaks in the regression code (introduced in 4.3-1).

@@ -83,18 +83,17 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
      *  prox:     matrix of proximity (if iprox=1)
      ******************************************************************/
 
-    int nsample0, mdim, nclass, addClass, jbt, mtry, ntest, nsample, ndsize,
+    int nsample0, mdim, nclass, addClass, mtry, ntest, nsample, ndsize,
         mimp, nimp, near, nuse, noutall, nrightall, nrightimpall;
-    int jb, j, n, m, k, arrayindex, imp, localImp, iprox, 
+    int jb, j, n, m, k, offset, imp, localImp, iprox, 
 	oobprox, keepf, replace, stratify, trace, *nright, 
-	*nrightimp, *nout, *nclts;
+	*nrightimp, *nout, *nclts, Ntree;
 
-    int *out, *bestsplitnext, *bestsplit, *zeroes,
-	*nodepop, *parent, *jin, *nodex,
+    int *out, *bestsplitnext, *bestsplit, *nodepop, *jin, *nodex,
 	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
 	*jtr, *nc, *idmove, *jvr,
-	*at, *a, *b, *cbestsplit, *mind, *nind, *jts, *oobpair;
-    int **class_idx, *class_size, last, tmp, ktmp, anyEmpty, ntry;
+	*at, *a, *b, *mind, *nind, *jts, *oobpair;
+    int **class_idx, *class_size, last, ktmp, anyEmpty, ntry;
 
     double av=0.0;
     
@@ -114,15 +113,14 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     nsample0 = dimx[1];
     nclass   = (*ncl==1) ? 2 : *ncl;
     ndsize   = *nodesize;
-    jbt      = *ntree;
+    Ntree    = *ntree;
     mtry     = *nvar;
     ntest    = *nts; 
     nsample = addClass ? (nsample0 + nsample0) : nsample0;
     mimp = imp ? mdim : 1;
     nimp = imp ? nsample : 1;
     near = iprox ? nsample0 : 1;
-    if (trace == 0) trace = jbt + 1;
-
+    if (trace == 0) trace = Ntree + 1;
 
     tgini =      (double *) S_alloc(mdim, sizeof(double));
     wl =         (double *) S_alloc(nclass, sizeof(double));
@@ -141,7 +139,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     bestsplitnext = (int *) S_alloc(*nrnodes, sizeof(int));
     bestsplit =     (int *) S_alloc(*nrnodes, sizeof(int));
     nodepop =       (int *) S_alloc(*nrnodes, sizeof(int));
-    parent =        (int *) S_alloc(*nrnodes, sizeof(int));
     nodestart =     (int *) S_alloc(*nrnodes, sizeof(int));
     jin =           (int *) S_alloc(nsample, sizeof(int));
     nodex =         (int *) S_alloc(nsample, sizeof(int));
@@ -154,12 +151,10 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     jvr =           (int *) S_alloc(nsample, sizeof(int));
     nc =            (int *) S_alloc(nclass, sizeof(int));
     jts =           (int *) S_alloc(ntest, sizeof(int));
-    zeroes =        (int *) S_alloc(ntest, sizeof(int));
     idmove =        (int *) S_alloc(nsample, sizeof(int));
     at =            (int *) S_alloc(mdim*nsample, sizeof(int));
     a =             (int *) S_alloc(mdim*nsample, sizeof(int));
     b =             (int *) S_alloc(mdim*nsample, sizeof(int));
-    cbestsplit =    (int *) S_alloc(*maxcat * *nrnodes, sizeof(int));
     mind =          (int *) S_alloc(mdim, sizeof(int));
     nright =        (int *) S_alloc(nclass, sizeof(int));
     nrightimp =     (int *) S_alloc(nclass, sizeof(int));
@@ -183,27 +178,20 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    class_idx[cl[n]-1][class_size[cl[n]-1] - 1] = n;
 	}
     } else {
-	if (replace) {
-	    nind = NULL;
-	} else {
-	    nind = (int *) S_alloc(nsample, sizeof(int));
-	}
+	nind = replace ? NULL : (int *) S_alloc(nsample, sizeof(int));
     }
 
     /*    INITIALIZE FOR RUN */
-    if (*testdat) {
-        zeroDouble(countts, ntest * nclass);
-        zeroInt(zeroes, ntest);
-    }
+    if (*testdat) zeroDouble(countts, ntest * nclass);
     zeroInt(counttr, nclass * nsample);
     zeroInt(out, nsample);
     zeroDouble(tgini, mdim);
-    zeroDouble(errtr, (nclass + 1) * jbt);
+    zeroDouble(errtr, (nclass + 1) * Ntree);
 
     if (*labelts) {
 	nclts  = (int *) S_alloc(nclass, sizeof(int));
 	for (n = 0; n < ntest; ++n) nclts[clts[n]-1]++;
-	zeroDouble(errts, (nclass + 1) * jbt);
+	zeroDouble(errts, (nclass + 1) * Ntree);
     }
 
     if (imp) {
@@ -221,7 +209,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
     /*   START RUN   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
     GetRNGstate(); 
-    if (trace <= jbt) {
+    if (trace <= Ntree) {
 	/* Print header for running output. */
 	Rprintf("ntree      OOB");
 	for (n = 1; n <= nclass; ++n) Rprintf("%7i", n);
@@ -231,23 +219,21 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	}
 	Rprintf("\n");
     }
-
-    for(jb = 0; jb < jbt; jb++) {
+    offset = 0;
+    for(jb = 0; jb < Ntree; jb++) {
         /* Do we need to simulate data for the second class? */
-        /* SET UP DATA TO ADD A CLASS++++++++++++++++++++++++++++++ */
         if (addClass) createClass(x, nsample0, nsample, mdim);
-
-	arrayindex = keepf ? jb * *nrnodes : 0;
 	do {
-	    zeroInt(nodestatus + arrayindex, *nrnodes);
-	    zeroInt(treemap + 2*arrayindex, 2 * *nrnodes);
-	    zeroDouble(xbestsplit + arrayindex, *nrnodes);
-	    zeroInt(nodeclass + arrayindex, *nrnodes);
+	    zeroInt(nodestatus + offset, *nrnodes);
+	    zeroInt(treemap + 2*offset, 2 * *nrnodes);
+	    zeroDouble(xbestsplit + offset, *nrnodes);
+	    zeroInt(nodeclass + offset, *nrnodes);
 	    zeroInt(jin, nsample);
             zeroInt(varUsed, mdim);
 	    zeroDouble(tclasspop, nclass);
 	    zeroDouble(win, nsample);
-      
+            /* TODO: Put all sampling code into a function. */
+            /* drawSample(sampsize, nsample, ); */
 	    if (stratify) {
 		/* stratified sampling by class */
 		if (replace) {
@@ -273,9 +259,10 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			for (j = 0; j < sampsize[n]; ++j) {
 			    ktmp = (int) (unif_rand() * (last+1));
 			    k = class_idx[n][ktmp];
-			    tmp = class_idx[n][last];
-			    class_idx[n][last] = class_idx[n][ktmp];
-			    class_idx[n][ktmp] = tmp;
+                            swapInt(class_idx[n][last], class_idx[n][ktmp]);
+                            /* tmp = class_idx[n][last];
+                               class_idx[n][last] = class_idx[n][ktmp];
+                               class_idx[n][ktmp] = tmp; */
 			    last--;
 			    tclasspop[cl[k] - 1] += wtt[k];
 			    win[k] += wtt[k];
@@ -295,15 +282,14 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			    jin[k] = 1;
 			}
 		    } else {
-			for (n = 0; n < nsample; ++n) {
-			    nind[n] = n;
-			}
+			for (n = 0; n < nsample; ++n) nind[n] = n;
 			last = nsample - 1;
 			for (n = 0; n < *sampsize; ++n) {
 			    ktmp = (int) (unif_rand() * (last+1));
 			    k = nind[ktmp];
-			    nind[ktmp] = nind[last];
-			    nind[last] = k;
+                            swapInt(nind[ktmp], nind[last]);
+			    /* nind[ktmp] = nind[last];
+                               nind[last] = k; */
 			    last--;
 			    tclasspop[cl[k] - 1] += wtt[k];
 			    win[k] += wtt[k];
@@ -322,38 +308,39 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    memcpy(a, at, sizeof(int) * mdim * nsample);
       	    modA(a, &nuse, nsample, mdim, cat, *maxcat, ncase, jin);
       
-	    F77_CALL(buildtree)(a, b, cl, cat, &mdim, &nsample, &nclass, 
-				treemap + 2*arrayindex, bestvar + arrayindex,
+	    F77_CALL(buildtree)(a, b, cl, cat, maxcat, &mdim, &nsample, 
+				&nclass, 
+				treemap + 2*offset, bestvar + offset,
 				bestsplit, bestsplitnext, tgini, 
-				nodestatus + arrayindex, nodepop, 
+				nodestatus + offset, nodepop, 
 				nodestart, classpop, tclasspop, tclasscat, 
-				ta, nrnodes, idmove, &ndsize, ncase, parent, 
-				jin, &mtry, varUsed, nodeclass + arrayindex, 
+				ta, nrnodes, idmove, &ndsize, ncase,  
+				jin, &mtry, varUsed, nodeclass + offset, 
 				ndbigtree + jb, win, wr, wc, wl, &mdim, 
 				&nuse, mind);
 	    /* if the "tree" has only the root node, start over */
 	} while (ndbigtree[jb] == 1);
     
-	Xtranslate(x, mdim, *nrnodes, nsample, bestvar + arrayindex, 
-		   bestsplit, bestsplitnext, xbestsplit + arrayindex,
-		   nodestatus + arrayindex, cat, ndbigtree[jb]);
+	Xtranslate(x, mdim, *nrnodes, nsample, bestvar + offset, 
+		   bestsplit, bestsplitnext, xbestsplit + offset,
+		   nodestatus + offset, cat, ndbigtree[jb]);
     
 	/*  Get test set error */
 	if (*testdat) {
-            predictClassTree(xts, ntest, mdim, zeroes, treemap + 2*arrayindex,
-                             nodestatus + arrayindex, xbestsplit + arrayindex,
-                             cbestsplit, bestvar + arrayindex, 
-                             nodeclass + arrayindex, ndbigtree[jb], 
+            predictClassTree(xts, ntest, mdim, treemap + 2*offset,
+                             nodestatus + offset, xbestsplit + offset,
+                             bestvar + offset, 
+                             nodeclass + offset, ndbigtree[jb], 
                              cat, nclass, jts, nodexts, *maxcat);
 	    TestSetError(countts, jts, clts, outclts, ntest, nclass, jb+1,
 			 errts + jb*(nclass+1), pid, *labelts, nclts, cut);
 	}
     
 	/*  Get out-of-bag predictions and errors. */
-        predictClassTree(x, nsample, mdim, jin, treemap + 2*arrayindex,
-                         nodestatus + arrayindex, xbestsplit + arrayindex,
-                         cbestsplit, bestvar + arrayindex, 
-                         nodeclass + arrayindex, ndbigtree[jb], 
+        predictClassTree(x, nsample, mdim, treemap + 2*offset,
+                         nodestatus + offset, xbestsplit + offset,
+                         bestvar + offset, 
+                         nodeclass + offset, ndbigtree[jb], 
                          cat, nclass, jtr, nodex, *maxcat);
 	
 	zeroInt(nout, nclass);
@@ -416,16 +403,12 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		    /* Permute the m-th variable. */
                     permuteOOB(m, x, jin, nsample, mdim);
 		    /* Predict the modified data using the current tree. */
-                    predictClassTree(x, nsample, mdim, jin, 
-                                     treemap + 2*arrayindex,
-                                     nodestatus + arrayindex, 
-                                     xbestsplit + arrayindex,
-                                     cbestsplit, 
-                                     bestvar + arrayindex, 
-                                     nodeclass + arrayindex,
-                                     ndbigtree[jb], cat, nclass,
-                                     jvr, nodex, *maxcat);
-
+                    predictClassTree(x, nsample, mdim, treemap + 2*offset,
+                                     nodestatus + offset, 
+                                     xbestsplit + offset,
+                                     bestvar + offset, 
+                                     nodeclass + offset, ndbigtree[jb], 
+                                     cat, nclass, jvr, nodex, *maxcat);
 		    /* Count how often correct predictions are made with 
 		       the modified data. */
 		    for (n = 0; n < nsample; n++) {
@@ -470,61 +453,60 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
 	/*  DO PROXIMITIES */
 	if (iprox) {
-	    for (n = 0; n < near; ++n) {
-		for (k = n+1; k < near; ++k) {
-		    if (oobprox) {
-			if (jin[k] == 0 && jin[n] == 0) {
-			    oobpair[k*near + n] ++;
-			    oobpair[n*near + k] ++;
-			    if (nodex[k] == nodex[n]) { 
-				prox[k*near + n] += 1.0;
-				prox[n*near + k] += 1.0;
-			    }
-			}
-		    } else {
-			if (nodex[k] == nodex[n]) {
-			    prox[k*near + n] += 1.0;
-			    prox[n*near + k] += 1.0;
-			}
-		    }
-		}
-	    }
+            computeProximity(prox, oobprox, nodex, jin, oobpair, near);
 	    /* proximity for test data */
 	    if (*testdat) {
+                computeProximity(proxts, 0, nodexts, jin, oobpair, ntest);
+                /* Compute proximity between testset and training set. */
 		for (n = 0; n < ntest; ++n) {
-		    for (k = 0; k <= n; ++k) {
-			if (nodexts[k] == nodexts[n]) {
-			    proxts[k * ntest + n] += 1.0;
-			    proxts[n * ntest + k] = proxts[k * ntest + n];
-			}
-			   }
 		    for (k = 0; k < near; ++k) {
 			if (nodexts[n] == nodex[k]) 
 			    proxts[n + ntest * (k+ntest)] += 1.0; 
 		    }
 		}
-	    } 
+	    }
 	}
 	R_CheckUserInterrupt();
 #ifdef win32
 	R_ProcessEvents();
 #endif
+        if (keepf) offset += *nrnodes;
     }
     PutRNGstate();
-      
+    
+    /*  Final processing of variable importance. */
+    for (m = 0; m < mdim; m++) tgini[m] /= Ntree;
+    if (imp) {
+	for (m = 0; m < mdim; ++m) {
+	    if (localImp) { /* casewise measures */
+		for (n = 0; n < nsample; ++n) impmat[m + n*mdim] /= out[n];
+	    }
+	    /* class-specific measures */
+	    for (k = 0; k < nclass; ++k) {
+	        av = imprt[m + k*mdim] / Ntree;
+		impsd[m + k*mdim] = 
+                    sqrt(((impsd[m + k*mdim] / Ntree) - av*av) / Ntree);
+		imprt[m + k*mdim] = av;
+		/* imprt[m + k*mdim] = (se <= 0.0) ? -1000.0 - av : av / se; */
+	    }
+	    /* overall measures */
+	    av = imprt[m + nclass*mdim] / Ntree;
+	    impsd[m + nclass*mdim] = 
+                sqrt(((impsd[m + nclass*mdim] / Ntree) - av*av) / Ntree);
+	    imprt[m + nclass*mdim] = av;
+	    imprt[m + (nclass+1)*mdim] = tgini[m];
+	}
+    } else {
+	for (m = 0; m < mdim; ++m) imprt[m] = tgini[m];
+    }
+
     /*  PROXIMITY DATA ++++++++++++++++++++++++++++++++*/
     if (iprox) {
 	for (n = 0; n < near; ++n) {
 	    for (k = n + 1; k < near; ++k) {
-		if (oobprox) {
-		    /* Only do the division if there are more than one 
-		       instance!! */
-		    if (oobpair[near*k + n] > 0) {
-			prox[near*k + n] /= oobpair[near*k + n];
-		    }
-		} else {
-		    prox[near*k + n] /= jbt;
-		}
+                prox[near*k + n] /= oobprox ? 
+                    (oobpair[near*k + n] > 0 ? oobpair[near*k + n] : 1) :
+                    Ntree;
 		prox[near*n + k] = prox[near*k + n];
 	    }
 	    prox[near*n + n] = 1.0;
@@ -532,107 +514,58 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	if (*testdat) {
 	    for (n = 0; n < ntest; ++n) 
 		for (k = 0; k < ntest + nsample; ++k) 
-		    proxts[ntest*k + n] /= jbt;
-	}
-    }
-  
-    /*  IMP DATA ++++++++++++++++++++++++++++++++++*/
-    for (m = 0; m < mdim; m++) {
-	tgini[m] = tgini[m] / jbt;
-    }
-
-    if (imp) {
-	for (m = 0; m < mdim; ++m) {
-	    /* casewise measures */
-	    if (localImp) {
-		for (n = 0; n < nsample; ++n) {
-		    impmat[m + n*mdim] /= out[n];
-		}
-	    }
-	    /* class-specific measures */
-	    for (k = 0; k < nclass; ++k) {
-	        av = imprt[m + k*mdim] / *ntree;
-		impsd[m + k*mdim] = 
-			sqrt(((impsd[m + k*mdim] / *ntree) - av*av) / *ntree);
-		imprt[m + k*mdim] = av;
-		/* imprt[m + k*mdim] = (se <= 0.0) ? -1000.0 - av : av / se; */
-	    }
-	    /* overall measures */
-	    av = imprt[m + nclass*mdim] / *ntree;
-	    impsd[m + nclass*mdim] = 
-		    sqrt(((impsd[m + nclass*mdim] / *ntree) - av*av) / *ntree);
-	    imprt[m + nclass*mdim] = av;
-	    /* imprt[m + nclass*mdim] = (se <= 0.0) ? -1000.0-av : av/se; */
-	    imprt[m + (nclass+1)*mdim] = tgini[m];
-	}
-    } else {
-	for (m = 0; m < mdim; ++m) {
-	    imprt[m] = tgini[m];
+		    proxts[ntest*k + n] /= Ntree;
 	}
     }
 }
 
-void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
-	       int *nrnodes, int *jbt, 
-	       double *xts, double *xbestsplit, double *pid, 
-	       double *cutoff, double *countts, int *treemap,
-	       int *nodestatus, int *cat, int *cbestsplit,
-	       int *nodeclass, int *jts, int *jet, int *bestvar,
-	       int *nodexts, int *ndbigtree, int *keepPred,
-	       int *prox, double *proxmatrix, int *nodes) {
-    int j, jb, n, n1, n2, idxNodes, idxSample1, idxSample2, *zeroes;
+
+void classForest(int *mdim, int *ntest, int *nclass, int *maxcat, 
+                 int *nrnodes, int *ntree, double *x, double *xbestsplit,
+                 double *pid, double *cutoff, double *countts, int *treemap,
+                 int *nodestatus, int *cat, int *nodeclass, int *jts, 
+                 int *jet, int *bestvar, int *node, int *treeSize, 
+                 int *keepPred, int *prox, double *proxMat, int *nodes) {
+    int j, jb, n, n1, n2, idxNodes, offset1, offset2, *junk;
     double crit, cmax;
 
-    zeroes = (int *) S_alloc(*ntest, sizeof(int));
-    zeroInt(zeroes, *ntest);
     zeroDouble(countts, *nclass * *ntest);
     idxNodes = 0;
-    idxSample1 = 0;
-    idxSample2 = 0;
+    offset1 = 0;
+    offset2 = 0;
 
-    for (jb = 0; jb < *jbt; ++jb) {
-	/* predict by the jb-th tree */
-        predictClassTree(xts, *ntest, *mdim, zeroes, treemap + 2*idxNodes,
+    for (j = 0; j < *ntree; ++j) {
+	/* predict by the j-th tree */
+        predictClassTree(x, *ntest, *mdim, treemap + 2*idxNodes,
 			 nodestatus + idxNodes, xbestsplit + idxNodes,
-			 cbestsplit, bestvar + idxNodes, nodeclass + idxNodes,
-			 ndbigtree[jb], cat, *nclass,
-			 jts + idxSample1, nodexts + idxSample2, *maxcat);
+			 bestvar + idxNodes, nodeclass + idxNodes,
+			 treeSize[j], cat, *nclass,
+			 jts + offset1, node + offset2, *maxcat);
 
 	/* accumulate votes: */
 	for (n = 0; n < *ntest; ++n) {
-	    countts[jts[n + idxSample1] - 1 + n * *nclass] += 1.0;
+	    countts[jts[n + offset1] - 1 + n * *nclass] += 1.0;
 	}
 
 	/* if desired, do proximities for this round */
-	if (*prox) {
-	    for (n1 = 0; n1 < *ntest; ++n1) {
-		for (n2 = n1 + 1; n2 < *ntest; ++n2) {
-		    if (nodexts[n1 + idxSample2] == nodexts[n2 + idxSample2]) {
-			proxmatrix[n1 + n2 * *ntest] += 1.0;
-		    }
-		}
-	    }
-	}
+	if (*prox) computeProximity(proxMat, 0, node + offset2, junk, junk, 
+                                    *ntest);
 	idxNodes += *nrnodes;
-	if (*keepPred) idxSample1 += *ntest;
-	if (*nodes)    idxSample2 += *ntest;
+	if (*keepPred) offset1 += *ntest;
+	if (*nodes)    offset2 += *ntest;
     }
 
     /* Aggregated prediction is the class with the maximum votes/cutoff */
     for (n = 0; n < *ntest; ++n) {
 	cmax = 0.0;
 	for (j = 0; j < *nclass; ++j) {
-	    crit = (countts[j + n * *nclass] / *jbt) / cutoff[j];
+	    crit = (countts[j + n * *nclass] / *ntree) / cutoff[j];
 	    if (crit > cmax) {
 		jet[n] = j + 1;
 		cmax = crit;
 	    }
 	    /* Break ties at random: */
-	    if (crit == cmax) {
-		if (unif_rand() > 0.5) {
-		    jet[n] = j + 1;
-		}
-	    }
+	    if (crit == cmax && unif_rand() > 0.5) jet[n] = j + 1;
 	}
     }
 
@@ -641,10 +574,10 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
     if (*prox) {
 	for (n1 = 0; n1 < *ntest; ++n1) {
 	    for (n2 = n1 + 1; n2 < *ntest; ++n2) {
-		proxmatrix[n1 + n2 * *ntest] /= *jbt;
-		proxmatrix[n2 + n1 * *ntest] = proxmatrix[n1 + n2 * *ntest];
+		proxMat[n1 + n2 * *ntest] /= *ntree;
+		proxMat[n2 + n1 * *ntest] = proxMat[n1 + n2 * *ntest];
 	    }
-	    proxmatrix[n1 + n1 * *ntest] = 1.0;
+	    proxMat[n1 + n1 * *ntest] = 1.0;
 	}
     }
 }
@@ -672,9 +605,7 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 	    smaxtr = 0.0;
 	    for (j = 0; j < nclass; ++j) {
 		qq = (((double) counttr[j + n*nclass]) / out[n]) / cutoff[j];
-		if (j+1 != cl[n]) {
-		    smax = (qq > smax) ? qq : smax;
-		}
+		if (j+1 != cl[n]) smax = (qq > smax) ? qq : smax;
 		/* if vote / cutoff is larger than current max, re-set max and 
 		   change predicted class to the current class */
 		if (qq > smaxtr) {
@@ -682,11 +613,9 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 		    jest[n] = j+1;
 		}
 		/* break tie at random */
-		if (qq == smaxtr) {
-		    if (unif_rand() > 0.5) {
-			smaxtr = qq;
-			jest[n] = j+1;
-		    }
+		if (qq == smaxtr && unif_rand() > 0.5) {
+                    smaxtr = qq;
+                    jest[n] = j+1;
 		}
 	    }
 	    if (jest[n] != cl[n]) {
@@ -697,9 +626,7 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 	}
     }
     errtr[0] /= noob;
-    for (n = 1; n <= nclass; ++n) {
-	errtr[n] /= noobcl[n-1];
-    }
+    for (n = 1; n <= nclass; ++n) errtr[n] /= noobcl[n-1];
 }
 
 
@@ -709,9 +636,7 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
     int j, n;
     double cmax, crit;
   
-    for (n = 0; n < ntest; ++n) {
-	countts[jts[n]-1 + n*nclass] += 1.0;
-    }
+    for (n = 0; n < ntest; ++n) countts[jts[n]-1 + n*nclass] += 1.0;
 
     /*  Prediction is the class with the maximum votes */
     for (n = 0; n < ntest; ++n) {
@@ -722,7 +647,6 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 		jet[n] = j+1;
 		cmax = crit;
 	    }
-
 	    /*  Break ties at random: */
 	    if (crit == cmax && unif_rand() > 0.5) {
 		jet[n] = j+1;
@@ -730,7 +654,6 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 	    }
 	}
     } 
-
     if (labelts) {
         zeroDouble(errts, nclass + 1);
 	for (n = 0; n < ntest; ++n) {

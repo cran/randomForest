@@ -19,7 +19,7 @@
           replace=TRUE, classwt=NULL, cutoff,
           sampsize=if(replace) nrow(x) else ceiling(.632*nrow(x)),
           nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
-          importance=FALSE, localImp=FALSE,
+          importance=FALSE, localImp=FALSE, nPerm=1,
           proximity=FALSE, oob.prox=proximity,
           norm.votes=TRUE, do.trace=FALSE,
           keep.forest=is.null(xtest), corr.bias=FALSE, ...) 
@@ -68,6 +68,10 @@
   \item{importance}{Should importance of predictors be assessed? }
   \item{localImp}{Should casewise importance measure be computed?
     (Setting this to \code{TRUE} will override \code{importance}.) }
+  \item{nPerm}{Number of times the OOB data are permuted per tree for
+    assessing variable importance.  Number larger than 1 gives slightly
+    more stable estimate, but not very effective.  Currently only
+    implemented for regression.}
   \item{proximity}{Should proximity measure among the rows be
     calculated?}
   \item{oob.prox}{Should proximity be calculated only on ``out-of-bag''
@@ -163,18 +167,6 @@
   calling \code{randomForest} via the formula interface is not advised:
   There may be too much overhead in handling the formula.
   
-  Here are the definitions of the variable importance measures.  For
-  each tree, the prediction accuracy on the out-of-bag portion of the
-  data is recorded.  Then the same is done after permuting each
-  predictor variable.  The difference between the two accuracies are
-  then averaged over all trees, and normalized by the standard
-  error.  If the standard error is equal to 0 for a variable, the
-  measure is set to -1000 + mean decrease in accuracy (which, most
-  likely, is also 0).  The second measure is the total decrease in node
-  impurities from splitting on the variable, averaged over all trees.
-  For classification, the node impurity is measured by the Gini index.
-  For regression, it is measured by residual sum of squares.
-
   The ``local'' (or casewise) variable importance is computed as
   follows:  For classification, it is the increase in percent of times a
   case is OOB and misclassified when the variable is permuted.  For

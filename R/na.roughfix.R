@@ -32,7 +32,7 @@ na.roughfix.default <- function(object, ...) {
     return(object)
   if (!is.numeric(object))
     stop("roughfix can only deal with numeric data.")
-  if (d == 2) {
+  if (length(d) == 2) {
       hasNA <- which(apply(object, 2, function(x) any(is.na(x))))
       for (j in hasNA) 
           object[is.na(object[, j]), j] <- median(object[, j], na.rm=TRUE)

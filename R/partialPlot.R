@@ -45,8 +45,8 @@ partialPlot.randomForest <-
             points(1:length(x.pt), y.pt, type = "h", lwd = 2, 
                    ...)
         } else {
-            barplot(1:length(x.pt), y.pt, col="blue", xlab = xlab, 
-                    ylab = ylab, main=main, ...)
+            barplot(y.pt, width=rep(1, length(y.pt)), col="blue", xlab = xlab, 
+                    ylab = ylab, main=main, names.arg=x.pt, ...)
         }
     } else {
         if (is.ordered(xv)) 

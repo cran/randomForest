@@ -5,7 +5,7 @@
              floor(sqrt(ncol(x)))), replace=TRUE, classwt=NULL, cutoff,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
-             importance=FALSE, localImp=FALSE,
+             importance=FALSE, localImp=FALSE, nPerm=1,
              proximity=FALSE, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
              keep.forest=is.null(xtest), corr.bias=FALSE, ...)
@@ -129,6 +129,7 @@
     } else impmat <- double(1)
     
     if (importance) {
+        if (nPerm < 1) nPerm <- as.integer(1) else nPerm <- as.integer(nPerm)
         if (classRF) {
             impout <- matrix(0.0, p, nclass + 2)
             impSD <- matrix(0.0, p, nclass + 1)
@@ -274,7 +275,9 @@
                                  class.error = 1 - diag(testcon)/rowSums(testcon))
             }
         }
-        out <- list(call = match.call(),
+        cl <- match.call()
+        cl[[1]] <- as.name("randomForest")
+        out <- list(call = cl,
                     type = if (addclass) "unsupervised" else "classification",
                     predicted = if (addclass) NULL else out.class,
                     err.rate = if (addclass) NULL else t(matrix(rfout$errtr,
@@ -330,15 +333,15 @@
         rfout <- .C("regRF",
                     x,
                     as.double(y),
-                    as.integer(n),
-                    as.integer(p),
+                    as.integer(c(n, p)),
                     as.integer(sampsize),
                     as.integer(nodesize),
                     as.integer(nrnodes),
                     as.integer(ntree),
                     as.integer(mtry),
-                    as.integer(c(importance, localImp)),
+                    as.integer(c(importance, localImp, nPerm)),
                     as.integer(ncat),
+                    as.integer(maxcat),
                     as.integer(do.trace),
                     as.integer(proximity),
                     as.integer(oob.prox),
@@ -386,8 +389,9 @@
             rfout$rightDaughter <-
                 rfout$rightDaughter[1:max.nodes, , drop=FALSE]
         }
-        
-        out <- list(call = match.call(),
+        cl <- match.call()
+        cl <- as.name("randomForest")
+        out <- list(call = cl,
                     type = "regression",
                     predicted = structure(rfout$ypred, names=x.row.names),
                     mse = rfout$mse,

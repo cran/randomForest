@@ -1,16 +1,25 @@
+/*******************************************************************
+   Copyright (C) 2001-4 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+  
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.                            
+*******************************************************************/
 #include <R.h>
 #include "rf.h"
 
 void zeroInt(int *x, int length) {
-	int i;
-	for (i=0; i < length; ++i) x[i] = 0;
-	/* memset(x, 0, length * sizeof(int)); */
+    memset(x, 0, length * sizeof(int)); 
 }
 
 void zeroDouble(double *x, int length) {
-	int i;
-	for (i=0; i < length; ++i) x[i] = 0.0;
-	/* memset(x, 0, length * sizeof(double)); */
+    memset(x, 0, length * sizeof(double)); 
 }
 
 void createClass(double *x, int realN, int totalN, int mdim) {
@@ -46,15 +55,12 @@ void prepare(int *cl, const int nsample, const int nclass, const int ipi,
 
 void makeA(double *x, const int mdim, const int nsample, int *cat, int *a, 
            int *b) {
-    /* makeA() constructs the mdim by nsample integer array a.  if there are
-     * less than 32,000 cases, this can be declared integer*2, otherwise
-     * integer*4. For each numerical variable with values x(m,n),
-     * n=1,...,nsample, the x-values are sorted from lowest to highest.
-     * Denote these by xs(m,n).  Then a(m,n) is the case number in which
-     * xs(m,n) occurs. The b matrix is also contructed here.
-     * if the mth variable is categorical, then a(m,n) is the category of the
-     * nth case number.
-     */
+    /* makeA() constructs the mdim by nsample integer array a.  For each 
+       numerical variable with values x(m, n), n=1, ...,nsample, the x-values 
+       are sorted from lowest to highest.  Denote these by xs(m, n).  Then 
+       a(m,n) is the case number in which xs(m, n) occurs. The b matrix is 
+       also contructed here.  If the mth variable is categorical, then 
+       a(m, n) is the category of the nth case number. */
     int i, j, n1, n2, *index;
     double *v;
 
@@ -69,7 +75,7 @@ void makeA(double *x, const int mdim, const int nsample, int *cat, int *a,
             }
             R_qsort_I(v, index, 1, nsample);
 
-            /*  this sorts the v(n) in ascending order. isort(n) is the case 
+            /*  this sorts the v(n) in ascending order. index(n) is the case 
                 number of that v(n) nth from the lowest (assume the original 
                 case numbers are 1,2,...).  */
             for (j = 0; j < nsample-1; ++j) {
@@ -146,10 +152,10 @@ void Xtranslate(double *x, int mdim, int nrnodes, int nsample,
 		int *bestvar, int *bestsplit, int *bestsplitnext,
 		double *xbestsplit, int *nodestatus, int *cat, int treeSize) {
 /*
-  c this subroutine takes the splits on numerical variables and translates them
-  c back into x-values.  It also unpacks each categorical split into a 
-  c 32-dimensional vector with components of zero or one--a one indicates that 
-  c the corresponding category goes left in the split.
+ this subroutine takes the splits on numerical variables and translates them
+ back into x-values.  It also unpacks each categorical split into a 
+ 32-dimensional vector with components of zero or one--a one indicates that 
+ the corresponding category goes left in the split.
 */
 
     int i, m;
@@ -209,7 +215,57 @@ void permuteOOB(int m, double *x, int *in, int nsample, int mdim) {
     Free(tp);
 }
 
-double pack(int l, int *icat) {
+/* Compute proximity. */
+void computeProximity(double *prox, int oobprox, int *node, int *inbag, 
+                      int *oobpair, int n) {
+/* Accumulate the number of times a pair of points fall in the same node.
+   prox:    n x n proximity matrix
+   oobprox: should the accumulation only count OOB cases? (0=no, 1=yes)
+   node:    vector of terminal node labels
+   inbag:   indicator of whether a case is in-bag
+   oobpair: matrix to accumulate the number of times a pair is OOB together
+   n:       total number of cases
+*/
+    int i, j;
+    for (i = 0; i < n; ++i) {
+        for (j = i+1; j < n; ++j) {
+            if (oobprox) {
+                /* if (jin[k] == 0 && jin[n] == 0) { */
+                if ((inbag[i] > 0) ^ (inbag[j] > 0)) {
+                    oobpair[j*n + i] ++;
+                    oobpair[i*n + j] ++;
+                    if (node[i] == node[j]) { 
+                        prox[j*n + i] += 1.0;
+                        prox[i*n + j] += 1.0;
+                    }
+                }
+            } else {
+                if (node[i] == node[j]) {
+                    prox[j*n + i] += 1.0;
+                    prox[i*n + j] += 1.0;
+                }
+            }
+        }
+    }
+}
+
+int pack(int nBits, int *bits) {
+    int i = nBits, pack=0;
+    while (--i >= 0) pack += bits[i] << i;
+    return(pack);
+}
+
+void unpack(int pack, int *bits) {
+/* pack is a 4-byte integer.  The sub. returns icat, an integer array of 
+   zeroes and ones corresponding to the coefficients in the binary expansion 
+   of pack. */   
+    int i;
+    for (i = 0; pack != 0; pack >>= 1, ++i) bits[i] = pack & 1;
+}
+
+#ifdef OLD
+
+double oldpack(int l, int *icat) {
     /* icat is a binary integer with ones for categories going left 
      * and zeroes for those going right.  The sub returns npack- the integer */
     int k;
@@ -222,18 +278,20 @@ double pack(int l, int *icat) {
 }
 
 
-void unpack(int l, int npack, int *icat) {
+void oldunpack(int l, int npack, int *icat) {
 /*      
  * npack is a long integer.  The sub. returns icat, an integer of zeroes and
  * ones corresponding to the coefficients in the binary expansion of npack.
  */   
     int i;
-    for (i = 0; i < 32; ++i) {
-	icat[i] = 0;
-    }
-    icat[0] = npack % 2;
+    zeroInt(icat, 32);
+    icat[0] = npack % 2; 
     for (i = 1; i < l; ++i) {
 	npack = (npack - icat[i-1]) / 2;
 	icat[i] = npack % 2;
     }
 }
+
+
+
+#endif /* OLD */

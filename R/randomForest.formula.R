@@ -22,7 +22,9 @@
         if(is.ordered(m[[i]])) m[[i]] <- as.numeric(m[[i]])
     }
     ret <- randomForest.default(m, y, ...)
-    ret[["call"]] <- call
+    cl <- match.call()
+    cl[[1]] <- as.name("randomForest")
+    ret$call <- cl
     ret$terms <- Terms
     if (!is.null(attr(m, "na.action"))) 
         ret$na.action <- attr(m, "na.action")

@@ -6,15 +6,18 @@
   \code{randomForest} object. 
 }
 \usage{
-getTree(rfobj, k=1)
+getTree(rfobj, k=1, labelVar=FALSE)
 }
 \arguments{
   \item{rfobj}{a \code{\link{randomForest}} object.}
   \item{k}{which tree to extract?}
+  \item{labelVar}{Should better labels be used for splitting variables
+    and predicted class?}
 }
 \value{
-  A matrix with six columns and number of rows equal to total number of
-  nodes in the tree.  The six columns are:
+  A matrix (or data frame, if \code{labelVar=TRUE}) with six columns and
+  number of rows equal to total number of nodes in the tree.  The six
+  columns are: 
   \item{left daughter}{the row where the left daughter node is; 0 if the
   node is terminal}
   \item{right daughter}{the row where the right daughter node is; 0 if
@@ -28,6 +31,9 @@ getTree(rfobj, k=1)
     terminal}
 }
 \details{
+  For numerical predictors, data with values of the variable less than
+  the splitting point go to the left daughter node.
+  
   For categorical predictors, the splitting point is represented by an
   integer, whose binary expansion gives the identities of the categories
   that goes to left or right.  For example, if a predictor has three
@@ -44,7 +50,7 @@ getTree(rfobj, k=1)
 \examples{
 data(iris)
 ## Look at the third trees in the forest.
-getTree(randomForest(iris[,-5], iris[,5], ntree=10), 3)
+getTree(randomForest(iris[,-5], iris[,5], ntree=10), 3, labelVar=TRUE)
 }
 \author{Andy Liaw \email{andy\_liaw@merck.com}}
 \keyword{tree}

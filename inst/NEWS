@@ -9,6 +9,17 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-8:
+
+* Added some code in predict.randomForest() so it works with randomForest
+  objects created in older versions of the package.
+
+* Fixed randomForest.default() so that getTree() works when the forest 
+  contains only one tree.
+
+* Added the argument `labelVar' (default FALSE) to getTree() for prettier
+  output.
+
 Changes in 4.5-7:
 
 * Fixed (another!) bug in splitting on categorical variables, especially 

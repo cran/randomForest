@@ -108,6 +108,12 @@
     nodexts <- if (nodes) integer(ntest*ntree) else integer(ntest)
   
     if (object$type == "regression") {
+            if (!is.null(object$forest$treemap)) {
+                object$forest$leftDaughter <- object$forest$treemap[,1,, drop=FALSE]
+                object$forest$rightDaughter <- object$forest$treemap[,2,, drop=FALSE]
+                object$forest$treemap <- NULL
+    }
+
         keepIndex <- "ypred"
         if (predict.all) keepIndex <- c(keepIndex, "treepred")
         if (proximity) keepIndex <- c(keepIndex, "proximity")

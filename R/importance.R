@@ -8,7 +8,7 @@ importance.randomForest <- function(x, type=NULL, class=NULL, scale=TRUE,
     if (!inherits(x, "randomForest"))
         stop("x is not of class randomForest")
     classRF <- x$type != "regression"
-    hasImp <- !is.null(dim(x$importance))
+    hasImp <- !is.null(dim(x$importance)) || ncol(x$importance) == 1
     hasType <- !is.null(type)
     allImp <- is.null(type) && hasImp
     if (hasType) {

@@ -288,7 +288,8 @@
                            dimnames = list(x.col.names,
                            c(levels(y), "MeanDecreaseAccuracy",
                              "MeanDecreaseGini")))
-                    else structure(rfout$impout, names=x.col.names),
+                    else matrix(rfout$impout, ncol=1,
+                                dimnames=list(x.col.names, "MeanDecreaseGini")),
                     importanceSD = if (importance)
                     matrix(rfout$impSD, p, nclass + 1,
                            dimnames = list(x.col.names,
@@ -308,9 +309,9 @@
                              bestvar = matrix(rfout$bestvar, nc = ntree)[1:max.nodes,, drop=FALSE],
                              treemap = treemap,
                              nodepred = matrix(rfout$nodepred,
-                             nc = ntree)[1:max.nodes,],
+                             nc = ntree)[1:max.nodes,, drop=FALSE],
                              xbestsplit = matrix(rfout$xbestsplit,
-                             nc = ntree)[1:max.nodes,],
+                             nc = ntree)[1:max.nodes,, drop=FALSE],
                              pid = rfout$classwt, cutoff = cutoff, ncat = ncat, maxcat = maxcat, 
                              nrnodes = max.nodes, ntree = ntree, nclass = nclass)
                     },
@@ -396,7 +397,8 @@
                     importance = if (importance) matrix(rfout$impout, p, 2,
                     dimnames=list(x.col.names,
                                   c("%IncMSE","IncNodePurity"))) else
-                        structure(rfout$impout, names=x.col.names),
+                        matrix(rfout$impout, ncol=1,
+                               dimnames=list(x.col.names, "IncNodePurity")),
                     importanceSD=if (importance) rfout$impSD else NULL,
                     localImportance = if (importance)
                     matrix(rfout$impmat, p, n, dimnames=list(x.col.names,
@@ -418,7 +420,7 @@
                              names=xts.row.names),
                              mse = if(labelts) rfout$msets else NULL,
                              rsq = if(labelts) 1 - rfout$msets /
-                                        (var(ytest)*(n-1)/n) else NULL,
+                                        (var(ytest) * (n-1) / n) else NULL,
                              proximity = if (proximity) 
                              matrix(rfout$proxts / ntree, nrow = ntest,
                                     dimnames = list(xts.row.names,

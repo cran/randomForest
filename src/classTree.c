@@ -308,7 +308,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
                efficient algorithm */
             for (j = 0; j < *lcat; ++j) icat[j] = unif_rand() > 0.5 ? 1 : 0;
         } else {
-            unpack(n, icat);
+            unpack(n + 1, icat);
         }
         for (j = 0; j < *nclass; ++j) {
             leftCatClassCount[j] = 0;
@@ -335,7 +335,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
         if (decGini > *critmax) {
             *critmax = decGini;
             *nhit = 1;
-            *ncatsp = *lcat > *ncmax ? pack(*lcat, icat) : n;
+            *ncatsp = *lcat > *ncmax ? pack(*lcat, icat) : n + 1;
         }
     }
     Free(leftCatClassCount);

@@ -9,6 +9,11 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-7:
+
+* Fixed (another!) bug in splitting on categorical variables, especially 
+  impacting data with binary (categorical) variables.
+
 Changes in 4.5-6:
 
 * Fixed a bug introduced in 4.5-2 that used the wrong default class weights.

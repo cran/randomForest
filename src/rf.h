@@ -48,6 +48,8 @@ extern void F77_NAME(locateout)(double *, int *, int *, int *, int *c, int *,
 extern void F77_NAME(finishimp)(double *, int *, int *, int * , int *, int *,
 				int *, double *, double *, double *, double *, 
 				double *, int *, int *, double *);
+extern void F77_NAME(comptserr)(double *, int *, int *, int *, int *,
+				int *, double *, double *, int *);
 
 /*************************************************************
   Subroutines for the regression RF

@@ -757,10 +757,10 @@ C     SUBROUTINE COMPTSERR
       subroutine comptserr(countts,jts,clts,jet,ntest,nclass,errts,
      1     pid,labelts)
       implicit double precision (a-h,o-z)
-      integer jts(ntest),clts(ntest),jet(ntest)
-      double precision countts(nclass,ntest),pid(nclass),errts
+      integer jts(ntest),clts(ntest),jet(ntest), cmax, ntest, nclass
+      double precision countts(nclass,ntest), pid(nclass)
       
-      rmissts=0
+      rmissts=0.0
       do n=1,ntest
          countts(jts(n),n)=countts(jts(n),n)+1
       end do
@@ -775,7 +775,7 @@ C     SUBROUTINE COMPTSERR
             end do
             if (jet(n).ne.clts(n)) rmissts=rmissts+1
          end do
-         errts=dble(rmissts)/ntest
+         errts=dble(rmissts)/dble(ntest)
       end if
       end
       
@@ -1325,8 +1325,3 @@ c ones corresponding to the coefficients in the binary expansion of npack.
       if(j.gt.1) go to 11
       end
       
-      
-      
-      
-      
-

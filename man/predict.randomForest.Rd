@@ -43,8 +43,8 @@ components: \code{pred} is the prediction (as described above) and
 \code{object$type} is \code{regression}.
 }
 \references{
-  Breiman, L., \emph{Random Forests},
-  \url{http://oz.berkeley.edu/users/breiman/randomforest2001.pdf}.
+  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
+  5-32.
 }
 \author{ Andy Liaw \email{andy\_liaw@merck.com} and Matthew Wiener
   \email{matthew\_wiener@merck.com}, based on original Fortran code by
@@ -55,11 +55,10 @@ components: \code{pred} is the prediction (as described above) and
 \examples{
 data(iris)
 set.seed(111)
-n.iris <- nrow(iris)
-iris.test <- sample(n.iris, round(n.iris/3), replace=FALSE)
-iris.rf <- randomForest(Species ~ ., data=iris[-iris.test,])
-iris.pred <- predict(iris.rf, iris[iris.test,])
-table(observed = iris[iris.test,"Species"], predicted = iris.pred)
+ind <- sample(2, nrow(iris), replace = TRUE, prob=c(0.8, 0.2))
+iris.rf <- randomForest(Species ~ ., data=iris[ind == 1,])
+iris.pred <- predict(iris.rf, iris[ind == 2,])
+table(observed = iris[ind==2, "Species"], predicted = iris.pred)
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

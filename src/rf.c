@@ -35,7 +35,8 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
         double *outlier, int *outcl, int *counttr, double *prox, 
 	double *imprt, int *trace, int *ndbigtree, int *nodestatus, 
 	int *bestvar, int *treemap, int *nodeclass, double *xbestsplit, 
-	double *pid, int *savef)
+	double *pid, int *keepf, int *testdat, double *xts, int *clts, int *nts, 
+	double *countts, int *outclts, int *labelts)
 {
   /******************************************************************
    *  C wrapper for random forests:  get input from R and drive
@@ -81,15 +82,15 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   int *out, *bestsplitnext, *bestsplit,
     *nodepop, *parent, *jin, *ndble, *nodex,
     *nodexts, *nodestart, *ta, *ncase, *jerr, *iv, *isort, *ncp, *clp,
-    *jtr, *nc, *msum, *jet, *idmove, *jvr, *countimp,
-    *at, *a, *b, *cbestsplit, *mind;
+    *jtr, *nc, *msum, *idmove, *jvr, *countimp,
+    *at, *a, *b, *cbestsplit, *mind, *jts;
   
-  double errtr, errc;
+  double errtr, errts, errc;
 
   double *tgini, *v, *tx, *wl, *classpop, *errimp,
     *rimpmarg, *tclasscat, *tclasspop, *rmargin, *win, *tp,
     *wc, *wr, *wtt, *diffmarg, *cntmarg, *rmissimp,
-    *tout, *tdx, *sm, *p, *q, *xts, *iw;
+    *tout, *tdx, *sm, *p, *q, *iw;
 
   nsample0 = *nrow;
   mdim     = *ncol;
@@ -98,7 +99,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   ndsize   = *nodesize;
   jbt      = *ntree;
   mtry     = *nvar;
-  ntest = 1; 
+  ntest    = *nts; 
   nsample = (iaddcl > 0) ? (nsample0 + nsample0) : nsample0;
   nrnodes = 2 * (nsample / ndsize) + 1;
   mimp = (*imp == 1) ? mdim : 1;
@@ -115,7 +116,6 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   rimpmarg =   (double *) S_alloc(mdim*nsample, sizeof(double));
   tclasscat =  (double *) S_alloc(nclass*32, sizeof(double));
   tclasspop =  (double *) S_alloc(nclass, sizeof(double));
-  xts =        (double *) S_alloc(mdim*ntest, sizeof(double)); 
   rmargin =    (double *) S_alloc(nsample, sizeof(double));
   win =        (double *) S_alloc(nsample, sizeof(double));
   tp =         (double *) S_alloc(nsample, sizeof(double));
@@ -153,7 +153,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   jtr =           (int *) S_alloc(nsample, sizeof(int));
   nc =            (int *) S_alloc(nclass, sizeof(int));
   msum =          (int *) S_alloc(mdim, sizeof(int));
-  jet =           (int *) S_alloc(ntest, sizeof(int));
+  jts =           (int *) S_alloc(ntest, sizeof(int));
   idmove =        (int *) S_alloc(nsample, sizeof(int));
   jvr =           (int *) S_alloc(nsample, sizeof(int));
   at =            (int *) S_alloc(mdim*nsample, sizeof(int));
@@ -170,12 +170,18 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   
   
   /*    INITIALIZE FOR RUN */
+  if(*testdat == 1) {
+    for (n = 0; n < nclass; ++n) {
+      for (k = 0; k < ntest; ++k) countts[n + k*nclass] = 0.0;
+    }
+  }
+
   F77_CALL(zerm)(counttr, &nclass, &nsample);
   F77_CALL(zerv)(out, &nsample);
   F77_CALL(zervr)(tgini, &mdim);
   F77_CALL(zerv)(msum, &mdim);
 
-  errtr = 0.0;
+  errtr = 0.0;  errts = 0.0;
   
   if(*imp == 1) {
     for(m = 0; m < mdim; ++m) {
@@ -198,7 +204,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 
   for(jb = 0; jb < jbt; jb++) {
 
-    arrayindex = (*savef == 1) ? jb * nrnodes : 0;
+    arrayindex = (*keepf == 1) ? jb * nrnodes : 0;
 
     F77_CALL(zerv)(nodestatus + arrayindex, &nrnodes);
     F77_CALL(zerm)(treemap + 2*arrayindex, &itwo, &nrnodes);
@@ -232,6 +238,17 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     F77_CALL(xtranslate)(x, &mdim, &nrnodes, &nsample, bestvar + arrayindex, 
 			 bestsplit, bestsplitnext, xbestsplit + arrayindex,
 			 nodestatus + arrayindex, cat, ndbigtree + jb); 
+
+    /*  Get test set error */
+    if(*testdat == 1) {
+      F77_CALL(testreebag)(xts, &ntest, &mdim, treemap, nodestatus, 
+			   xbestsplit, cbestsplit, bestvar, nodeclass,
+			   &nrnodes, ndbigtree + jb, cat, &nclass,
+			   jts,nodexts,maxcat);
+      F77_CALL(comptserr)(countts, jts, clts, outclts, &ntest, &nclass,
+			  &errts, pid, labelts);
+    }
+    
     /*  GET OUT-OF-BAG ESTIMATES */
     F77_CALL(testreebag)(x, &nsample, &mdim, treemap + 2*arrayindex, 
 			 nodestatus + arrayindex, xbestsplit + arrayindex, 
@@ -251,8 +268,12 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     if ((jb + 1) % *trace == 0 || jb + 1 == jbt) {
       F77_CALL(oob)(&nsample, &nclass, jin, cl, jtr, jerr, counttr, out,
 		    &errtr, &errc, rmargin, q, outcl, wtt);
-      if(*trace < jbt)
-	Rprintf("%4i: Out-of-bag error rate=%5.2f%%\n", jb+1, 100.0*errtr);
+      if(*trace < jbt) {
+	Rprintf("%4i: OOB error rate=%5.2f%%\t", jb+1, 100.0*errtr);
+	if(*labelts == 1) 
+ 	  Rprintf("Test set error rate=%5.2f%%", 100.0*errts);
+ 	Rprintf("\n");
+      }
     }
 
     /*  DO VARIABLE IMPORTANCE  */

@@ -16,7 +16,9 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	   int *nrnodes, int *jbt, int *mtry, int *imp, int *cat, int *jprint,
 	   double *yptr, double *errimp, int *ndbigtree, int *nodestatus, 
 	   int *treemap, double *avnode, int *mbest, double *upper, 
-	   double *mse, double *rsq, int *savef)
+	   double *mse, double *rsq, int *keepf, int *testdat,
+	   double *xts, int *nts, double *yts, int *labelts,
+	   double *ypred)
 {
   /*************************************************************************
    Input:
@@ -38,18 +40,20 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 
   *************************************************************************/
   
-  double qverrts, averrb, avy, vary, astr, asd, xrand, em, errb = 0.0;
+  double errts = 0.0, averrb, avy, avyts, vary, varyts, astr, asd, xrand, 
+    em, errb = 0.0;
 
   double *yb, *rsnodecost, *bestcrit, *sd, *wts, *v, *ut, *xt, *xb, *ytr, 
-    *yl, *xa, *utr, *predimp, *za, *tgini;
+    *yl, *xa, *utr, *predimp, *za, *tgini, *ytree;
   
-  int k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx;
+  int i, k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx, ntest;
   
   int *jdex, *nodepop, *npert, *ip, *nperm, *parent, *nout, *jin, *isort, 
     *nodestart, *ncase, *nbrterm, *jperm, *incl, *mind;
   
   nimp = (*imp == 1) ? (*imp * *nsample) : 1;
   mimp = (*imp == 1) ? (*imp * *mdim) : 1;
+  ntest = *nts;
 
   if(*jprint == 0) *jprint = *jbt + 1;
 
@@ -63,6 +67,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   xt         = (double *) R_alloc(*nsample, sizeof(double));
   xb         = (double *) R_alloc(*mdim * *nsample, sizeof(double));
   ytr        = (double *) R_alloc(*nsample, sizeof(double));
+  ytree      = (double *) R_alloc(ntest, sizeof(double));
   yl         = (double *) R_alloc(*nsample, sizeof(double));
   xa         = (double *) R_alloc(3 * *mdim, sizeof(double));
   utr        = (double *) R_alloc(*nsample, sizeof(double));
@@ -86,7 +91,6 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   incl       = (int *) R_alloc(*mdim, sizeof(int));
   mind       = (int *) R_alloc(*mdim, sizeof(int)); 
 
-  qverrts = 0.0;
   averrb = 0.0;
 	
   avy = 0.0;
@@ -100,6 +104,17 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     avy = (ntrue * avy + y[n]) / (ntrue + 1);
   }
   vary /= *nsample;
+
+  varyts = 0.0;
+  avyts = 0.0;
+  if(*testdat == 1) {
+    for(n = 0; n < ntest; ++n) {
+      ntrue = n;
+      varyts += ntrue * (yts[n] - avyts)*(yts[n] - avyts) / (ntrue + 1);
+      avyts = (ntrue * avyts + yts[n]) / (ntrue + 1);
+    }
+    varyts /= ntest;
+  }
   
   astr = 0.0;
   asd = 0.0;
@@ -112,13 +127,17 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     }
   }
 
+  if(*labelts == 1) {
+    for(n = 0; n < ntest; ++n) ypred[n] = 0.0;
+  }
+
   GetRNGstate();
 
   /*************************************
    Start the loop over trees.
   *************************************/
   for(jb = 0; jb < *jbt; ++jb) {
-    idx = (*savef == 1) ? jb * *nrnodes : 0;
+    idx = (*keepf == 1) ? jb * *nrnodes : 0;
     for(n = 0; n < *nsample; ++n) jin[n] = 0;
     for(n = 0; n < *nsample; ++n) {
       xrand = unif_rand();
@@ -163,10 +182,27 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
       errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
     }
     errb /= *nsample;
-    
+
+    if(*testdat == 1) {
+      for(i = 0; i < ntest; ++i) ytree[i] = 0.0;      
+      F77_CALL(rtestreebag)(xts, &ntest, mdim, treemap + 2*idx, 
+			    nodestatus + idx, nrnodes, ndbigtree + jb,
+			    ytree, upper + idx, avnode + idx, 
+			    mbest + idx, cat);
+      errts = 0.0;
+      for(n = 0; n < ntest; ++n) {
+	ypred[n] = (jb * ypred[n] + ytree[n]) / (jb + 1);
+	if(*labelts == 1)
+	  errts += (yts[n] - ypred[n]) * (yts[n] - ypred[n]);
+      }
+      if(*labelts == 1) errts /= ntest;
+    }
+
     if ((jb + 1) % *jprint == 0) {
-      Rprintf("%d:    OOB Error=%f    %% Var(y)=%f\n", 
-	      jb + 1, errb, 100*errb/vary);
+      Rprintf("%d: ", jb + 1);
+      if(*labelts == 1) Rprintf("MSE(Test)=%f  %%Var(y)=%5.2f  ", 
+				errts, 100.0 * errts / varyts);
+      Rprintf("MSE(OOB)=%f  %%Var(y)=%5.2f\n", errb, 100*errb/vary);
     }
 	   
     if(*imp == 1) { 

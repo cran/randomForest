@@ -13,11 +13,13 @@
 }
 \usage{
 \method{randomForest}{formula}(formula, data=NULL, subset, ...)
-\method{randomForest}{default}(x, y=NULL, addclass=0, ntree=500,
+\method{randomForest}{default}(x, y=NULL, xtest, ytest, addclass=0, ntree=500,
   mtry=ifelse(is.null(y) || is.factor(y), max(floor(ncol(x)/3), 1),
-    floor(sqrt(ncol(x)))), classwt=NULL, nodesize=1, importance=FALSE,
+    floor(sqrt(ncol(x)))), classwt=NULL,
+    nodesize=ifelse(is.null(y) || is.factor(y), 5, 1),
+    importance=FALSE,
   proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE,
-  keep.forest=FALSE, ...)
+  keep.forest=is.null(xtest), ...)
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -32,6 +34,9 @@
     otherwise regression is assumed.  If omitted, \code{randomForest}
     will run in unsupervised mode with \code{addclass=1} (unless
     explicitly set otherwise).}
+  \item{xtest}{a data frame or matrix (like \code{x}) containing
+    predictors for the test set.}
+  \item{ytest}{response for the test set.}
   \item{addclass}{\code{=0} (default) do not add a synthetic class to
     the data. \code{=1} label the input data as class 1 and add a
     synthetic class by randomly sampling from the product of empirical
@@ -42,11 +47,14 @@
     small a number, to ensure that every input row gets predicted at
     least a few times. }
   \item{mtry}{Number of variables randomly sampled as candidates at each
-    split. }
+    split.  Note that the default values are different for
+    classification and regression}
   \item{classwt}{Priors of the classes.  Need not add up to one.
     Ignored for regression.}
   \item{nodesize}{Minimum size of terminal nodes.  Setting this number
-    larger causes smaller trees to be grown (and thus take less time).}
+    larger causes smaller trees to be grown (and thus take less time).
+    Note that the default values are different for classification
+    and regression.}
   \item{importance}{Should importance of predictors be assessed? }
   \item{proximity}{Should proximity measure among the rows be
     calculated?  Ignored for regression.}
@@ -60,12 +68,18 @@
     \code{randomForest} is run.  If set to some integer, then running
     output is printed for every \code{do.trace} trees.}
   \item{keep.forest}{If set to \code{FALSE}, the forest will not be
-    retained in the output object.}
+    retained in the output object.  If \code{xtest} is given, defaults
+    to \code{FALSE}.}
   \item{...}{optional parameters to be passed to the low level function
     \code{randomForest.default}.}
 }
-%\details{
-%}
+\note{If \code{xtest} is given, prediction of the test set is done ``in
+  place'' as the trees are grown.  If \code{ytest} is also given, and
+  \code{do.trace} is set to some positive integer, then for every
+  \code{do.trace} trees, the test set error is printed.  Results for the
+  test set is returned in the \code{test} component of the resulting
+  \code{randomForest} object.
+}
 \value{
   An object of class \code{randomForest}, which is a list with the
   following components:
@@ -101,12 +115,27 @@
   \item{mse}{mean square error: sum of squared residuals divided by
     \code{n}.}
   \item{rsq}{``pseudo R-squared'': 1 - \code{mse} / Var(y).}
+  If test set is given (through the \code{xtest} or additionally
+  \code{ytest} arguments), then there is also a \code{test} component,
+  which is a list with the following components:
+  \item{predicted}{predicted classes/values for the test set.}
+  \item{confusion}{(for classification) if \code{ytest} is given,
+  confusion matrix for the test set.}
+  \item{votes}{(for classification) the vote counts for the test set.}
+  \item{mse}{(for regression) if \code{ytest} is given, the test set
+  MSE.}
+  \item{rsq}{(for regression) if \code{ytest} is given, the test set
+  ``pseudo R-squared'' (1 - MSE/var(y), where var(y) is the variance of
+  \code{ytest} using n as divisor).}
   Note:  The \code{forest} structure is slightly different between
   classification and regression.
 }
 \references{
-  Breiman, L., \emph{Random Forests}, 
-  \url{http://oz.berkeley.edu/users/breiman/randomforest2001.pdf}.
+  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
+  5-32.
+
+  Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
+  Random Forests V3.1'', \url{http://oz.berkeley.edu/users/breiman/ Using_random_forests_V3.1.pdf}.
 }
 \author{Andy Liaw \email{andy\_liaw@merck.com} and Matthew Wiener
   \email{matthew\_wiener@merck.com}, based on original Fortran code by

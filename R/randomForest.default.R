@@ -1,5 +1,5 @@
 "randomForest.default" <-
-    function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
+    function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=ifelse(!is.null(y) && !is.factor(y),
              max(floor(ncol(x)/3), 1), 
              floor(sqrt(ncol(x)))), replace=TRUE, classwt=NULL, cutoff,
@@ -7,14 +7,15 @@
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
              importance=FALSE, localImp=FALSE,
              proximity=FALSE, oob.prox=proximity,
-             outscale=FALSE, norm.votes=TRUE, do.trace=FALSE,
+             norm.votes=TRUE, do.trace=FALSE,
              keep.forest=is.null(xtest), corr.bias=FALSE, ...)
 {
-    classRF <- is.null(y) || is.factor(y)
+    addclass <- is.null(y)
+    classRF <- addclass || is.factor(y)
     if (!classRF && length(unique(y)) <= 5) {
         warning("The response has five or fewer unique values.  Are you sure you want to do regression?")
     }
-    if (classRF && !is.null(y) && addclass==0 && length(unique(y)) < 2) {
+    if (classRF && !addclass && length(unique(y)) < 2) {
         stop("Need at least two classes to do classification.")
     }
     n <- nrow(x)
@@ -40,20 +41,18 @@
     }
     if (!is.null(y)) {
         if (length(y) != n) stop("length of response must be the same as predictors")
-        addclass <- 0
+        addclass <- FALSE
     } else {
-        if (addclass == 0) addclass <- 1
+        if (!addclass) addclass <- TRUE
         y <- factor(c(rep(1, n), rep(2, n)))
         x <- rbind(x, x)
         keep.forest <- FALSE
     }
-  if (!is.element(addclass,0:2))
-      stop("addclass can only take on values 0, 1, or 2")
   
-  if (any(is.na(x))) stop("NA not permitted in predictors")
-  if (testdat && any(is.na(xtest))) stop("NA not permitted in xtest")
-  if (any(is.na(y))) stop("NA not permitted in response")
-  if (!is.null(ytest) && any(is.na(ytest))) stop("NA not permitted in ytest")
+    if (any(is.na(x))) stop("NA not permitted in predictors")
+    if (testdat && any(is.na(xtest))) stop("NA not permitted in xtest")
+    if (any(is.na(y))) stop("NA not permitted in response")
+    if (!is.null(ytest) && any(is.na(ytest))) stop("NA not permitted in ytest")
 
     if (is.data.frame(x)) {
         ncat <- sapply(x, function(x) if(is.factor(x) && !is.ordered(x))
@@ -113,18 +112,10 @@
             classwt <- rep(1, nclass)
             ipi <- 0
         }
-    } else addclass <- 0  
-    
-    if(outscale) {
-        outscale <- 1
-        proximity <- TRUE
-        outlier <- rep(0, n)
-    } else {
-        outlier <- 0
-        outscale <- 0
-    }
-    
-    if(proximity) {
+    } else addclass <- FALSE  
+
+    if (addclass) proximity <- TRUE
+    if (proximity) {
         prox <- matrix(0.0, n, n)
         proxts <- if (testdat) matrix(ntest, ntest + n) else double(1)
     } else {
@@ -150,7 +141,7 @@
         impSD <- double(1)
     }
     
-    nsample <- if (addclass == 0) n else 2*n
+    nsample <- if (addclass) 2 * n else n
     Stratify <- length(sampsize) > 1
     if ((!Stratify) && sampsize > nrow(x)) stop("sampsize too large")
     if (Stratify && (!classRF)) stop("sampsize should be of length one")
@@ -210,7 +201,6 @@
                     localImp,
                     proximity,
                     oob.prox,
-                    outscale,
                     do.trace,
                     keep.forest,
                     replace,
@@ -221,7 +211,6 @@
                     classwt = as.double(classwt),
                     cutoff = as.double(cutoff),
                     nodesize = as.integer(nodesize),
-                    outlier = as.double(outlier),
                     outcl = integer(nsample),
                     counttr = integer(nclass * nsample),
                     prox = prox,
@@ -248,12 +237,12 @@
                     errts = error.test,
                     DUP=FALSE,
                     PACKAGE="randomForest")[-1]
-        if (addclass == 0) {
+        if (!addclass) {
             if (keep.forest) {
         ## deal with the random forest outputs
                 max.nodes <- max(rfout$ndbigtree)
                 treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
-                treemap <- aperm(treemap, c(2,1,3))[1:max.nodes, , ,drop=FALSE]
+                treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,,drop=FALSE]
             }
             ## Turn the predicted class into a factor like y.
             out.class <- factor(rfout$outcl, levels=1:nclass,
@@ -285,14 +274,12 @@
             }
         }
         out <- list(call = match.call(),
-                    type = ifelse(addclass == 0, "classification",
-                    "unsupervised"),
-                    predicted = if (addclass == 0) out.class else NULL,
-                    err.rate = if (addclass == 0) t(matrix(rfout$errtr,
-                                   nclass+1,
-                                   ntree, dimnames=list(c("OOB", levels(y)),
-                                          NULL))) else NULL, 
-                    confusion = if(addclass == 0) con else NULL,
+                    type = if (addclass) "unsupervised" else "classification",
+                    predicted = if (addclass) NULL else out.class,
+                    err.rate = if (addclass) NULL else t(matrix(rfout$errtr,
+                    nclass+1, ntree,
+                    dimnames=list(c("OOB", levels(y)), NULL))),
+                    confusion = if (addclass) NULL else con,
                     votes = out.votes,
                     oob.times = oob.times,
                     classes = levels(y),
@@ -312,10 +299,9 @@
                            dimnames = list(x.col.names,x.row.names)) else NULL,
                     proximity = if (proximity) matrix(rfout$prox, n, n,
                     dimnames = list(x.row.names, x.row.names)) else NULL,
-                    outlier = if (outscale) rfout$outlier else NULL,
                     ntree = ntree,
                     mtry = mtry,
-                    forest = if (addclass > 0 || !keep.forest) NULL else {
+                    forest = if (addclass || !keep.forest) NULL else {
                         list(ndbigtree = rfout$ndbigtree, 
                              nodestatus = matrix(rfout$nodestatus,
                              nc = ntree)[1:max.nodes,],
@@ -328,6 +314,7 @@
                              pid = rfout$pid, cutoff = cutoff, ncat = ncat, maxcat = maxcat, 
                              nrnodes = max.nodes, ntree = ntree, nclass = nclass)
                     },
+                    y = if (addclass) NULL else y,
                     test = if(!testdat) NULL else list(
                     predicted = out.class.ts,
                     err.rate = if (labelts) t(matrix(rfout$errts, nclass+1,
@@ -384,18 +371,17 @@
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)
-            
             rfout$nodestatus <-
-              matrix(rfout$nodestatus, ncol = ntree)[1:max.nodes,,drop=FALSE]
+                matrix(rfout$nodestatus, ncol=ntree)[1:max.nodes, , drop=FALSE]
             rfout$bestvar <-
-              matrix(rfout$bestvar, ncol = ntree)[1:max.nodes,,drop=FALSE]
+                matrix(rfout$bestvar, ncol=ntree)[1:max.nodes, , drop=FALSE]
             rfout$nodepred <-
-              matrix(rfout$nodepred, ncol = ntree)[1:max.nodes,,drop=FALSE]
+                matrix(rfout$nodepred, ncol=ntree)[1:max.nodes, , drop=FALSE]
             rfout$xbestsplit <-
-              matrix(rfout$xbestsplit, ncol = ntree)[1:max.nodes,,drop=FALSE]
+                matrix(rfout$xbestsplit, ncol=ntree)[1:max.nodes, , drop=FALSE]
             rfout$treemap <- aperm(array(rfout$treemap,
                                          dim = c(2, nrnodes, ntree)),
-                                   c(2, 1, 3))[1:max.nodes, , ,drop=FALSE]
+                                   c(2, 1, 3))[1:max.nodes, , , drop=FALSE]
         }
         
         out <- list(call = match.call(),
@@ -422,6 +408,7 @@
                       list(ncat = ncat), list(nrnodes=max.nodes),
                       list(ntree=ntree)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
+                    y = y,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred,
                              names=xts.row.names),

@@ -8,21 +8,20 @@
 \description{
   \code{randomForest} implements Breiman's random forest algorithm (based on
   Breiman and Cutler's original Fortran code) for classification and
-  regression.  It can also be used in unsupervised mode for locating
-  outliers or assessing proximities among data points.
+  regression.  It can also be used in unsupervised mode for assessing
+  proximities among data points.
 }
 \usage{
 \method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
 \method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL,
-          addclass=0, ntree=500,
-          mtry=ifelse(!is.null(y) && !is.factor(y),
+          ntree=500, mtry=ifelse(!is.null(y) && !is.factor(y),
                max(floor(ncol(x)/3), 1), floor(sqrt(ncol(x)))),
           replace=TRUE, classwt=NULL, cutoff,
           sampsize=if(replace) nrow(x) else ceiling(.632*nrow(x)),
           nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
           importance=FALSE, localImp=FALSE,
           proximity=FALSE, oob.prox=proximity,
-          outscale=FALSE, norm.votes=TRUE, do.trace=FALSE,
+          norm.votes=TRUE, do.trace=FALSE,
           keep.forest=is.null(xtest), corr.bias=FALSE, ...) 
 \method{print}{randomForest}(x, ...)
 }
@@ -39,17 +38,10 @@
     \code{print} method, an \code{randomForest} object).}
   \item{y}{A response vector.  If a factor, classification is assumed,
     otherwise regression is assumed.  If omitted, \code{randomForest}
-    will run in unsupervised mode with \code{addclass=1} (unless
-    explicitly set otherwise).}
+    will run in unsupervised mode.}
   \item{xtest}{a data frame or matrix (like \code{x}) containing
     predictors for the test set.}
   \item{ytest}{response for the test set.}
-  \item{addclass}{\code{=0} (default) do not add a synthetic class to
-    the data. \code{=1} label the input data as class 1 and add a
-    synthetic class by randomly sampling from the product of empirical
-    marginal distributions of the input.  \code{=2} is similar to
-    \code{=1}, but the synthetic data are sampled from the uniform
-    hyperrectangle that contain the input.  Ignored for regression.}
   \item{ntree}{Number of trees to grow.  This should not be set to too
     small a number, to ensure that every input row gets predicted at
     least a few times. }
@@ -80,8 +72,6 @@
     calculated?}
   \item{oob.prox}{Should proximity be calculated only on ``out-of-bag''
     data?}
-  \item{outscale}{Should outlyingness of rows be assessed?  Ignored for
-    regression.}
   \item{norm.votes}{If \code{TRUE} (default), the final result of votes
     are expressed as fractions.  If \code{FALSE}, raw vote counts are
     returned (useful for combining results from different runs).
@@ -142,9 +132,6 @@
     \code{randomForest} is called, a matrix of proximity measures among
     the input (based on the frequency that pairs of data points are in
     the same terminal nodes).}
-  \item{outlier}{(classification only) if \code{outscale=TRUE} when
-    \code{randomForest} is called, a vector indicating how outlying the
-    data points are (based on the proximity measures).}
 
   \item{mse}{(regression only) vector of mean square errors: sum of squared
     residuals divided by \code{n}.}
@@ -228,10 +215,8 @@ print(iris.mds$GOF)
 
 ## The `unsupervised' case:
 set.seed(17)
-iris.urf <- randomForest(iris[, -5], proximity=TRUE, outscale=TRUE)
-## Look for Outliers:
-plot(iris.urf$out, type="h", ylab="",
-     main="Measure of Outlyingness for Iris Data")
+iris.urf <- randomForest(iris[, -5])
+MDSplot(iris.urf, iris$Species)
 
 ## Regression:
 data(airquality)

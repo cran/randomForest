@@ -15,7 +15,7 @@
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
 	int *sampsize, int *Options, int *ntree, int *nvar,
 	int *ipi, double *pi, double *cut, int *nodesize, 
-        double *outlier, int *outcl, int *counttr, double *prox, 
+        int *outcl, int *counttr, double *prox, 
 	double *imprt, double *, double *impmat, int *nrnodes, int *ndbigtree, 
 	int *nodestatus, int *bestvar, int *treemap, int *nodeclass,
 	double *xbestsplit, double *pid, double *errtr, 
@@ -34,7 +34,7 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 void regTree(double *x, double *y, int mdim, int nsample, 
 	     int *treemap, double *upper, double *avnode, int *nodestatus, 
 	     int nrnodes, int nthsize, int mtry, int *mbest, int *cat, 
-	     double *tgini);
+	     double *tgini, int *varUsed);
 
 void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample, 
 		   int ndstart, int ndend, int *msplit, double *decsplit, 
@@ -46,28 +46,34 @@ void predictRegTree(double *x, int nsample, int mdim, int *doPred,
 		    int ndbigtree, double *ypred, double *split, 
 		    double *nodepred, int *bestvar, int *cat, int *nodex);
 
-void permuteOOB(int m, double *x, int *in, int nsample, 
-		int mdim);
+void predictClassTree(double *x, int n, int mdim, int *doPred, int *treemap,
+		      int *nodestatus, double *xbestsplit,
+		      int *cbestsplit, int *bestvar, int *nodeclass,
+		      int nrnodes, int ndbigtree, int *cat, int nclass,
+		      int *jts, int *nodex, int maxcat);
 
 double pack(int l, int *icat);
 void unpack(int l, int npack, int *icat);
+
 void zeroInt(int *x, int length);
 void zeroDouble(double *x, int length);
+void createClass(double *x, int realN, int totalN, int mdim);
+void prepare(int *cl, const int nsample, const int nclass, const int ipi, 
+	     double *pi, double *pid, int *nc, double *wtt);
+void makeA(double *x, const int mdim, const int nsample, int *cat, int *a, 
+           int *b);
+void modA(int *a, int *nuse, const int nsample, const int mdim, int *cat, 
+          const int maxcat, int *ncase, int *jin);
+void Xtranslate(double *x, int mdim, int nrnodes, int nsample, 
+		int *bestvar, int *bestsplit, int *bestsplitnext,
+		double *xbestsplit, int *nodestatus, int *cat, int treeSize);
+void permuteOOB(int m, double *x, int *in, int nsample, int mdim);
 
 /* Template of Fortran subroutines to be called from the C wrapper */
-extern void F77_NAME(createclass)(double *, int *, int *, int *, int *,
-				  double *, double *, double *, int *, int *);
 extern void F77_NAME(zerm)(int *,     int *, int *);
 extern void F77_NAME(zermd)(double *, int *, int *);
 extern void F77_NAME(zerv)(int *,     int *);
 extern void F77_NAME(zervr)(double *, int *);
-extern void F77_NAME(prep)(int *, int *, int *, int *, double *, double *, 
-			   int*, double *); 
-extern void F77_NAME(makea)(double *, int *, int *, int *, int *, double *,
-			    int *, int *, int *);
-extern void F77_NAME(eqm)(int *, int *, int *, int *);
-extern void F77_NAME(moda)(int *, int *, int *, int *, int *, int *, int *,
-			   int *, int *);
 extern void F77_NAME(buildtree)(int *, int *, int *, int *, int *, int *, int
 				*, int *, int *, int *, int *, double *, int
 				*, int *, int *, double *, double *, double
@@ -75,39 +81,3 @@ extern void F77_NAME(buildtree)(int *, int *, int *, int *, int *, int *, int
 				int *, int *, int *, int *, int *, double *,
 				double *, double *, double *, int *, int *,
 				int *); 
-extern void F77_NAME(xtranslate)(double *, int *, int *, int *, int *, int *,
-				 int *, double *, int *, int *, int *); 
-extern void F77_NAME(testreebag)(double *, int *, int *, int *, int *,
-				 double *, int *, int *, int *, int *, int *,
-				 int *, int *, int *, int *, int *); 
-extern void F77_NAME(oob)(int *, int *, int *, int *, int *, int *, int *,
-			  int *, double *, double *, int
-			  *, double *, double *);
-extern void F77_NAME(permobmr)(int *, double *, double *, double *, int *,
-			       int *, int *);
-extern void F77_NAME(locateout)(double *, int *, int *, int *, int *c, int *,
-				int *,	double *, double *, int *, int *);
-extern void F77_NAME(finishimp)(double *, int *, int *, int * , int *, int *,
-				int *, double *, double *, double *, double *, 
-				double *, int *, int *, double *, double *);
-extern void F77_NAME(comptserr)(double *, int *, int *, int *, int *,
-				int *, double *, double *, int *, double *);
-
-/*************************************************************
-  Subroutines for the regression RF
-************************************************************/
-
-extern void F77_NAME(rbuildtree)(double *xb, double *yb, double *yl, int *mdim,
-				int *nls, int *nsample, int *treemap, 
-				int *jdex, double *upper, double *avnode, 
-				double *bestcrit, int *nodestatus, 
-				int *nodepop, int *nodestart, int *nrnodes, 
-				int *nthsize, double *rsnodecost, int *ncase, 
-				int *parent, double *ut, double *v, 
-				double *xt, int *mtry, int *ip, int *mbest, 
-				int *cat, double *tgini, int *mind);
-extern void F77_NAME(rtestreebag)(double *x, int *nsample, int *mdim, 
-				 int *treemap, int *nodestatus, int *nrnodes,
-				 int *ndbigtree, double *ytr, double *upper, 
-				 double *avnode, int *mbest, int *cat,
-				  int *nodex);

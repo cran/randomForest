@@ -25,23 +25,16 @@
 #include <R.h>
 #include "rf.h"
 
-void regTree(double *x, double *y, int mdim, int nsample, 
-	     int *treemap, double *upper, double *avnode, int *nodestatus, 
-	     int nrnodes, int nthsize, int mtry, int *mbest, int *cat, 
-	     double *tgini) {
-  /* int mdim, nsample, nrnodes, nthsize, mtry; */
+void regTree(double *x, double *y, int mdim, int nsample, int *treemap,
+             double *upper, double *avnode, int *nodestatus, int nrnodes, 
+             int nthsize, int mtry, int *mbest, int *cat,  
+	     double *tgini, int *varUsed) {
     int i, j, k, m, ncur, *jdex, *nodestart, *nodepop;
     int ndstart, ndend, ndendl, nodecnt, jstat, msplit;
     double d, ss, av, decsplit, ubest, sumnode;
 
-    /*    mtry = *mtr;
-    mdim = *mdi;
-    nsample = *nsampl;
-    nrnodes = *nrnode;
-    nthsize = *nthsiz;*/
-
-    nodestart = (int *) R_alloc(nrnodes, sizeof(int));
-    nodepop   = (int *) R_alloc(nrnodes, sizeof(int));
+    nodestart = (int *) Calloc(nrnodes, int);
+    nodepop   = (int *) Calloc(nrnodes, int);
     
     /* initialize some arrays for the tree */
     for (i = 0; i < nrnodes; ++i) {
@@ -51,11 +44,11 @@ void regTree(double *x, double *y, int mdim, int nsample,
 	avnode[i] = 0;
     }
     
-    jdex = (int *) R_alloc(nsample, sizeof(int));
+    jdex = (int *) Calloc(nsample, int);
     for (i = 1; i <= nsample; ++i) {
 	jdex[i-1] = i;
     }
-    for (i=0; i < mdim; ++i) tgini[i] = 0.0;
+    zeroDouble(tgini, mdim);
 
     ncur = 0;
     nodestart[0] = 0;
@@ -96,10 +89,11 @@ void regTree(double *x, double *y, int mdim, int nsample,
 	} else {
 	    /* Found the best split. */
 	    mbest[k] = msplit;
+            varUsed[msplit - 1] = 1;
 	    upper[k] = ubest;
 /*	    bestcrit[k] = decsplit; */
 	}
-	tgini[msplit-1] += decsplit;
+	tgini[msplit - 1] += decsplit;
 	
 	/* leftnode no.= ncur+1, rightnode no. = ncur+2. */
 	nodepop[ncur + 1] = ndendl - ndstart + 1;
@@ -156,11 +150,10 @@ void regTree(double *x, double *y, int mdim, int nsample,
 	/* if tree size limit has been reach, stop */
 	if (ncur >= nrnodes) break;
     }
-/*
+
     Free(jdex);
     Free(nodepop);
     Free(nodestart);
-    Free(bestcrit);*/
 }
 
 /*--------------------------------------------------------------*/
@@ -171,22 +164,14 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     int last, ncat[32], icat[32], non, lc, nl, nr, npopl, npopr, ic;
     int i, j, kv, l, *mind, *ncase;
     double *xt, *ut, *v, *yl, sumcat[32], avcat[32], tavcat[32], ubestt;
-    double crit, critmax, critvar, suml, sumr, d;
+    double crit, critmax, critvar, suml, sumr, d, critParent;
 
-    /*
     ut = (double *) Calloc(nsample, double);
     xt = (double *) Calloc(nsample, double);
     v  = (double *) Calloc(nsample, double);
     yl = (double *) Calloc(nsample, double);
     mind  = (int *) Calloc(mdim, int);
     ncase = (int *) Calloc(nsample, int);
-    */
-    ut = (double *) S_alloc(nsample, sizeof(double));
-    xt = (double *) S_alloc(nsample, sizeof(double));
-    v  = (double *) S_alloc(nsample, sizeof(double));
-    yl = (double *) S_alloc(nsample, sizeof(double));
-    mind  = (int *) S_alloc(mdim, sizeof(int));
-    ncase = (int *) S_alloc(nsample, sizeof(int));
     
     /* START BIG LOOP */
     *msplit = -1;
@@ -260,6 +245,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	    
 	/* ncase(n)=case number of v nth from bottom */
 	/* Start from the right and search to the left. */
+	critParent = sumnode * sumnode / nodecnt;
 	suml = 0.0;
 	sumr = sumnode;
 	npopl = 0;
@@ -275,7 +261,8 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	    npopl++;
 	    npopr--;
 	    if (v[j] < v[j+1]) {
-		crit = (suml * suml / npopl) + (sumr * sumr / npopr);
+		crit = (suml * suml / npopl) + (sumr * sumr / npopr) -
+		  critParent;
 		if (crit > critvar) {
 		    ubestt = (v[j] + v[j+1]) / 2.0;
 		    critvar = crit;
@@ -300,7 +287,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	}
 	/* Rprintf("var %i: crit=%f, critmax=%f\n", kv+1, critvar, critmax);*/
     }
-    *decsplit = critmax - (sumnode * sumnode / nodecnt);
+    *decsplit = critmax; 
     
     /* If best split can not be found, set to terminal node and return. */
     if (*msplit == -1) {
@@ -337,14 +324,13 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 	}
 	*ubest = pack(lc, icat);
     }
-    /*
+
       Free(ncase);
       Free(mind);
       Free(v);
       Free(yl);
       Free(xt);
       Free(ut); 
-    */
 }
 
 /*====================================================================*/
@@ -353,9 +339,8 @@ void predictRegTree(double *x, int nsample, int mdim, int *doPred,
 		    int ndbigtree, double *ypred, double *split, 
 		    double *nodepred, int *bestvar, int *cat, int *nodex) {
     int icat[32], i, j, k, kt, m, mm, lc;
-
+    
     zeroInt(nodex, nsample);
-
     for (i = 0; i < nsample; ++i) {
 	if (doPred[i] > 0) continue; /* skip to the next case */
 	kt = 0;
@@ -364,6 +349,7 @@ void predictRegTree(double *x, int nsample, int mdim, int *doPred,
 		/* terminal node: assign prediction and move on to next */
 		ypred[i] = nodepred[kt];
 		nodex[i] = kt + 1;
+		/* Rprintf("ypred[%i]=%f\n", i+1, ypred[i]); */
 		break;
 	    }
 	    m = bestvar[kt] - 1;

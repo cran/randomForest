@@ -1,3 +1,17 @@
+Changes in 4.4-1:
+
+* Fixed a memory problem introduced in 4.3-3.
+
+* Made slight change in regression code so that it won't split `pure' 
+  nodes.  Also fixed the `increase in node purity' importance measure 
+  in regression.
+
+* The outscale option in randomForest() is removed.  Use the outlier() 
+  function instead.  The default outlier() method can be used with other
+  proximity/dissimilarity measures.
+
+* More Fortran subroutines migrated to C.
+
 Changes in 4.3-3:
 
 * Fixed randomForest.formula() so that update() will work.
@@ -13,8 +27,11 @@ Changes in 4.3-1:
 
 * Fixed bugs in sampling cases and variables without replacement.
 
+* Added the rfNews() function to display the NEWS file.  Advertised in
+  the start up banner.
+
 * (Not user-visible.)  Translated regression tree building code from 
-  Fortran to C.
+  Fortran to C.  One perhaps noticeable change is less memory usage.
 
 Changes in 4.3-0:
 

@@ -54,8 +54,8 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     
     double *yb, *xt, *xb, *ytr, *utr, *ytree, *tgini; 
     
-    int i, k, m, mr, mrind, n, ntrue, jout, jb, idx, ntest, last, ktmp;
-    int *oobpair, varImp, localImp, *ind, *indts;
+    int k, m, mr, n, ntrue, jout, jb, idx, ntest, last, ktmp;
+    int *oobpair, varImp, localImp, *ind, *indts, *varUsed;
     
     int *jin, *nind, *nodex, *nodexts;
     
@@ -76,6 +76,7 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     jin        = (int *) S_alloc(*nsample, sizeof(int));
     ind        = (int *) S_alloc(*nsample, sizeof(int));
     nodex      = (int *) S_alloc(*nsample, sizeof(int));
+    varUsed    = (int *) S_alloc(*mdim, sizeof(int));
     nind = *replace ? NULL : (int *) S_alloc(*nsample, sizeof(int));
     
     if (*testdat) {
@@ -112,26 +113,14 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     }
     
     if (*iprox) {
-	for (n = 0; n < *nsample; ++n) {
-	    for (k = 0; k < *nsample; ++k) {
-		prox[k * *nsample + n] = 0.0;
-		if (*oobprox) {
-		    oobpair[k * *nsample + n] = 0;
-		}
-	    }      
-	}
 	if (*testdat) {
-	    for (n = 0; n < ntest; ++n) {
-		for (k = 0; k < ntest + *nsample; ++k) {
-		    prox[k * ntest + n] = 0.0;
-		}
-	    }
+	    zeroDouble(prox, *nsample * (*nsample + ntest));
+	} else {
+	    zeroDouble(prox, *nsample * *nsample);
 	}
+	if (*oobprox) zeroInt(oobpair, *nsample * *nsample);
     }
-    
-    for (m = 0; m < *mdim; ++m) {
-	tgini[m] = 0.0;
-    }
+    zeroDouble(tgini, *mdim);
     
     if (varImp) {
 	for (m = 0; m < *mdim; ++m) {
@@ -139,18 +128,9 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	    errimp[m + *mdim] = 0.0;
 	    impSD[m] = 0.0;
 	}
-	if (localImp) {
-	    for (n = 0; n < *nsample * *mdim; ++n) {
-		impmat[n] = 0.0;
-	    }
-	}
+	if (localImp) zeroDouble(impmat, *nsample * *mdim);
     }
-    
-    if (*labelts) {
-	for (n = 0; n < ntest; ++n) {
-	    ypred[n] = 0.0;
-	}
-    }
+    if (*labelts) zeroDouble(ypred, ntest);
     
     /* print header for running output */
     if (*jprint <= *jbt) {
@@ -171,10 +151,9 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
      *************************************/
     for (jb = 0; jb < *jbt; ++jb) {
 	idx = (*keepf) ? jb * *nrnodes : 0;
-	for (n = 0; n < *nsample; ++n) {
-	    jin[n] = 0;
-	    nodex[n] = 0;
-	}
+	zeroInt(jin, *nsample);
+	zeroInt(nodex, *nsample);
+        zeroInt(varUsed, *mdim);
 	if (*replace) {
 	    for (n = 0; n < *sampsize; ++n) {
 		xrand = unif_rand();
@@ -204,9 +183,9 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	    }
 	}
 	
-	regTree(xb, yb, *mdim, *sampsize, treemap + (2*idx), 
-		upper + idx, avnode + idx, nodestatus + idx, 
-		*nrnodes, *nthsize, *mtry, mbest + idx, cat, tgini);
+	regTree(xb, yb, *mdim, *sampsize, treemap + (2*idx), upper + idx,
+                avnode + idx, nodestatus + idx, *nrnodes, *nthsize, *mtry, 
+                mbest + idx, cat, tgini, varUsed);
 	ndbigtree[jb] = *nrnodes;
 	for (k = *nrnodes-1; k >= 0; --k) {
 	    if (nodestatus[k + idx] == 0) {
@@ -216,11 +195,8 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 		nodestatus[k + idx] = -1;
 	    }
 	}
-	
-	for (n = 0; n < *nsample; ++n) {
-	    ytr[n] = 0.0;
-	}
-	
+
+	zeroDouble(ytr, *nsample);	
 	predictRegTree(x, *nsample, *mdim, ind, treemap + 2*idx, 
 		       nodestatus + idx, *nrnodes, ndbigtree[jb], ytr, 
 		       upper + idx, avnode + idx, mbest + idx, cat, nodex);
@@ -256,10 +232,8 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	}
 	
 	if (*testdat) {
-	    for (i = 0; i < ntest; ++i) {
-		ytree[i] = 0.0;
-		nodexts[i] = 0;
-	    }
+	    zeroDouble(ytree, ntest);
+	    zeroInt(nodexts, ntest);
 	    predictRegTree(xts, ntest, *mdim, indts, treemap + 2*idx,
 			   nodestatus + idx, *nrnodes, ndbigtree[jb],
 			   ytree, upper + idx, avnode + idx, 
@@ -269,7 +243,6 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	    errts = 0.0;
 	    for (n = 0; n < ntest; ++n) {
 		ypred[n] = (jb * ypred[n] + ytree[n]) / (jb + 1);
-		
 	    }
 	    
 	    if (*labelts) {
@@ -341,31 +314,33 @@ void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	/* Variable importance */
 	if (varImp) { 
 	    for (mr = 0; mr < *mdim; ++mr) {
-		/* make a copy of the m-th variable into xt */
-		for (n = 0; n < *nsample; ++n) xt[n] = x[mr + n * *mdim];
-		permuteOOB(mr, x, jin, *nsample, *mdim);
-		predictRegTree(x, *nsample, *mdim, jin, treemap + 2*idx, 
-			       nodestatus + idx, *nrnodes, ndbigtree[jb], 
-			       ytr, upper + idx, avnode + idx, mbest + idx, 
-			       cat, nodex);
-		ooberrperm = 0.0;
-		for (n = 0; n < *nsample; ++n) {
-		    x[mr + n * *mdim] = xt[n];
-		    if (jin[n] == 0) {
-			ooberrperm += (y[n] - avy) * ytr[n];
-			if (localImp) {
-			    impmat[mr + n * *mdim] += 
-			      (ytr[n] - y[n]) * (ytr[n] - y[n]) - 
-			      resOOB[n] * resOOB[n];
-			}
-		    }
-		}
-		delta = (ooberr - ooberrperm) / *nsample;
-		errimp[mr] += delta;
-		impSD[mr] += delta * delta;
-		/* errimp[mr] = em / *nsample; */
-	    }
-	}
+                if (varUsed[mr]) { /* Go ahead if the variable is used */
+                    /* make a copy of the m-th variable into xt */
+                    for (n = 0; n < *nsample; ++n) xt[n] = x[mr + n * *mdim];
+                    permuteOOB(mr, x, jin, *nsample, *mdim);
+                    predictRegTree(x, *nsample, *mdim, jin, treemap + 2*idx, 
+                                   nodestatus + idx, *nrnodes, ndbigtree[jb], 
+                                   ytr, upper + idx, avnode + idx, 
+                                   mbest + idx, cat, nodex);
+                    ooberrperm = 0.0;
+                    for (n = 0; n < *nsample; ++n) {
+                        x[mr + n * *mdim] = xt[n]; /* copy original data back */
+                        if (jin[n] == 0) {
+                            ooberrperm += (y[n] - avy) * ytr[n];
+                            if (localImp) {
+                                impmat[mr + n * *mdim] += 
+                                    (ytr[n] - y[n]) * (ytr[n] - y[n]) - 
+                                    resOOB[n] * resOOB[n];
+                            }
+                        }
+                    }
+                    delta = (ooberr - ooberrperm) / *nsample;
+                    errimp[mr] += delta;
+                    impSD[mr] += delta * delta;
+                    /* errimp[mr] = em / *nsample; */
+                }
+            }
+        }
     }
     PutRNGstate();
     
@@ -433,6 +408,7 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest,
     ytree = (double *) S_alloc(*ntest, sizeof(double));
     nodex = (int *) S_alloc(*ntest, sizeof(int));
     ind   = (int *) S_alloc(*ntest, sizeof(int));
+
     if (*iprox) zeroDouble(proximity, *ntest * *ntest);
     if (*keepPred) zeroDouble(allpred, *ntest * *ntree);
 

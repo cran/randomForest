@@ -38,7 +38,7 @@ void F77_SUB(rrand)(double *r) { *r = unif_rand(); }
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
 	     int *sampsize, int *Options, int *ntree, int *nvar,
 	     int *ipi, double *pi, double *cut, int *nodesize, 
-	     double *outlier, int *outcl, int *counttr, double *prox, 
+	     int *outcl, int *counttr, double *prox, 
 	     double *imprt, double *impsd, double *impmat, int *nrnodes, 
 	     int *ndbigtree, int *nodestatus, int *bestvar, int *treemap, 
 	     int *nodeclass, double *xbestsplit, double *pid, double *errtr, 
@@ -81,37 +81,35 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
      *  imprt:    matrix of variable importance measures
      *  impmat:   matrix of local variable importance measures
      *  prox:     matrix of proximity (if iprox=1)
-     *  outlier:  measure of outlyingness (if noutlier=1)
      ******************************************************************/
 
-    int nsample0, mdim, nclass, iaddcl, jbt, mtry, ntest, nsample, ndsize,
+    int nsample0, mdim, nclass, addClass, jbt, mtry, ntest, nsample, ndsize,
         mimp, nimp, near, nuse, noutall, nrightall, nrightimpall;
     int i, jb, j, n, m, k, arrayindex, imp, localImp, iprox, 
 	oobprox, noutlier, keepf, replace, stratify, trace, *nright, 
 	*nrightimp, *nout, *nclts;
 
-    int *out, *bestsplitnext, *bestsplit,
-	*nodepop, *parent, *jin, *ndble, *nodex,
-	*nodexts, *nodestart, *ta, *ncase, *jerr, *iv, *isort, *ncp, *clp,
-	*jtr, *nc, *idmove, *jvr, /* *countimp, */
+    int *out, *bestsplitnext, *bestsplit, *zeroes,
+	*nodepop, *parent, *jin, *nodex,
+	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed, *clp,
+	*jtr, *nc, *idmove, *jvr,
 	*at, *a, *b, *cbestsplit, *mind, *nind, *jts, *oobpair;
     int **class_idx, *class_size, last, tmp, ktmp, anyEmpty, ntry;
 
     double av=0.0, se=0.0;
     
-    double *tgini, *v, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
-        *tp, *wc, *wr, *wtt, *tout, *tdx, *sm, *p, *iw;
+    double *tgini, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
+        *tp, *wc, *wr, *wtt, *tout, *p, *iw;
 
-    iaddcl   = Options[0];
+    addClass = Options[0];
     imp      = Options[1];
     localImp = Options[2];
     iprox    = Options[3];
     oobprox  = Options[4];
-    noutlier = Options[5];
-    trace    = Options[6]; 
-    keepf    = Options[7];
-    replace  = Options[8];
-    stratify = Options[9];
+    trace    = Options[5]; 
+    keepf    = Options[6];
+    replace  = Options[7];
+    stratify = Options[8];
     mdim     = dimx[0];
     nsample0 = dimx[1];
     nclass   = (*ncl==1) ? 2 : *ncl;
@@ -119,7 +117,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     jbt      = *ntree;
     mtry     = *nvar;
     ntest    = *nts; 
-    nsample = (iaddcl > 0) ? (nsample0 + nsample0) : nsample0;
+    nsample = addClass ? (nsample0 + nsample0) : nsample0;
     mimp = imp ? mdim : 1;
     nimp = imp ? nsample : 1;
     near = iprox ? nsample0 : 1;
@@ -133,16 +131,11 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     classpop =   (double *) S_alloc(nclass* *nrnodes, sizeof(double));
     tclasscat =  (double *) S_alloc(nclass*32, sizeof(double));
     tclasspop =  (double *) S_alloc(nclass, sizeof(double));
-    v =          (double *) S_alloc(nsample, sizeof(double));
     tx =         (double *) S_alloc(nsample, sizeof(double));
     win =        (double *) S_alloc(nsample, sizeof(double));
     tp =         (double *) S_alloc(nsample, sizeof(double));
     wtt =        (double *) S_alloc(nsample, sizeof(double));
     iw =         (double *) S_alloc(nsample, sizeof(double));
-    tdx =        (double *) S_alloc(nsample0, sizeof(double));
-    sm =         (double *) S_alloc(nsample0, sizeof(double));
-    p =          (double *) S_alloc(nsample0, sizeof(double));
-    tout =       (double *) S_alloc(near, sizeof(double));
 
     out =           (int *) S_alloc(nsample, sizeof(int));
     bestsplitnext = (int *) S_alloc(*nrnodes, sizeof(int));
@@ -151,21 +144,18 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     parent =        (int *) S_alloc(*nrnodes, sizeof(int));
     nodestart =     (int *) S_alloc(*nrnodes, sizeof(int));
     jin =           (int *) S_alloc(nsample, sizeof(int));
-    ndble =         (int *) S_alloc(nsample0, sizeof(int));
     nodex =         (int *) S_alloc(nsample, sizeof(int));
     nodexts =       (int *) S_alloc(ntest, sizeof(int));
     ta =            (int *) S_alloc(nsample, sizeof(int));
     ncase =         (int *) S_alloc(nsample, sizeof(int));
     jerr =          (int *) S_alloc(nsample, sizeof(int));
-    isort =         (int *) S_alloc(nsample, sizeof(int));
-    iv =            (int *) S_alloc(mdim, sizeof(int)); 
-    ncp =           (int *) S_alloc(near, sizeof(int));
-    clp =           (int *) S_alloc(near, sizeof(int));
+    varUsed =       (int *) S_alloc(mdim, sizeof(int)); 
     jtr =           (int *) S_alloc(nsample, sizeof(int));
+    jvr =           (int *) S_alloc(nsample, sizeof(int));
     nc =            (int *) S_alloc(nclass, sizeof(int));
     jts =           (int *) S_alloc(ntest, sizeof(int));
+    zeroes =        (int *) S_alloc(ntest, sizeof(int));
     idmove =        (int *) S_alloc(nsample, sizeof(int));
-    jvr =           (int *) S_alloc(nsample, sizeof(int));
     at =            (int *) S_alloc(mdim*nsample, sizeof(int));
     a =             (int *) S_alloc(mdim*nsample, sizeof(int));
     b =             (int *) S_alloc(mdim*nsample, sizeof(int));
@@ -178,8 +168,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	oobpair = (int *) S_alloc(near*near, sizeof(int));
     }
 
-    F77_CALL(prep)(cl, &nsample, &nclass, ipi, pi, pid, nc, wtt);
-    
+    prepare(cl, nsample, nclass, *ipi, pi, pid, nc, wtt);    
+
     if (stratify) {
         /* Create the array of pointers, each pointing to a vector 
 	   of indices of where data of each class is. */
@@ -200,14 +190,11 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	}
     }
 
-    /* SET UP DATA TO ADD A CLASS++++++++++++++++++++++++++++++ */
-
-    if(iaddcl >= 1) 
-	F77_CALL(createclass)(x, cl, &nsample0, &nsample, &mdim, tdx, p,
-			      sm, ndble, &iaddcl);
-    
     /*    INITIALIZE FOR RUN */
-    if(*testdat) zeroDouble(countts, ntest * nclass);
+    if (*testdat) {
+        zeroDouble(countts, ntest * nclass);
+        zeroInt(zeroes, ntest);
+    }
     zeroInt(counttr, nclass * nsample);
     zeroInt(out, nsample);
     zeroDouble(tgini, mdim);
@@ -224,13 +211,11 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
         zeroDouble(impsd, (nclass+1) * mdim);
 	if (localImp) zeroDouble(impmat, nsample * mdim);
     }
-
     if (iprox) {
         zeroDouble(prox, nsample0 * nsample0);
         if (*testdat) zeroDouble(proxts, ntest * (ntest + nsample0));
     }
-
-    F77_CALL(makea)(x, &mdim, &nsample, cat, isort, v, at, b, &mdim);
+    makeA(x, mdim, nsample, cat, at, b); 
 
     R_CheckUserInterrupt();
 
@@ -248,6 +233,10 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     }
 
     for(jb = 0; jb < jbt; jb++) {
+        /* Do we need to simulate data for the second class? */
+        /* SET UP DATA TO ADD A CLASS++++++++++++++++++++++++++++++ */
+        if (addClass) createClass(x, nsample0, nsample, mdim);
+
 	arrayindex = keepf ? jb * *nrnodes : 0;
 	do {
 	    zeroInt(nodestatus + arrayindex, *nrnodes);
@@ -255,6 +244,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    zeroDouble(xbestsplit + arrayindex, *nrnodes);
 	    zeroInt(nodeclass + arrayindex, *nrnodes);
 	    zeroInt(jin, nsample);
+            zeroInt(varUsed, mdim);
 	    zeroDouble(tclasspop, nclass);
 	    zeroDouble(win, nsample);
       
@@ -329,13 +319,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    }
       
 	    /* Copy the original a matrix back. */ 
-	    /* for (n = 0; n < mdim * nsample; ++n) {
-		a[n] = at[n];
-		}*/
 	    memcpy(a, at, sizeof(int) * mdim * nsample);
-      
-	    F77_CALL(moda)(a, &nuse, &nsample, &mdim, cat, maxcat, ncase, 
-			   jin, ta);
+      	    modA(a, &nuse, nsample, mdim, cat, *maxcat, ncase, jin);
       
 	    F77_CALL(buildtree)(a, b, cl, cat, &mdim, &nsample, &nclass, 
 				treemap + 2*arrayindex, bestvar + arrayindex,
@@ -343,40 +328,34 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 				nodestatus + arrayindex, nodepop, 
 				nodestart, classpop, tclasspop, tclasscat, 
 				ta, nrnodes, idmove, &ndsize, ncase, parent, 
-				jin, &mtry, iv, nodeclass + arrayindex, 
+				jin, &mtry, varUsed, nodeclass + arrayindex, 
 				ndbigtree + jb, win, wr, wc, wl, &mdim, 
 				&nuse, mind);
 	    /* if the "tree" has only the root node, start over */
 	} while (ndbigtree[jb] == 1);
     
-	F77_CALL(xtranslate)(x, &mdim, nrnodes, &nsample, 
-			     bestvar + arrayindex, bestsplit, bestsplitnext, 
-			     xbestsplit + arrayindex,
-			     nodestatus + arrayindex, cat, ndbigtree + jb); 
+	Xtranslate(x, mdim, *nrnodes, nsample, bestvar + arrayindex, 
+		   bestsplit, bestsplitnext, xbestsplit + arrayindex,
+		   nodestatus + arrayindex, cat, ndbigtree[jb]);
     
 	/*  Get test set error */
 	if (*testdat) {
-	    F77_CALL(testreebag)(xts, &ntest, &mdim, treemap + 2*arrayindex,
-				 nodestatus + arrayindex, 
-				 xbestsplit + arrayindex,
-				 cbestsplit, bestvar + arrayindex, 
-				 nodeclass + arrayindex, nrnodes, 
-				 ndbigtree + jb, cat, &nclass, jts, nodexts, 
-				 maxcat);
+            predictClassTree(xts, ntest, mdim, zeroes, treemap + 2*arrayindex,
+                             nodestatus + arrayindex, xbestsplit + arrayindex,
+                             cbestsplit, bestvar + arrayindex, 
+                             nodeclass + arrayindex, *nrnodes, ndbigtree[jb], 
+                             cat, nclass, jts, nodexts, *maxcat);
 	    TestSetError(countts, jts, clts, outclts, ntest, nclass, jb+1,
 			 errts + jb*(nclass+1), pid, *labelts, nclts, cut);
 	}
     
-	/*  GET OUT-OF-BAG ESTIMATES */
-	F77_CALL(testreebag)(x, &nsample, &mdim, treemap + 2*arrayindex, 
-			     nodestatus + arrayindex, xbestsplit + arrayindex, 
-			     cbestsplit, bestvar + arrayindex, 
-			     nodeclass + arrayindex, nrnodes, ndbigtree + jb, 
-			     cat, &nclass, jtr, nodex, maxcat); 
-
-	/* for (n = 0; n < nclass; ++n) {
-	    nout[n] = 0;
-	    }*/
+	/*  Get out-of-bag predictions and errors. */
+        predictClassTree(x, nsample, mdim, jin, treemap + 2*arrayindex,
+                         nodestatus + arrayindex, xbestsplit + arrayindex,
+                         cbestsplit, bestvar + arrayindex, 
+                         nodeclass + arrayindex, *nrnodes, ndbigtree[jb], 
+                         cat, nclass, jtr, nodex, *maxcat);
+	
 	zeroInt(nout, nclass);
 	noutall = 0;
 	for (n = 0; n < nsample; ++n) {
@@ -393,6 +372,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    }
 	}
 
+        /* Compute out-of-bag error rate. */
 	oob(nsample, nclass, jin, cl, jtr, jerr, counttr, out,
 	    errtr + jb*(nclass+1), outcl, cut);
 
@@ -418,21 +398,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	/*  DO VARIABLE IMPORTANCE  */
 	if (imp) {
 	    nrightall = 0;
-	    /* for (n = 0; n < mdim; ++n) {
-	        iv[n] = 0;
-		}*/
-	    zeroInt(iv, mdim);
-	    /* Loop through the tree and find out which variables are used. */
-	    for (n = 0; n < ndbigtree[jb]; ++n) {
-		if (nodestatus[n + arrayindex] != -1) {
-		    iv[bestvar[n + arrayindex] - 1] = 1;
-		}
-	    }
 	    /* Count the number of correct prediction by the current tree
 	       among the OOB samples, by class. */
-	    /* for (n = 0; n < nclass; ++n) {
-		nright[n] = 0;
-		}*/
 	    zeroInt(nright, nclass);
 	    for (n = 0; n < nsample; ++n) {
        	        /* out-of-bag and predicted correctly: */
@@ -441,56 +408,59 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		    nrightall++;
 		}
 	    }
-	    for (m = 1; m <= mdim; ++m) { 
-		if (iv[m-1]) {
+	    for (m = 0; m < mdim; ++m) { 
+		if (varUsed[m]) {
 		    nrightimpall = 0;
 		    zeroInt(nrightimp, nclass);
+		    for (n = 0; n < nsample; ++n) tx[n] = x[m + n*mdim];
 		    /* Permute the m-th variable. */
-		    F77_CALL(permobmr)(&m, x, tp, tx, jin, &nsample, &mdim);
+                    permuteOOB(m, x, jin, nsample, mdim);
 		    /* Predict the modified data using the current tree. */
-		    F77_CALL(testreebag)(x, &nsample, &mdim, 
-					 treemap + 2*arrayindex, 
-					 nodestatus + arrayindex,
-					 xbestsplit + arrayindex, cbestsplit, 
-					 bestvar + arrayindex, 
-					 nodeclass + arrayindex, 
-					 nrnodes, ndbigtree + jb, cat,
-					 &nclass, jvr, nodex, maxcat); 
+                    predictClassTree(x, nsample, mdim, jin, 
+                                     treemap + 2*arrayindex,
+                                     nodestatus + arrayindex, 
+                                     xbestsplit + arrayindex,
+                                     cbestsplit, 
+                                     bestvar + arrayindex, 
+                                     nodeclass + arrayindex,
+                                     *nrnodes, ndbigtree[jb], cat, nclass,
+                                     jvr, nodex, *maxcat);
+
 		    /* Count how often correct predictions are made with 
 		       the modified data. */
 		    for (n = 0; n < nsample; n++) {
-		        if (jin[n] == 0) { /* out-of-bag */
-			    if (jvr[n] == cl[n]) { /* correct prediction */
+			if (jin[n] == 0) {
+			    if (jvr[n] == cl[n]) {
 			        nrightimp[cl[n] - 1]++;
 			        nrightimpall++;
 			    }
 			    if (localImp && jvr[n] != jtr[n]) {
 			        if (cl[n] == jvr[n]) {
-				    impmat[(m-1) + n*mdim] -= 1.0;
+				    impmat[m + n*mdim] -= 1.0;
 				} else {
-				    impmat[(m-1) + n*mdim] += 1.0;
+				    impmat[m + n*mdim] += 1.0;
 				}
 			    }
 			}
 			/* Restore the original data for that variable. */
-		        x[m-1 + n*mdim] = tx[n];
+		        x[m + n*mdim] = tx[n];
 		    }
 		    /* Accumulate decrease in proportions of correct 
 		       predictions. */
 		    for (n = 0; n < nclass; ++n) {
 			if (nout[n] > 0) {
-			    imprt[(m - 1) + n*mdim] += 
+			    imprt[m + n*mdim] += 
 				((double) (nright[n] - nrightimp[n])) / 
 			        nout[n];
-			    impsd[(m - 1) + n*mdim] += 
+			    impsd[m + n*mdim] += 
 				((double) (nright[n] - nrightimp[n]) * 
 				 (nright[n] - nrightimp[n])) / nout[n]; 
 			}
 		    }
 		    if (noutall > 0) {
-			imprt[(m-1) + nclass*mdim] += 
+			imprt[m + nclass*mdim] += 
 				((double)(nrightall - nrightimpall)) / noutall;
-			impsd[(m-1) + nclass*mdim] += 
+			impsd[m + nclass*mdim] += 
 				((double) (nrightall - nrightimpall) * 
 				 (nrightall - nrightimpall)) / noutall; 
 		    }
@@ -565,12 +535,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		    proxts[ntest*k + n] /= jbt;
 	}
     }
-
-    /*  OUTLIER DATA +++++++++++++++++++++++++++++*/
-    if (noutlier) {
-	F77_CALL(locateout)(prox, cl, &near, &nsample, &nclass, ncp, &iaddcl,
-			    outlier, tout, isort, clp);
-    }
   
     /*  IMP DATA ++++++++++++++++++++++++++++++++++*/
     for (m = 0; m < mdim; m++) {
@@ -608,7 +572,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     }
 }
 
-
 void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 	       int *nrnodes, int *jbt, 
 	       double *xts, double *xbestsplit, double *pid, 
@@ -616,11 +579,12 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 	       int *nodestatus, int *cat, int *cbestsplit,
 	       int *nodeclass, int *jts, int *jet, int *bestvar,
 	       int *nodexts, int *ndbigtree, int *keepPred,
-	       int *prox, double *proxmatrix, int *nodes)
-{
-    int i, j, jb, n, n1, n2, idxNodes, idxSample1, idxSample2;
+	       int *prox, double *proxmatrix, int *nodes) {
+    int i, j, jb, n, n1, n2, idxNodes, idxSample1, idxSample2, *zeroes;
     double crit, cmax;
 
+    zeroes = (int *) S_alloc(*ntest, sizeof(int));
+    zeroInt(zeroes, *ntest);
     zeroDouble(countts, *nclass * *ntest);
     idxNodes = 0;
     idxSample1 = 0;
@@ -628,12 +592,12 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 
     for (jb = 0; jb < *jbt; ++jb) {
 	/* predict by the jb-th tree */
-	F77_CALL(testreebag)(xts, ntest, mdim, treemap + 2*idxNodes,
-			     nodestatus + idxNodes, xbestsplit + idxNodes,
-			     cbestsplit, bestvar + idxNodes, 
-			     nodeclass + idxNodes, nrnodes, ndbigtree + jb, 
-			     cat, nclass, jts + idxSample1, 
-			     nodexts + idxSample2, maxcat);
+        predictClassTree(xts, *ntest, *mdim, zeroes, treemap + 2*idxNodes,
+			 nodestatus + idxNodes, xbestsplit + idxNodes,
+			 cbestsplit, bestvar + idxNodes, nodeclass + idxNodes,
+			 *nrnodes, ndbigtree[jb], cat, *nclass,
+			 jts + idxSample1, nodexts + idxSample2, *maxcat);
+
 	/* accumulate votes: */
 	for (n = 0; n < *ntest; ++n) {
 	    countts[jts[n + idxSample1] - 1 + n * *nclass] += 1.0;

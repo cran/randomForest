@@ -416,6 +416,7 @@ c
          j = int(nn * xrand) + 1
          mvar = mind(j)
          mind(j) = mind(nn)
+         mind(nn) = mvar
          nn = nn - 1
 c
          if(cat(mvar) .eq. 1) then

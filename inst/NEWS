@@ -1,3 +1,15 @@
+Changes in 4.3-2:
+
+* Fixed a bug that caused crashes in classification if test set data
+  are supplied.
+
+Changes in 4.3-1:
+
+* Fixed bugs in sampling cases and variables without replacement.
+
+* (Not user-visible.)  Translated regression tree building code from 
+  Fortran to C.
+
 Changes in 4.3-0:
 
 * Thanks to Adele Cutler, there's now casewise variable importance 

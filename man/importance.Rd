@@ -8,7 +8,7 @@
   produced by \code{\link{randomForest}}.
 }
 \usage{
-\method{importance}{randomForest}(x, type=2, class, scale=TRUE, ...)
+\method{importance}{randomForest}(x, type=NULL, class=NULL, scale=TRUE, ...)
 }
 \arguments{
   \item{x}{an object of class \code{\link{randomForest}}}.
@@ -21,24 +21,35 @@
   \item{...}{not used.}
 }
 \value{
-  A (named) vector of importance measure, one for each predictor variable.
+  If \code{class} and \code{type} are \code{NULL}, A matrix of
+  \code{p} rows and \code{nclass + 2} columns (where \code{p} is the
+  number of variables in the data and \code{nclass} is the number of
+  classes) for classification problem, or \code{p} rows and \code{2}
+  columns for regression.  In the classification case, the first
+  \code{nclass} columns are the class-specific importance measures
+  (based on permutation of out-of-bag data).  The \code{nclass+1}st
+  column is the overall importance, and the last column is the overall
+  measure based on the decrease in node purity (or `Gini-based'
+  measure).
+
+  If either \code{type} or \code{class} is given, it returns a
+  (named) vector of importance measure, one for each predictor variable.
 }
 \details{
   See the documentation for \code{\link{randomForest}} for explanation
   of how the importance measures are computed.
 }
-%\references{
-%}
 \seealso{
   \code{\link{randomForest}}, \code{\link{varImpPlot}}
 }
+\example{
 set.seed(4543)
 data(mtcars)
 mtcars.rf <- randomForest(mpg ~ ., data=mtcars, ntree=1000, keep=FALSE,
                           importance=TRUE)
 importance(mtcars.rf)
-importance(mtcars.rf, type=1)			  
-%\author{}
+importance(mtcars.rf, type=1)
+}
 \keyword{regression}
 \keyword{classif}
 \keyword{tree}

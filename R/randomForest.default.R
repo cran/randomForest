@@ -197,7 +197,7 @@
 
     if (classRF) {
         error.test <- if (labelts) double((nclass+1) * ntree) else double(1)
-        rfout <- .C("rf",
+        rfout <- .C("classRF",
                     x = x,
                     xdim = as.integer(c(p, n)),
                     y = as.integer(y),
@@ -339,7 +339,7 @@
                     dimnames = list(xts.row.names, c(xts.row.names,
                     x.row.names))) else NULL))
     } else {
-        rfout <- .C("regrf",
+        rfout <- .C("regRF",
                     x,
                     as.double(y),
                     as.integer(n),

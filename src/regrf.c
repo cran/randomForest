@@ -1,8 +1,17 @@
-/************************************************************************
-      copyright 1999 by leo Breiman
-      this is free software and can be used for any purpose. 
-      It comes with no guarantee.  
- *************************************************************************/
+/*******************************************************************
+   Copyright (C) 2001-4 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+  
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.                            
+*******************************************************************/
+
 #include <R.h>
 #include "rf.h"
 
@@ -10,7 +19,7 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
 
-void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
+void regRF(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *jbt, int *mtry, int *imp, 
 	   int *cat, int *jprint, int *iprox, int *oobprox, int *biasCorr, 
 	   double *yptr, double *errimp, double *impmat, double *impSD,
@@ -43,14 +52,12 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     double errts = 0.0, averrb, avy, avyts, vary, varyts, xrand, 
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
     
-    double *yb, *rsnodecost, *bestcrit, *v, *ut, *xt, *xb, *ytr, 
-	*yl, *utr, *ytree, *tgini; 
+    double *yb, *xt, *xb, *ytr, *utr, *ytree, *tgini; 
     
-    int i, k, m, mr, mrind, n, nls, ntrue, jout, jb, idx, ntest, last, tmp;
-    int *oobpair, varImp, localImp;
+    int i, k, m, mr, mrind, n, ntrue, jout, jb, idx, ntest, last, ktmp;
+    int *oobpair, varImp, localImp, *ind, *indts;
     
-    int *jdex, *nodepop, *ip, *parent, *jin,  
-	*nodestart, *ncase, *mind, *nind, *nodex, *nodexts;
+    int *jin, *nind, *nodex, *nodexts;
     
     ntest = *nts;
     varImp = imp[0];
@@ -58,40 +65,26 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     
     if (*jprint == 0) *jprint = *jbt + 1;
     
-    yb         = (double *) S_alloc(*nsample, sizeof(double));
-    v          = (double *) S_alloc(*nsample, sizeof(double));
-    ut         = (double *) S_alloc(*nsample, sizeof(double));
-    xt         = (double *) S_alloc(*nsample, sizeof(double));
+    yb         = (double *) S_alloc(*sampsize, sizeof(double));
     ytr        = (double *) S_alloc(*nsample, sizeof(double));
-    yl         = (double *) S_alloc(*nsample, sizeof(double));
+    xt         = (double *) S_alloc(*nsample, sizeof(double));
     utr        = (double *) S_alloc(*nsample, sizeof(double));
     resOOB     = (double *) S_alloc(*nsample, sizeof(double));
-    rsnodecost = (double *) S_alloc(*nrnodes, sizeof(double));
-    bestcrit   = (double *) S_alloc(*nrnodes, sizeof(double));
-    xb         = (double *) S_alloc(*mdim * *nsample, sizeof(double));
+    xb         = (double *) S_alloc(*mdim * *sampsize, sizeof(double));
     tgini      = (double *) S_alloc(*mdim, sizeof(double));
     
-    jdex       = (int *) S_alloc(*nsample, sizeof(int));
     jin        = (int *) S_alloc(*nsample, sizeof(int));
-    ncase      = (int *) S_alloc(*nsample, sizeof(int));
+    ind        = (int *) S_alloc(*nsample, sizeof(int));
     nodex      = (int *) S_alloc(*nsample, sizeof(int));
-    nodepop    = (int *) S_alloc(*nrnodes, sizeof(int));
-    parent     = (int *) S_alloc(*nrnodes, sizeof(int));
-    nodestart  = (int *) S_alloc(*nrnodes, sizeof(int));
-    mind       = (int *) S_alloc(*mdim, sizeof(int)); 
-    ip         = (int *) S_alloc(*mdim, sizeof(int));
-    if (*replace) {
-	nind = NULL;
-    } else {
-	nind = (int *) S_alloc(*nsample, sizeof(int));
-    }
+    nind = *replace ? NULL : (int *) S_alloc(*nsample, sizeof(int));
+    
     if (*testdat) {
 	ytree      = (double *) S_alloc(ntest, sizeof(double));
 	nodexts    = (int *) S_alloc(ntest, sizeof(int));
+	indts      = (int *) S_alloc(ntest, sizeof(int));
     }
-    if (*iprox && *oobprox) {
-	oobpair = (int *) S_alloc(*nsample * *nsample, sizeof(int));
-    }
+    oobpair = (*iprox && *oobprox) ? 
+	(int *) S_alloc(*nsample * *nsample, sizeof(int)) : NULL;
     
     averrb = 0.0;
     avy = 0.0;
@@ -100,6 +93,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     for (n = 0; n < *nsample; ++n) {
 	yptr[n] = 0.0;
 	nout[n] = 0;
+	ind[n] = 0;
 	ntrue = n;
 	vary += ntrue * (y[n] - avy)*(y[n] - avy) / (ntrue + 1);
 	avy = (ntrue * avy + y[n]) / (ntrue + 1);
@@ -173,8 +167,8 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     }
     GetRNGstate();
     /*************************************
-   Start the loop over trees.
-    *************************************/
+     * Start the loop over trees.
+     *************************************/
     for (jb = 0; jb < *jbt; ++jb) {
 	idx = (*keepf) ? jb * *nrnodes : 0;
 	for (n = 0; n < *nsample; ++n) {
@@ -197,10 +191,11 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	    }
 	    last = *nsample - 1;
 	    for (n = 0; n < *sampsize; ++n) {
-		k = unif_rand() * (last + 1);
-		tmp = nind[last];
-		nind[last] = nind[k];
-		nind[k] = tmp;
+		ktmp = (int) (unif_rand() * (last+1));
+		k = nind[ktmp];
+		nind[ktmp] = nind[last];
+		nind[last] = k;
+		last--;
 		jin[k] = 1;
 		yb[n] = y[k];
 		for(m = 0; m < *mdim; ++m) {
@@ -208,16 +203,10 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 		}
 	    }
 	}
-	nls = *nsample;
 	
-	F77_CALL(rbuildtree)(xb, yb, yl, mdim, &nls, sampsize, 
-			     treemap + (2*idx), 
-			     jdex, upper + idx, avnode + idx, bestcrit, 
-			     nodestatus + idx, nodepop,
-			     nodestart, nrnodes, nthsize, rsnodecost, ncase, 
-			     parent, ut, v, xt, mtry, ip, mbest + idx, cat, 
-			     tgini, mind);
-	
+	regTree(xb, yb, *mdim, *sampsize, treemap + (2*idx), 
+		upper + idx, avnode + idx, nodestatus + idx, 
+		*nrnodes, *nthsize, *mtry, mbest + idx, cat, tgini);
 	ndbigtree[jb] = *nrnodes;
 	for (k = *nrnodes-1; k >= 0; --k) {
 	    if (nodestatus[k + idx] == 0) {
@@ -232,10 +221,10 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	    ytr[n] = 0.0;
 	}
 	
-	F77_CALL(rtestreebag)(x, nsample, mdim, treemap + 2*idx, 
-			      nodestatus + idx, 
-			      nrnodes, ndbigtree + jb, ytr, upper + idx, 
-			      avnode + idx, mbest + idx, cat, nodex);
+	predictRegTree(x, *nsample, *mdim, ind, treemap + 2*idx, 
+		       nodestatus + idx, *nrnodes, ndbigtree[jb], ytr, 
+		       upper + idx, avnode + idx, mbest + idx, cat, nodex);
+
 	/* ytr is the prediction on OOB data by the current tree */
 	/* yptr is the aggregated prediction by all trees grown so far */
 	errb = 0.0;
@@ -271,10 +260,10 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 		ytree[i] = 0.0;
 		nodexts[i] = 0;
 	    }
-	    F77_CALL(rtestreebag)(xts, &ntest, mdim, treemap + 2*idx, 
-				  nodestatus + idx, nrnodes, ndbigtree + jb,
-				  ytree, upper + idx, avnode + idx, 
-				  mbest + idx, cat, nodexts);
+	    predictRegTree(xts, ntest, *mdim, indts, treemap + 2*idx,
+			   nodestatus + idx, *nrnodes, ndbigtree[jb],
+			   ytree, upper + idx, avnode + idx, 
+			   mbest + idx, cat, nodexts);
 	    /* ytree is the prediction for test data by the current tree */
 	    /* ypred is the aggregated prediction by all trees grown so far */
 	    errts = 0.0;
@@ -352,12 +341,13 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
 	/* Variable importance */
 	if (varImp) { 
 	    for (mr = 0; mr < *mdim; ++mr) {
-		mrind = mr + 1;
-		F77_CALL(permobmr)(&mrind, x, utr, xt, jin, nsample, mdim);
-		F77_CALL(rtestreebag)(x, nsample, mdim, treemap + 2*idx, 
-				      nodestatus + idx, nrnodes, 
-				      ndbigtree + jb, ytr, upper + idx, 
-				      avnode + idx, mbest + idx, cat, nodex);
+		/* make a copy of the m-th variable into xt */
+		for (n = 0; n < *nsample; ++n) xt[n] = x[mr + n * *mdim];
+		permuteOOB(mr, x, jin, *nsample, *mdim);
+		predictRegTree(x, *nsample, *mdim, jin, treemap + 2*idx, 
+			       nodestatus + idx, *nrnodes, ndbigtree[jb], 
+			       ytr, upper + idx, avnode + idx, mbest + idx, 
+			       cat, nodex);
 		ooberrperm = 0.0;
 		for (n = 0; n < *nsample; ++n) {
 		    x[mr + n * *mdim] = xt[n];
@@ -431,17 +421,24 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *sampsize,
     
 }
 
-
-void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree, 
-		int *ndbigtree, int *treemap, int *nodestatus, int *nrnodes, 
-		double *upper, double *avnodes, int *mbest, int *cat,
-		int *keepPred, double *allpred, int *iprox, double *proximity) 
-{
-    int i, j, k, n, idx, *nodex;
+/*----------------------------------------------------------------------*/
+void runrforest(double *xts, double *ypred, int *mdim, int *ntest, 
+		int *ntree, int *ndbigtree, int *treemap, 
+		int *nodestatus, int *nrnodes, double *upper, 
+		double *avnodes, int *mbest, int *cat, int *keepPred, 
+		double *allpred, int *iprox, double *proximity) {
+    int i, j, k, n, idx, *nodex, *ind;
     double *ytree;
 
-    ytree = (double *) S_alloc(*ntest, sizeof(double));
-    nodex = (int *) S_alloc(*ntest, sizeof(int));
+    ytree = (double *) R_alloc(*ntest, sizeof(double));
+    nodex = (int *) R_alloc(*ntest, sizeof(int));
+    ind   = (int *) R_alloc(*ntest, sizeof(int));
+
+    for (i = 0; i < *ntest; ++i) {
+	ytree[i] = 0.0;
+	nodex[i] = 0;
+	ind[i] = 0;
+    }
 
     if (*iprox) {
 	for (i = 0; i < *ntest; ++i) {
@@ -461,10 +458,10 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree,
 	}
 
 	idx = i * *nrnodes;
-	for(j = 0; j < *ntest; j++) ytree[j] = 0.0;
-	F77_CALL(rtestreebag)(xts, ntest, mdim, treemap + 2*idx, nodestatus + idx,
-			      nrnodes, ndbigtree + i, ytree, upper + idx, 
-			      avnodes + idx, mbest + idx, cat, nodex);
+	for (j = 0; j < *ntest; j++) ytree[j] = 0.0;
+	predictRegTree(xts, *ntest, *mdim, ind, treemap + 2*idx, 
+		       nodestatus + idx, *nrnodes, ndbigtree[i], ytree, 
+		       upper + idx, avnodes + idx, mbest + idx, cat, nodex);
 
 	for(j = 0; j < *ntest; ++j) {
 	    ypred[j] += ytree[j];
@@ -537,6 +534,5 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
 	}
     }
     *mse /= nout;
-
     return;
 }

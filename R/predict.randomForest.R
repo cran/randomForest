@@ -61,6 +61,8 @@
     cat.new <- sapply(x, function(x) if (is.factor(x) && !is.ordered(x)) 
                       length(levels(x))
     else 1)
+    if (length(cat.new) != length(object$forest$ncat))
+        stop("Number of variables in newdata does not match the model.")
     if (!all(object$forest$ncat == cat.new)) 
       stop("Type of predictors in new data do not match that of the training data.")
   }

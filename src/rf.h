@@ -1,5 +1,5 @@
 /*******************************************************************
-   Copyright (C) 2001-2 Leo Breiman, Adele Cutler, Andy Liaw and Mathew Wiener
+   Copyright (C) 2001-4 Leo Breiman, Adele Cutler and Merck & Co., Inc.
   
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
    GNU General Public License for more details.                            
 *******************************************************************/
 
-void rf(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
+void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
 	int *sampsize, int *Options, int *ntree, int *nvar,
 	int *ipi, double *pi, double *cut, int *nodesize, 
         double *outlier, int *outcl, int *counttr, double *prox, 
@@ -30,6 +30,29 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
 	       int *nodeclass, int *jts, int *jet, int *bestvar,
 	       int *nodexts, int *ndbigtree, int *keepPred, 
 	       int *prox, double *proxmatrix, int *nodes);
+
+void regTree(double *x, double *y, int mdim, int nsample, 
+	     int *treemap, double *upper, double *avnode, int *nodestatus, 
+	     int nrnodes, int nthsize, int mtry, int *mbest, int *cat, 
+	     double *tgini);
+
+void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample, 
+		   int ndstart, int ndend, int *msplit, double *decsplit, 
+		   double *ubest, int *ndendl, int *jstat, int mtry,
+		   double sumnode, int nodecnt, int *cat);
+
+void predictRegTree(double *x, int nsample, int mdim, int *doPred,
+		    int *treemap, int *nodestatus, int nrnodes, 
+		    int ndbigtree, double *ypred, double *split, 
+		    double *nodepred, int *bestvar, int *cat, int *nodex);
+
+void permuteOOB(int m, double *x, int *in, int nsample, 
+		int mdim);
+
+double pack(int l, int *icat);
+void unpack(int l, int npack, int *icat);
+void zeroInt(int *x, int length);
+void zeroDouble(double *x, int length);
 
 /* Template of Fortran subroutines to be called from the C wrapper */
 extern void F77_NAME(createclass)(double *, int *, int *, int *, int *,

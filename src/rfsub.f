@@ -764,16 +764,20 @@ C     SUBROUTINE COMPTSERR
       do n=1,ntest
          countts(jts(n),n)=countts(jts(n),n)+1
       end do
+
+      do n=1,ntest
+         cmax=0
+         do j=1,nclass
+            if (countts(j,n).gt.cmax) then
+               jet(n)=j
+               cmax=countts(j,n)
+            end if
+         end do
+      end do
+
       if(labelts.eq.1) then
          do n=1,ntest
-            cmax=0
-            do j=1,nclass
-               if (countts(j,n).gt.cmax) then
-                  jet(n)=j
-                  cmax=countts(j,n)
-               end if
-            end do
-            if (jet(n).ne.clts(n)) rmissts=rmissts+1
+            if (jet(n).ne.clts(n)) rmissts = rmissts + 1.0
          end do
          errts=dble(rmissts)/dble(ntest)
       end if
@@ -1304,8 +1308,8 @@ c ones corresponding to the coefficients in the binary expansion of npack.
       
       subroutine eqm(j,k,m,n)
       integer j(m,n),k(m,n)
-      do m1=1,m
-         do n1=1,n
+      do n1=1,n
+         do m1=1,m
             j(m1,n1)=k(m1,n1)
          end do
       end do

@@ -1,3 +1,9 @@
+combine                 Combine Ensembles of Trees
+grow                    Add trees to an ensemble
+partial.plot            Partial dependence plot
+plot.randomForest       Plot method for randomForest objects
 predict.randomForest    predict method for random forest objects
 randomForest            Classification and Regression with Random
                         Forest
+treesize                Size of trees in an ensemble
+var.imp.plot            Variable Importance Plot

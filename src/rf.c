@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *****************************************************************/
 
 #include <stdio.h>
-#include <assert.h>
 #include <R.h>
 #include "rf.h"
 
@@ -35,9 +34,9 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
         double *outlier, int *outcl, int *counttr, double *prox, 
 	double *imprt, int *trace, int *ndbigtree, int *nodestatus, 
 	int *bestvar, int *treemap, int *nodeclass, double *xbestsplit, 
-	double *pid, int *keepf, int *testdat, double *xts, int *clts, 
-	int *nts, double *countts, int *outclts, int *labelts, 
-	double *proxts)
+	double *pid, double *errtr, int *keepf, int *testdat, double *xts,
+	int *clts, int *nts, double *countts, int *outclts, int *labelts, 
+	double *proxts, double *errts)
 {
   /******************************************************************
    *  C wrapper for random forests:  get input from R and drive
@@ -86,7 +85,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
     *jtr, *nc, *msum, *idmove, *jvr, *countimp,
     *at, *a, *b, *cbestsplit, *mind, *jts;
   
-  double errtr, errts, errc;
+  double errc;
 
   double *tgini, *v, *tx, *wl, *classpop, *errimp,
     *rimpmarg, *tclasscat, *tclasspop, *rmargin, *win, *tp,
@@ -182,13 +181,16 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   F77_CALL(zervr)(tgini, &mdim);
   F77_CALL(zerv)(msum, &mdim);
 
-  errtr = 0.0;  errts = 0.0;
-  
+  for(n = 0; n < jbt; ++n) errtr[n] = 0.0;
+
+  if(*labelts == 1) {
+    for(n = 0; n < jbt; ++n) errts[n] = 0.0;
+  }
+
   if(*imp == 1) {
     for(m = 0; m < mdim; ++m) {
       for(k = 0; k < nsample; ++k) {
 	for(j = 0; j < nclass; ++j) {
-	  assert(j + (k*nclass) + (m*nclass*nsample) < nclass*nimp*mimp);
 	  countimp[j + (k*nclass) + (m*nclass*nsample)] = 0;
 	}
       }
@@ -228,8 +230,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 
     for(n = 0; n < nsample; n++) {
       k = (unif_rand() * nsample) - 1;
-      assert(k < nsample); 
-      assert(k >= 0); 
+      /*      Rprintf("%i\n",k); */
       tclasspop[cl[k] - 1] = tclasspop[cl[k] - 1] + wtt[k];
       win[k] = win[k] + wtt[k];
       jin[k] = 1;
@@ -258,7 +259,7 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 			   &nrnodes, ndbigtree + jb, cat, &nclass,
 			   jts,nodexts,maxcat);
       F77_CALL(comptserr)(countts, jts, clts, outclts, &ntest, &nclass,
-			  &errts, pid, labelts);
+			  errts + jb, pid, labelts);
     }
     
     /*  GET OUT-OF-BAG ESTIMATES */
@@ -268,22 +269,21 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 			 nodeclass + arrayindex, &nrnodes, ndbigtree + jb, 
 			 cat, &nclass, jtr, nodex, maxcat); 
 
-    for(n = 0; n < nsample; n++) {
+    for(n = 0; n < nsample; ++n) {
       if(jin[n] == 0) {
-	assert((n*nclass + jtr[n] - 1) < (*ncl * nsample)); 
-	assert((n*nclass + jtr[n] - 1) >= 0); 
 	counttr[n*nclass + jtr[n] - 1] ++;
         out[n]++;
       }
     }
 
+    F77_CALL(oob)(&nsample, &nclass, jin, cl, jtr, jerr, counttr, out,
+		  errtr + jb, &errc, rmargin, q, outcl, wtt);
+
     if ((jb + 1) % *trace == 0 || jb + 1 == jbt) {
-      F77_CALL(oob)(&nsample, &nclass, jin, cl, jtr, jerr, counttr, out,
-		    &errtr, &errc, rmargin, q, outcl, wtt);
       if(*trace < jbt) {
-	Rprintf("%4i: OOB error rate=%5.2f%%\t", jb+1, 100.0*errtr);
+	Rprintf("%4i: OOB error rate=%5.2f%%\t", jb+1, 100.0*errtr[jb]);
 	if(*labelts == 1) 
- 	  Rprintf("Test set error rate=%5.2f%%", 100.0*errts);
+ 	  Rprintf("Test set error rate=%5.2f%%", 100.0*errts[jb]);
  	Rprintf("\n");
       }
     }
@@ -293,16 +293,13 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
       F77_CALL(zerv)(iv, &mdim);
       for(kt = 0; kt < *(ndbigtree + jb); kt++) {
         if(nodestatus[kt + arrayindex] != -1) {
-	  assert(kt + arrayindex < jbt * nrnodes);
-	  assert(kt + arrayindex >= 0);
-	  assert(bestvar[kt + arrayindex] - 1 < mdim);
-	  assert(bestvar[kt + arrayindex] - 1 >= 0);
 	  iv[bestvar[kt + arrayindex] - 1] = 1;
 	  msum[bestvar[kt + arrayindex] - 1] ++;
 	}
       }
       for(mr = 1; mr <= mdim; mr++) {
         if(iv[mr-1] == 1) {
+	  /* for(i = 0; i < *impiter; ++i) { */
 	  F77_CALL(permobmr)(&mr, x, tp, tx, jin, &nsample, &mdim);
 	  F77_CALL(testreebag)(x, &nsample, &mdim, treemap + 2*arrayindex, 
 			       nodestatus + arrayindex,
@@ -317,12 +314,18 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 	    }
 	  }
 	  for(n = 0; n < nsample; n++) {
-	    assert(mr-1 + n*mdim < mdim*nsample);
-	    assert(mr-1 + n*mdim >= 0);
 	    x[mr-1 + n*mdim] = tx[n];
 	  }
 	}
-      }
+      }/*
+      if(jb==999) {
+	for(n = 0; n < nsample; ++n) {
+	  for(mr = 0; mr < mdim; ++mr) {
+	    Rprintf("%5i ", countimp[n + mr * nsample]);
+	  }
+	  Rprintf("\n");
+	}
+	}*/
     }
 
     /*  DO PROXIMITIES */
@@ -376,14 +379,10 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
   if (*imp == 1) {
     F77_CALL(finishimp)(rmissimp, countimp, out, cl, &nclass, &mdim,
 			&nsample, errimp, rimpmarg, diffmarg, cntmarg, 
-			rmargin, counttr, outcl, &errtr);
+			rmargin, counttr, outcl, errtr + jbt - 1);
 
   /*	GIVES STANDARD IMP OUTPUT */
     for(m = 0; m < mdim; m++) {
-      assert(m < mimp);
-      assert(m >= 0);
-      assert(3*mdim + m < 4*mdim);
-      assert(3*mdim + m >= 0);
       imprt[m] = errimp[m];
       imprt[mdim + m] = ((diffmarg[m] > 0.0) ? diffmarg[m] : 0.0);
       imprt[2*mdim + m] = ((cntmarg[m] > 0.0) ? cntmarg[m] : 0.0);

@@ -13,7 +13,7 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "FileDescription", "DLL for R package `randomForest'\0"
-            VALUE "FileVersion", "3.3-4\0"
+            VALUE "FileVersion", "3.4-1\0"
             VALUE "Compiled under R Version", R_MAJOR "." R_MINOR " (" R_YEAR "-" R_MONTH "-" R_DAY ")\0"
             VALUE "Project info", "http://www.r-project.org\0"
         END

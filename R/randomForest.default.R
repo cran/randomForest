@@ -121,6 +121,8 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
   }
 
   if(keep.forest) nt <- ntree else nt <- 1
+
+  if(labelts) error.test <- numeric(ntree) else error.test <- 0
   
   if(classRF) {
     rfout <- .C("rf",
@@ -153,6 +155,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 nodeclass = as.integer(numeric(nt * nrnodes)),
                 xbestsplit = as.double(numeric(nt * nrnodes)),
                 pid = as.double(numeric(max(2, nclass))),
+                errtr = as.double(numeric(ntree)),
                 keepf = as.integer(keep.forest),
                 testdat = as.integer(testdat),
                 xts = as.double(xtest),
@@ -162,6 +165,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 outclts = as.integer(numeric(ntest)),
                 labelts = as.integer(labelts),
                 proxts = as.double(proxts),
+                errts = as.double(error.test),
                 DUP=FALSE,
                 PACKAGE="randomForest")
     if(addclass == 0) {
@@ -200,7 +204,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 type = ifelse(addclass == 0, "classification",
                   "unsupervised"),
                 predicted = if(addclass == 0) out.class else NULL,
-                err.rate = if(addclass == 0) mean(y != out.class) else NULL, 
+                err.rate = if(addclass == 0) rfout$errtr else NULL, 
                 confusion = if(addclass == 0) con else NULL,
                 votes = out.votes,
                 importance = if(importance) matrix(rfout$impout, p, 4,
@@ -225,8 +229,8 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 },
                 test = if(!testdat) NULL else list(
                   predicted = out.class.ts,
-                  error=if(labelts) mean(ytest != out.class.ts) else NULL,
-                  confusion=if(labelts) con else NULL,
+                  err.rate=if(labelts) rfout$errts else NULL,
+                  confusion=if(labelts) testcon else NULL,
                   votes=out.votes.ts,
                   proximity = if(proximity) matrix(rfout$proxts, nrow=ntest,
                     dimnames = list(xts.row.names, c(xts.row.names,
@@ -253,9 +257,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 nodestatus = as.integer(numeric(nt * nrnodes)),
                 treemap = as.integer(numeric(nt * 2 * nrnodes)),
                 avnode = as.double(numeric(nt * nrnodes)),
-                mbest = as.integer(numeric(nt * nrnodes)),
-                upper = as.double(numeric(nt * nrnodes)),
-                mse = as.double(numeric(1)),
+                bestvar = as.integer(numeric(nt * nrnodes)),
+                xbestsplit = as.double(numeric(nt * nrnodes)),
+                mse = as.double(numeric(ntree)),
                 rsq = as.double(numeric(1)),
                 keepf = as.integer(keep.forest),
                 testdat = as.integer(testdat),
@@ -265,26 +269,35 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 labelts = as.integer(labelts),
                 ytestpred = as.double(numeric(ntest)),
                 proxts = as.double(proxts),
+                msets = as.double(error.test),
                 DUP=FALSE,
-                PACKAGE="randomForest")[c(13:23, 30:31)]
+                PACKAGE="randomForest")[c(13:23, 30:32)]
+    ## Format the forest component, if present.
+    if(keep.forest) {
+      rfout$nodestatus <- matrix(rfout$nodestatus, ncol = ntree)
+      rfout$bestvar <- matrix(rfout$bestvar, ncol = ntree)
+      rfout$avnode <- matrix(rfout$avnode, ncol = ntree)
+      rfout$xbestsplit <- matrix(rfout$xbestsplit, ncol = ntree)
+      rfout$treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
+    }
     out <- list(call = match.call(),
                 type = "regression",
                 predicted = structure(rfout$ypred, names=x.row.names),
                 mse = rfout$mse,
-                rsq = rfout$rsq,
-                importance = if(importance) structure(rfout[[2]], names=x.col.names) else NULL,
+                rsq = 1 - rfout$mse / (var(y)*(n-1)/n),
+                importance = if(importance) structure(rfout[[2]],
+                  names=x.col.names) else NULL,
                 proximity = if(proximity) structure(rfout$prox/ntree,
                   dim = c(n, n), dimnames = list(x.row.names, x.row.names)) else NULL,
                 ntree = ntree,
                 mtry = mtry,
                 forest = if(keep.forest) c(rfout[4:9], list(ncat = ncat),
-                  list(nrnodes=nrnodes)) else NULL,
+                  list(nrnodes=nrnodes), list(ntree=ntree)) else NULL,
                 test = if(testdat) {
                   list(predicted = structure(rfout$ytestpred,
                          names=xts.row.names),
-                  mse = if(labelts) mean((ytest - rfout$ytestpred)^2) else NULL,
-                  rsq = if(labelts) 1 - mean((ytest - rfout$ytestpred)^2) /
-                       (var(ytest)*(n-1)/n),
+                  mse = if(labelts) rfout$msets else NULL,
+                  rsq = if(labelts) 1 - rfout$msets / (var(ytest)*(n-1)/n) else NULL,
                   proximity = if(proximity) 
                        matrix(rfout$proxts / ntree, nrow = ntest,
                               dimnames = list(xts.row.names, c(xts.row.names,

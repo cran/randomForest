@@ -66,7 +66,7 @@
   }
   mdim <- ncol(x)
   ntest <- nrow(x)
-  ntree <- object$ntree
+  ntree <- object$forest$ntree
   maxcat <- object$forest$maxcat
   nclass <- object$forest$nclass
   nrnodes <- object$forest$nrnodes
@@ -88,9 +88,9 @@
               as.integer(object$forest$treemap),
               as.integer(object$forest$nodestatus),
               as.integer(object$forest$nrnodes),
-              as.double(object$forest$upper),
+              as.double(object$forest$xbestsplit),
               as.double(object$forest$avnode),
-              as.integer(object$forest$mbest),
+              as.integer(object$forest$bestvar),
               as.integer(object$forest$ncat),
               as.integer(proximity),
               proximity = as.double(proxmatrix),

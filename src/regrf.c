@@ -18,7 +18,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	   int *ndbigtree, int *nodestatus, int *treemap, double *avnode, 
 	   int *mbest, double *upper, double *mse, double *rsq, int *keepf, 
 	   int *testdat, double *xts, int *nts, double *yts, int *labelts,
-	   double *ypred, double *proxts)
+	   double *ypred, double *proxts, double *msets)
 {
   /*************************************************************************
    Input:
@@ -227,7 +227,9 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 				errts, 100.0 * errts / varyts);
       Rprintf("MSE(OOB)=%f  %%Var(y)=%7.2f\n", errb, 100*errb/vary);
     }
-	   
+    mse[jb] = errb;
+    if(*labelts == 1) msets[jb] = errts;
+
     /*  DO PROXIMITIES */
     if(*iprox == 1) {
       for(n = 0; n < *nsample; ++n) {
@@ -281,7 +283,6 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   PutRNGstate();
 
   /* end of tree iterations=======================================*/
-  *mse = errb;
   *rsq = 1.0 - errb/vary;
 
   if (*imp == 1) {

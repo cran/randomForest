@@ -12,7 +12,7 @@
   outliers or assessing proximities among data points.
 }
 \usage{
-\method{randomForest}{formula}(formula, data=NULL, subset, ...)
+\method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
 \method{randomForest}{default}(x, y=NULL, xtest, ytest, addclass=0, ntree=500,
   mtry=ifelse(is.null(y) || is.factor(y), max(floor(ncol(x)/3), 1),
     floor(sqrt(ncol(x)))), classwt=NULL,
@@ -23,12 +23,15 @@
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
-  \item{formula}{a symbolic description of the model to be fitted.}
   \item{data}{an optional data frame containing the variables in the model.
     By default the variables are taken from the environment which
     \code{randomForest} is called from.}
-  \item{subset}{an index vector indicating which rows should be used.}
-  \item{x}{a data frame or a matrix of predictors (for the
+  \item{subset}{an index vector indicating which rows should be used.
+    (NOTE: If given, this argument must be named.)}
+  \item{na.action}{A function to specify the action to be taken if NAs
+    are found.  (NOTE: If given, this argument must be named.)}
+  \item{x}{a data frame or a matrix of predictors, or a formula
+    describing the model to be fitted (for the
     \code{print} method, an \code{randomForest} object).}
   \item{y}{A response vector.  If a factor, classification is assumed,
     otherwise regression is assumed.  If omitted, \code{randomForest}
@@ -73,13 +76,7 @@
   \item{...}{optional parameters to be passed to the low level function
     \code{randomForest.default}.}
 }
-\note{If \code{xtest} is given, prediction of the test set is done ``in
-  place'' as the trees are grown.  If \code{ytest} is also given, and
-  \code{do.trace} is set to some positive integer, then for every
-  \code{do.trace} trees, the test set error is printed.  Results for the
-  test set is returned in the \code{test} component of the resulting
-  \code{randomForest} object.
-}
+
 \value{
   An object of class \code{randomForest}, which is a list with the
   following components:
@@ -99,8 +96,9 @@
   \item{forest}{(a list that contains the entire forest; \code{NULL} if 
     \code{randomForest} is run in unsupervised mode or if
     \code{keep.forest=FALSE}.} 
-  \item{err.rate}{(classification only) final error rate of the
-    prediction on the input data.} 
+  \item{err.rate}{(classification only) vector error rates of the
+    prediction on the input data, the i-th element being the error rate
+    for all trees up to the i-th.} 
   \item{confusion}{(classification only) the confusion matrix of the
     prediction.}
   \item{votes}{(classification only) a matrix with one row for each
@@ -114,21 +112,32 @@
     \code{randomForest} is called, a vector indicating how outlying the
     data points are (based on the proximity measures).}
 
-  \item{mse}{(regression only) mean square error: sum of squared
+  \item{mse}{(regression only) vector of mean square errors: sum of squared
     residuals divided by \code{n}.}
   \item{rsq}{(regression only) ``pseudo R-squared'': 1 - \code{mse} /
     Var(y).} 
   \item{test}{if test set is given (through the \code{xtest} or additionally
   \code{ytest} arguments), this component is a list which contains the
-  corresponding \code{predicted}, \code{confusion}, \code{votes} (for
-  classification) or \code{predicted}, \code{mse} and \code{rsq} (for
-  regression) for the test set.  If \code{proximity=TRUE}, there is also
-  a component, \code{proximity}, which contains the proximity among the
-  test set as well as proximity between test and training data.}
-
-  Note:  The \code{forest} structure is slightly different between
-  classification and regression.
+  corresponding \code{predicted}, \code{err.rate}, \code{confusion},
+  \code{votes} (for classification) or \code{predicted}, \code{mse} and
+  \code{rsq} (for regression) for the test set.  If
+  \code{proximity=TRUE}, there is also a component, \code{proximity},
+  which contains the proximity among the test set as well as proximity
+  between test and training data.} 
 }
+
+\note{
+  The \code{forest} structure is slightly different between
+  classification and regression.
+
+  If \code{xtest} is given, prediction of the test set is done ``in
+  place'' as the trees are grown.  If \code{ytest} is also given, and
+  \code{do.trace} is set to some positive integer, then for every
+  \code{do.trace} trees, the test set error is printed.  Results for the
+  test set is returned in the \code{test} component of the resulting
+  \code{randomForest} object.
+}
+
 \references{
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
   5-32.

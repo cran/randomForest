@@ -7,3 +7,4 @@ randomForest            Classification and Regression with Random
                         Forest
 treesize                Size of trees in an ensemble
 var.imp.plot            Variable Importance Plot
+var.used                Variables used in a random forest

@@ -13,13 +13,14 @@
 }
 \usage{
 \method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
-\method{randomForest}{default}(x, y=NULL, xtest, ytest, addclass=0, ntree=500,
-  mtry=ifelse(is.null(y) || is.factor(y), max(floor(ncol(x)/3), 1),
-    floor(sqrt(ncol(x)))), classwt=NULL,
-    nodesize=ifelse(is.null(y) || is.factor(y), 5, 1),
-    importance=FALSE,
-  proximity=FALSE, outscale=FALSE, norm.votes=TRUE, do.trace=FALSE,
-  keep.forest=is.null(xtest), ...)
+\method{randomForest}{default}(x, y = NULL, xtest = NULL, ytest = NULL, addclass = 0, 
+    ntree = 500, mtry = ifelse(!is.null(y) && !is.factor(y), 
+        max(floor(ncol(x)/3), 1), floor(sqrt(ncol(x)))), classwt = NULL, cutoff,
+    nodesize = ifelse(!is.null(y) && !is.factor(y), 5, 1), importance = FALSE, 
+    proximity = FALSE, outscale = FALSE, norm.votes = TRUE, do.trace = FALSE, 
+    keep.forest = is.null(xtest), ...) 
+NULL
+
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -54,6 +55,11 @@
     classification and regression}
   \item{classwt}{Priors of the classes.  Need not add up to one.
     Ignored for regression.}
+  \item{cutoff}{(Classification only)  A vector of length equal to
+    number of classes.  The `winning' class for an observation is the
+    one with the maximum (positive) difference between proportion of
+    votes and cutoff.  Default is 1/k where k is the number of classes
+    (i.e., majority vote wins).}
   \item{nodesize}{Minimum size of terminal nodes.  Setting this number
     larger causes smaller trees to be grown (and thus take less time).
     Note that the default values are different for classification
@@ -90,12 +96,15 @@
     columns, each a different measure of importance of the predictors;
     for regression problem, a vector (\code{NULL} if
     \code{importance=FALSE} when \code{randomForest} is called, this
-    component is set to \code{NULL}).}
+    component is set to \code{NULL}).  For classification problem, if
+    \code{importance=FALSE}, the fourth measure is still returned.  This
+    measure corresponds to average increase in node purity caused by
+    splitting on the variables, and is always computed.}
   \item{ntree}{number of trees grown.}
   \item{mtry}{number of predictors sampled for spliting at each node.}
   \item{forest}{(a list that contains the entire forest; \code{NULL} if 
     \code{randomForest} is run in unsupervised mode or if
-    \code{keep.forest=FALSE}.} 
+    \code{keep.forest=FALSE}.}
   \item{err.rate}{(classification only) vector error rates of the
     prediction on the input data, the i-th element being the error rate
     for all trees up to the i-th.} 
@@ -149,7 +158,7 @@
   \email{matthew\_wiener@merck.com}, based on original Fortran code by
   Leo Breiman and Adele Cutler.}
 
-\seealso{\code{\link{predict.randomForest}}}
+\seealso{\code{\link{predict.randomForest}}, \code{link{var.imp.plot}}}
 
 \examples{
 ## Classification:
@@ -161,11 +170,13 @@ print(iris.rf)
 ## Look at variable importance:
 print(round(iris.rf$importance, 2))
 ## Do MDS on 1 - proximity:
-library(mva)
+require(mva)
 iris.mds <- cmdscale(1 - iris.rf$proximity)
-pairs(cbind(iris[,1:4], iris.mds), cex=0.6, gap=0.2, 
+op <- par(pty="s")
+pairs(cbind(iris[,1:4], iris.mds), cex=0.6, gap=0, 
       col=c("red", "green", "blue")[codes(iris$Species)],
       main="Iris Data: Predictors and MDS of Proximity Based on RandomForest")
+par(op)
 ## Examine the stress of MDS:
 print( sum((as.dist(1 - iris.rf$proximity) - dist(iris.mds))^2) /
        sum((as.dist(1 - iris.rf$proximity)^2)) )
@@ -187,3 +198,4 @@ print(round(ozone.rf$importance, 2))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}
+\keyword{tree}

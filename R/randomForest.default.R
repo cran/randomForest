@@ -1,7 +1,7 @@
 "randomForest.default" <-
 function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
          mtry=ifelse(!is.null(y) && !is.factor(y), max(floor(ncol(x)/3), 1),
-           floor(sqrt(ncol(x)))), classwt=NULL,
+           floor(sqrt(ncol(x)))), classwt=NULL, cutoff,
          nodesize= ifelse(!is.null(y) && !is.factor(y), 5, 1),
          importance=FALSE, proximity=FALSE, outscale=FALSE, norm.votes=TRUE,
          do.trace=FALSE, keep.forest=is.null(xtest), ...)
@@ -70,6 +70,12 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     nclass <- length(levels(y))
     if(!all(levels(y) == levels(ytest)))
       stop("y and ytest must have the same levels")
+    if(missing(cutoff)) {
+      cutoff <- rep(1 / nclass, nclass)
+    } else {
+      if(sum(cutoff) > 1 || sum(cutoff) < 0 || !all(cutoff > 0))
+        stop("Incorrect cutoff specified.")
+    }
     if(!is.null(classwt)) {
       if(length(classwt) != nclass)
         stop("length of classwt not equal to number of classes")
@@ -101,9 +107,15 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     if(classRF) {
       impout <- matrix(0, p, 4)
     } else {
-      impout <- numeric(p)
+      impout <- matrix(0, p, 2)
     }
-  } else impout <- 0
+  } else {
+##    if(classRF) {
+      impout <- numeric(p)
+##    } else {
+##      impout <- 0
+##    }
+  }
 
   nsample <- if(addclass == 0) n else 2*n
   nrnodes <- 2 * trunc(nsample/nodesize) + 1
@@ -138,6 +150,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 mtry=as.integer(mtry),
                 ipi=as.integer(ipi),
                 classwt=as.double(classwt),
+                cutoff = as.double(cutoff),
                 nodesize=as.integer(nodesize),
                 importance=as.integer(importance),
                 proximity=as.integer(proximity),
@@ -207,8 +220,10 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 err.rate = if(addclass == 0) rfout$errtr else NULL, 
                 confusion = if(addclass == 0) con else NULL,
                 votes = out.votes,
-                importance = if(importance) matrix(rfout$impout, p, 4,
-                  dimnames = list(x.col.names, paste("Measure", 1:4))) else NULL,
+                importance = if(importance) 
+                  matrix(rfout$impout, p, 4, dimnames = list(x.col.names,
+                                               paste("Measure", 1:4)))
+                else structure(rfout$impout, names=x.col.names),
                 proximity = if(proximity) matrix(rfout$prox, n, n,
                   dimnames = list(x.row.names, x.row.names)) else NULL,
                 outlier = if(outscale) rfout$outlier else NULL,
@@ -224,7 +239,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                          nc = ntree)[1:max.nodes,],
                        xbestsplit = matrix(rfout$xbestsplit,
                          nc = ntree)[1:max.nodes,],
-                       pid = rfout$pid, ncat = ncat, maxcat = maxcat, 
+                       pid = rfout$pid, cutoff = cutoff, ncat = ncat, maxcat = maxcat, 
                        nrnodes = max.nodes, ntree = ntree, nclass = nclass)
                 },
                 test = if(!testdat) NULL else list(
@@ -285,8 +300,8 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 predicted = structure(rfout$ypred, names=x.row.names),
                 mse = rfout$mse,
                 rsq = 1 - rfout$mse / (var(y)*(n-1)/n),
-                importance = if(importance) structure(rfout[[2]],
-                  names=x.col.names) else NULL,
+                importance = if(importance) structure(matrix(rfout[[2]],p,2),
+                  dimnames=list(x.col.names, c("%IncMSE","IncNodePurity"))) else structure(rfout[[2]], names=x.col.names),
                 proximity = if(proximity) structure(rfout$prox/ntree,
                   dim = c(n, n), dimnames = list(x.row.names, x.row.names)) else NULL,
                 ntree = ntree,

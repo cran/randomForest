@@ -40,16 +40,16 @@ extern void F77_NAME(testreebag)(double *, int *, int *, int *, int *,
 				 int *, int *, int *, int *, int *); 
 extern void F77_NAME(oob)(int *, int *, int *, int *, int *, int *, int *,
 			  int *, double *, double *, double *, double *, int
-			  *, double *);
+			  *, double *, double *);
 extern void F77_NAME(permobmr)(int *, double *, double *, double *, int *,
 			       int *, int *);
 extern void F77_NAME(locateout)(double *, int *, int *, int *, int *c, int *,
 				int *,	double *, double *, int *, int *);
 extern void F77_NAME(finishimp)(double *, int *, int *, int * , int *, int *,
 				int *, double *, double *, double *, double *, 
-				double *, int *, int *, double *);
+				double *, int *, int *, double *, double *);
 extern void F77_NAME(comptserr)(double *, int *, int *, int *, int *,
-				int *, double *, double *, int *);
+				int *, double *, double *, int *, double *);
 
 /*************************************************************
   Subroutines for the regression RF

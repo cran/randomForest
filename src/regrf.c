@@ -44,7 +44,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     em, errb = 0.0;
 
   double *yb, *rsnodecost, *bestcrit, *sd, *wts, *v, *ut, *xt, *xb, *ytr, 
-    *yl, *xa, *utr, *predimp, *za, *tgini, *ytree;
+    *yl, *xa, *utr, *predimp, *za, *ytree, *tgini, maximp;
   
   int i, k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx, ntest;
   
@@ -118,7 +118,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     }
     varyts /= ntest;
   }
-  
+
   astr = 0.0;
   asd = 0.0;
 
@@ -135,10 +135,16 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     }
   }
 
+  for(m = 0; n < *mdim; ++m) {
+    tgini[m] = 0.0;
+  }
+  
   if(*imp==1) {
-    for(n = 0; n < nimp; ++n) {
-      for(m = 0; m < mimp; ++m) {
-	predimp[n + m * nimp] = 0.0;
+    for(m = 0; m < *mdim; ++m) {
+      errimp[m] = 0.0;
+      errimp[m + *mdim] = 0.0;
+      for(n = 0; n < *nsample; ++n) {
+	predimp[n + m * *nsample] = 0.0;
       }
     }
   }
@@ -284,13 +290,22 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 
   /* end of tree iterations=======================================*/
   *rsq = 1.0 - errb/vary;
+  maximp = 0.0;
+  for(m = 0; m < *mdim; ++m) {
+    if(tgini[m] > maximp) maximp = tgini[m];
+  }
 
   if (*imp == 1) {
     for (m = 0; m < *mdim; ++m) {
       errimp[m] = 100 * ((errimp[m] / errb) - 1);
       if(errimp[m] <= 0.0) errimp[m] = 0.0;
+      errimp[m + *mdim] = tgini[m] / maximp;
     }
+  } else {
+    for(m = 0; m < *mdim; ++m) 
+      errimp[m] = tgini[m] / maximp;
   }
+  
 }
 
 
@@ -304,7 +319,7 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree,
   double *ytree;
 
   ytree = (double *) R_alloc(*ntest, sizeof(double));
-  nodex = (int *) R_alloc(*ntest, sizeof(double));
+  nodex = (int *) R_alloc(*ntest, sizeof(int));
 
   for(i = 0; i < *ntest; ++i) {
     ytree[i] = 0.0;

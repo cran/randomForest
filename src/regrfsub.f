@@ -302,25 +302,25 @@ c     ncase(n)=case number of v nth from bottom
          ubest=dble(nubest)
       end if
       
-	decsplit=critmax-(sumnode*sumnode/nodecnt)
-	return
-	end
-	
-		
+      decsplit=critmax-(sumnode*sumnode/nodecnt)
+      return
+      end
+
+
       subroutine rtestreebag(x,nsample,mdim,treemap,nodestatus,
      1    nrnodes,ndbigtree,ytree,upper,avnode,mbest,cat,nodex)
-	
-      implicit double precision (a-h,o-z)	
+
+      implicit double precision (a-h,o-z)
       double precision x(mdim,nsample),
      1    upper(nrnodes),avnode(nrnodes),ytree(nsample)
-	
+
       integer treemap(2,nrnodes),nodestatus(nrnodes),
      1    mbest(nrnodes),cat(mdim),icat(32), nodex(nsample)
 
-	do n = 1, nsample
-	   nodex(n) = 0
-	end do
-     	
+      do n = 1, nsample
+         nodex(n) = 0
+      end do
+
 	do n=1,nsample
 	   kt=1
 	   do k=1,ndbigtree

@@ -755,22 +755,36 @@ C     SUBROUTINE TESTREEBAG
 C     SUBROUTINE COMPTSERR
       
       subroutine comptserr(countts,jts,clts,jet,ntest,nclass,errts,
-     1     pid,labelts)
+     1     pid,labelts,cutoff)
       implicit double precision (a-h,o-z)
-      integer jts(ntest),clts(ntest),jet(ntest), cmax, ntest, nclass
-      double precision countts(nclass,ntest), pid(nclass)
+      integer jts(ntest),clts(ntest),jet(ntest), ntest, nclass
+      double precision countts(nclass,ntest), pid(nclass),
+     *     cutoff(nclass), nvote, cmax
       
       rmissts=0.0
       do n=1,ntest
          countts(jts(n),n)=countts(jts(n),n)+1
       end do
-
+c
+c  Count total number of trees voting.
+c
+      nvote = 0
+      do n = 1, nclass
+         nvote = nvote + countts(n,1)
+      end do
+c
+c  Prediction is the class with the maximum votes
+c
       do n=1,ntest
-         cmax=0
+         cmax=0.0
          do j=1,nclass
-            if (countts(j,n).gt.cmax) then
+c Original code:
+c          if (countts(j,n).gt.cmax) then
+            if (countts(j,n) / nvote - cutoff(j) .gt. cmax) then
                jet(n)=j
-               cmax=countts(j,n)
+c Original code:
+c               cmax=countts(j,n)
+               cmax = countts(j,n) / nvote - cutoff(j)
             end if
          end do
       end do
@@ -855,14 +869,14 @@ C     SUBROUTINE UNIF & FUNCTION NSELECT
       
       
 C     SUBROUTINE OOB
-      
+C     Modified by A. Liaw 1/10/2003 (Deal with cutoff)      
       subroutine oob(nsample,nclass,jin,cl,jtr,jerr,counttr,out,
-     1     errtr,errc,rmargin,q,jest,wtt)
+     1     errtr,errc,rmargin,q,jest,wtt,cutoff)
       implicit double precision (a-h,o-z)      
       integer jin(nsample),cl(nsample),jtr(nsample),out(nsample),
      1     jerr(nsample),jest(nsample),counttr(nclass,nsample)
       double precision rmargin(nsample),q(nclass,nsample),wtt(nsample),
-     1     errtr, rmiss, rmissc
+     1     errtr, rmiss, rmissc, cutoff(nclass), qq
       
       inderr=1
       if(inderr.eq.1) then
@@ -885,10 +899,12 @@ C     SUBROUTINE OOB
             smax=0.0
             smaxtr=0.0
             do j=1,nclass
+c Original code:
                q(j,n)=dble(counttr(j,n))/out(n)
+               qq = q(j,n) - cutoff(j)
                if(j.ne.cl(n)) smax=dmax1(q(j,n),dble(smax))
-               if (q(j,n).gt.smaxtr) then
-                  smaxtr=q(j,n)
+               if (qq.gt.smaxtr) then
+                  smaxtr=qq
                   jest(n)=j
                end if
             end do
@@ -931,17 +947,18 @@ C     SUBROUTINE PERMOBAR
 
       
 C     SUBROUTINE FINISHIMP
+C     Modified by A. Liaw 1/10/2003 (Deal with cutoff)
 C     Modified by A. Liaw 2/11/2002 (removed graph from argument)
       subroutine finishimp(rmissimp,countimp,out,cl,nclass,mdim,
      1     nsample, errimp,rimpmarg,diffmarg,cntmarg,
-     1     rmargin,counttr,jest,errtr)
+     1     rmargin,counttr,jest,errtr,cutoff)
       implicit double precision (a-h,o-z)      
       integer cl(nsample),countimp(nclass,nsample,mdim),
-     1     counttr(nclass,nsample),out(nsample),jest(nsample)
+     1     counttr(nclass,nsample),out(nsample),jest(nsample),lmax
       
       double precision errimp(mdim),rimpmarg(mdim,nsample),
      1     rmissimp(mdim),errtr,
-     1     diffmarg(mdim),cntmarg(mdim),rmargin(nsample)
+     1     diffmarg(mdim),cntmarg(mdim),rmargin(nsample), cutoff(nclass)
 c     1	graph(nclass,nsample,mdim)
 
       imax=0
@@ -953,38 +970,36 @@ c     1	graph(nclass,nsample,mdim)
          do n=1,nsample
             if(out(n).ge.1) then
                lmax=0
-               kmax=0
+               smax=0.0
                do j=1,nclass
-                  ks=countimp(j,n,m1)+counttr(j,n)
-                  if (ks.gt.kmax) then
-                     kmax=ks
+                  ks = countimp(j,n,m1)+counttr(j,n)
+                  sk = dble(ks) - (out(n) * cutoff(j))
+                  if (sk.gt.smax) then
+                     smax=sk
                      imax=j
                   end if
                   if(j.ne.cl(n)) lmax=max0(lmax,ks)
                   if(j.eq.cl(n)) ks0=ks
                end do
-               if(imax.ne.cl(n)) rmissimp(m1)=rmissimp(m1)+1
+               if(imax.ne.cl(n)) rmissimp(m1) = rmissimp(m1) + 1.0
                rimpmarg(m1,n)=dble(ks0-lmax)/out(n)
             end if
          end do 
-      end do 
-      do m1=1,mdim
-         errimp(m1)=rmissimp(m1)/nsample
-         errimp(m1)=100*(errimp(m1)-errtr)/errtr
-         errimp(m1)=dmax1(0.0d0,errimp(m1))
       end do
       do m=1,mdim
+         errimp(m)=rmissimp(m)/nsample
+         errimp(m)=100*(errimp(m)-errtr)/errtr
+         errimp(m)=dmax1(0.0d0,errimp(m))
          diffmarg(m)=0
          cntmarg(m)=0
          do n=1,nsample
             diffmarg(m)=diffmarg(m)+(rmargin(n)-rimpmarg(m,n))
-            if(rimpmarg(m,n).lt.rmargin(n)) cntmarg(m)=cntmarg(m)+1 
-            if(rimpmarg(m,n).gt.rmargin(n)) cntmarg(m)=cntmarg(m)-1
-         end do
+            if(rimpmarg(m,n).lt.rmargin(n)) cntmarg(m)=cntmarg(m)+1.0
+            if(rimpmarg(m,n).gt.rmargin(n)) cntmarg(m)=cntmarg(m)-1.0
+          end do
          diffmarg(m)=100*diffmarg(m)/nsample
          cntmarg(m)=cntmarg(m)/nsample
       end do
-            
       end
       
 C     SUBROUTINE LOCATEOUT
@@ -1066,13 +1081,13 @@ c proxmatrix is a matrix of dimension ntest x ntest
 c   if prox is 1, and is unused (and a single double) otherwise
 c
       subroutine runforest(mdim,ntest,nclass,maxcat,nrnodes,
-     1     labelts,jbt,clts,xts,xbestsplit,pid,countts,treemap,
+     1     labelts,jbt,clts,xts,xbestsplit,pid,cutoff,countts,treemap,
      1     nodestatus,cat,cbestsplit,nodeclass,jts,jet,bestvar,
      1     nodexts,ndbigtree, prox, proxmatrix)
       
       implicit double precision (a-h,o-z)
       double precision xts(mdim,ntest),xbestsplit(nrnodes,jbt),
-     1     pid(nclass),
+     1     pid(nclass),cutoff(nclass),
      1     countts(nclass,ntest),errts, proxmatrix(ntest, ntest)
       
       integer treemap(2,nrnodes,jbt),nodestatus(nrnodes,jbt),
@@ -1101,7 +1116,7 @@ c
             end do
          end if
          call comptserr(countts,jts,clts,jet,ntest,nclass,
-     1        errts,pid,labelts)
+     1        errts,pid,labelts,cutoff)
          
       end do
       

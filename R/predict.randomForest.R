@@ -116,6 +116,7 @@
                    xts = as.double(x),
                    xbestsplit = as.double(object$forest$xbestsplit), 
                    pid = as.double(object$forest$pid),
+                   cutoff = as.double(object$forest$cutoff),
                    countts = as.double(numeric(nclass * ntest)),
                    treemap = as.integer(aperm(object$forest$treemap, 
                      c(2, 1, 3))),

@@ -1,10 +1,11 @@
 "randomForest.default" <-
 function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
          mtry=ifelse(!is.null(y) && !is.factor(y), max(floor(ncol(x)/3), 1),
-           floor(sqrt(ncol(x)))), classwt=NULL, cutoff,
+           floor(sqrt(ncol(x)))), classwt=NULL, cutoff, sampsize,
          nodesize= ifelse(!is.null(y) && !is.factor(y), 5, 1),
-         importance=FALSE, proximity=FALSE, outscale=FALSE, norm.votes=TRUE,
-         do.trace=FALSE, keep.forest=is.null(xtest), corr.bias=FALSE, ...)
+         importance=FALSE, proximity=FALSE, oob.prox=TRUE, outscale=FALSE,
+         norm.votes=TRUE, do.trace=FALSE, keep.forest=is.null(xtest),
+         corr.bias=FALSE, ...)
 {
   classRF <- is.null(y) || is.factor(y)
   if (!classRF && length(unique(y)) <= 5) {
@@ -70,6 +71,8 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     ncat <- rep(1, p)
   }
   maxcat <- max(ncat)
+  if (maxcat > 32)
+    stop("Can not handle categorical predictors with more than 32 categories.")
   x <- t(x)
   if(!is.null(xtest)) xtest <- t(xtest)
   
@@ -77,16 +80,31 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     nclass <- length(levels(y))
     if(!all(levels(y) == levels(ytest)))
       stop("y and ytest must have the same levels")
-    if(missing(cutoff)) {
+    if (missing(cutoff)) {
       cutoff <- rep(1 / nclass, nclass)
     } else {
-      if(sum(cutoff) > 1 || sum(cutoff) < 0 || !all(cutoff > 0))
+      if (sum(cutoff) > 1 || sum(cutoff) < 0 || !all(cutoff > 0) ||
+         length(cutoff) != nclass) {
         stop("Incorrect cutoff specified.")
+      }
+      if (!is.null(names(cutoff))) {
+        if (!all(names(cutoff) %in% levels(y))) {
+          stop("Wrong name(s) for cutoff")
+        }
+        cutoff <- cutoff[levels(y)]
+      }
     }
-    if(!is.null(classwt)) {
-      if(length(classwt) != nclass)
+    if (!is.null(classwt)) {
+      if (length(classwt) != nclass)
         stop("length of classwt not equal to number of classes")
-      if(any(classwt<=0)) stop("classwt must be positive")
+      ## If classwt has names, match to class labels.
+      if (!is.null(names(classwt))) {
+        if (!all(names(cutoff) %in% levels(y))) {
+          stop("Wrong name(s) for cutoff")
+        }
+        classwt <- classwt[levels(y)]
+      }
+      if (any(classwt <= 0)) stop("classwt must be positive")
       ipi <- 1
     } else {
       classwt <- rep(1, nclass)
@@ -110,14 +128,24 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     prox <- proxts <- 0
   }
   
-  if(importance) {
+  if (importance) {
+    if (classRF) {
+      impout <- matrix(0, p, nclass + 2)
+    } else {
       impout <- matrix(0, p, 2)
+    }
   } else {
       impout <- numeric(p)
   }
 
-  nsample <- if(addclass == 0) n else 2*n
-  nrnodes <- 2 * trunc(nsample/nodesize) + 1
+  nsample <- if (addclass == 0) n else 2*n
+  if (classRF) {
+    nboot <- if (missing(sampsize)) nsample else sum(sampsize)
+    nrnodes <- 2 * trunc(nboot / nodesize) + 1
+  } else {
+    ## For regression trees, need to do this to get maximal trees.
+    nrnodes <- 2*nsample + 1
+  }
 
   testdat <- !is.null(xtest)
   if(testdat) {
@@ -136,39 +164,51 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
   if(labelts) error.test <- numeric(ntree) else error.test <- 0
   
   if(classRF) {
+    if (!missing(sampsize)) {
+      nsum <- sum(sampsize)
+      if (any(sampsize <= 0) || nsum == 0) stop("Bad sampsize specification")
+      ## If sampsize has names, match to class labels.
+      if (!is.null(names(sampsize))) {
+        sampsize <- sampsize[levels(y)]
+      }
+    } else {
+      sampsize <- rep(0, nclass)
+    }
     rfout <- .C("rf",
-                x=as.double(x),
-                p=as.integer(p),
-                n=as.integer(n),
-                y=as.integer(y),
-                nclass=as.integer(nclass),
-                ncat=as.integer(ncat), 
-                maxcat=as.integer(maxcat),
-                addclass=as.integer(addclass),
+                x = as.double(x),
+                xdim = as.integer(c(p, n)),
+                y = as.integer(y),
+                nclass = as.integer(nclass),
+                ncat = as.integer(ncat), 
+                maxcat = as.integer(maxcat),
+                sampsize = as.integer(sampsize),
+                Options = as.integer(c(addclass,
+                                       importance,
+                                       proximity,
+                                       oob.prox,
+                                       outscale,
+                                       do.trace,
+                                       keep.forest)),
                 ntree=as.integer(ntree),
                 mtry=as.integer(mtry),
                 ipi=as.integer(ipi),
                 classwt=as.double(classwt),
                 cutoff = as.double(cutoff),
                 nodesize=as.integer(nodesize),
-                importance=as.integer(importance),
-                proximity=as.integer(proximity),
-                outscale=as.integer(outscale),
                 outlier=as.double(outlier),
                 outcl=as.integer(numeric(nsample)),
                 counttr=as.integer(numeric(nclass * nsample)),
                 prox=as.double(prox),
-                impout=as.double(impout), 
-                trace=as.integer(as.numeric(do.trace)),
+                impout=as.double(impout),
+                nrnodes = as.integer(nrnodes),
                 ndbigtree = as.integer(numeric(ntree)),
                 nodestatus = as.integer(numeric(nt * nrnodes)),
                 bestvar = as.integer(numeric(nt * nrnodes)),
                 treemap = as.integer(numeric(nt * 2 * nrnodes)),
-                nodeclass = as.integer(numeric(nt * nrnodes)),
+                nodepred = as.integer(numeric(nt * nrnodes)),
                 xbestsplit = as.double(numeric(nt * nrnodes)),
                 pid = as.double(numeric(max(2, nclass))),
                 errtr = as.double(numeric(ntree)),
-                keepf = as.integer(keep.forest),
                 testdat = as.integer(testdat),
                 xts = as.double(xtest),
                 clts = as.integer(ytest),
@@ -188,8 +228,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
         treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,]
       }
       ## Turn the predicted class into a factor like y.
-      out.class <- factor(rfout$outcl, levels = 1:length(levels(y)), 
-                          labels = levels(y))
+      out.class <- levels(y)[rfout$outcl]
       names(out.class) <- x.row.names
       con <- table(observed = y, predicted = out.class)
       con <- cbind(con, class.error = 1 - diag(con)/rowSums(con))
@@ -199,8 +238,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
       out.votes <- t(apply(out.votes, 1, function(x) x/sum(x)))
     dimnames(out.votes) <- list(x.row.names, levels(y))
     if(testdat) {
-      out.class.ts <- factor(rfout$outclts, levels = 1:length(levels(y)), 
-                             labels = levels(y))
+      out.class.ts <- levels(y)[rfout$outclts]
       names(out.class.ts) <- xts.row.names
       out.votes.ts <- t(matrix(rfout$countts, nclass, ntest))
       dimnames(out.votes.ts) <- list(xts.row.names, levels(y))
@@ -219,10 +257,12 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 err.rate = if(addclass == 0) rfout$errtr else NULL, 
                 confusion = if(addclass == 0) con else NULL,
                 votes = out.votes,
+                classes = levels(y),
                 importance = if(importance) 
-                  matrix(rfout$impout, p, 2, dimnames = list(x.col.names,
-                                               c("MeanDecreaseMargin",
-                                                 "MeanDecreaseGini")))
+                  matrix(rfout$impout, p, nclass+2,
+                         dimnames = list(x.col.names,
+                           c(levels(y), "MeanDecreaseAccuracy",
+                             "MeanDecreaseGini")))
                 else structure(rfout$impout, names=x.col.names),
                 proximity = if(proximity) matrix(rfout$prox, n, n,
                   dimnames = list(x.row.names, x.row.names)) else NULL,
@@ -235,7 +275,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                          nc = ntree)[1:max.nodes,],
                        bestvar = matrix(rfout$bestvar, nc = ntree)[1:max.nodes,],
                        treemap = treemap,
-                       nodeclass = matrix(rfout$nodeclass,
+                       nodepred = matrix(rfout$nodepred,
                          nc = ntree)[1:max.nodes,],
                        xbestsplit = matrix(rfout$xbestsplit,
                          nc = ntree)[1:max.nodes,],
@@ -265,13 +305,15 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 as.integer(ncat),
                 as.integer(do.trace),
                 as.integer(proximity),
+                as.integer(oob.prox),
+                as.integer(corr.bias),
                 ypred = as.double(ypred),
                 impout = as.double(impout),
                 prox = as.double(prox),
                 ndbigtree = as.integer(numeric(ntree)),
                 nodestatus = as.integer(numeric(nt * nrnodes)),
                 treemap = as.integer(numeric(nt * 2 * nrnodes)),
-                avnode = as.double(numeric(nt * nrnodes)),
+                nodepred = as.double(numeric(nt * nrnodes)),
                 bestvar = as.integer(numeric(nt * nrnodes)),
                 xbestsplit = as.double(numeric(nt * nrnodes)),
                 mse = as.double(numeric(ntree)),
@@ -285,43 +327,36 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 ytestpred = as.double(numeric(ntest)),
                 proxts = as.double(proxts),
                 msets = as.double(error.test),
+                coef = as.double(numeric(2)),
                 DUP=FALSE,
-                PACKAGE="randomForest")[c(13:23, 30:32)]
-    ## Do bias correction: regress residual on yhat.
-    if (corr.bias) {
-      coefs <- lsfit(rfout$ypred, y - rfout$ypred)$coef
-      yhat <- rfout$ypred + (coefs[1] + coefs[2] * rfout$ypred)
-      if (testdat) yhatt <- rfout$ytestpred + (coefs[1] +
-                                               coefs[2]*rfout$ytestpred)
-    } else {
-      yhat <- rfout$ypred
-      if (testdat) yhatt <- rfout$ytestpred
-    }
+                PACKAGE="randomForest")[c(15:25, 32:35)]
     ## Format the forest component, if present.
     if(keep.forest) {
       rfout$nodestatus <- matrix(rfout$nodestatus, ncol = ntree)
       rfout$bestvar <- matrix(rfout$bestvar, ncol = ntree)
-      rfout$avnode <- matrix(rfout$avnode, ncol = ntree)
+      rfout$nodepred <- matrix(rfout$nodepred, ncol = ntree)
       rfout$xbestsplit <- matrix(rfout$xbestsplit, ncol = ntree)
-      rfout$treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
+      rfout$treemap <- aperm(array(rfout$treemap, dim = c(2, nrnodes, ntree)),
+                             c(2, 1, 3))
     }
 
     out <- list(call = match.call(),
                 type = "regression",
-                predicted = structure(yhat, names=x.row.names),
+                predicted = structure(rfout$ypred, names=x.row.names),
                 mse = rfout$mse,
                 rsq = 1 - rfout$mse / (var(y)*(n-1)/n),
                 importance = if(importance) structure(matrix(rfout[[2]],p,2),
                   dimnames=list(x.col.names, c("%IncMSE","IncNodePurity"))) else structure(rfout[[2]], names=x.col.names),
-                proximity = if(proximity) structure(rfout$prox/ntree,
+                proximity = if(proximity) structure(rfout$prox,
                   dim = c(n, n), dimnames = list(x.row.names, x.row.names)) else NULL,
                 ntree = ntree,
                 mtry = mtry,
                 forest = if(keep.forest) c(rfout[4:9], list(ncat = ncat),
                   list(nrnodes=nrnodes), list(ntree=ntree)) else NULL,
-                coefs = if (corr.bias) coefs else NULL,
+                coefs = if (corr.bias) rfout$coef else NULL,
                 test = if(testdat) {
-                  list(predicted = structure(yhat, names=xts.row.names),
+                  list(predicted = structure(rfout$ytestpred,
+                         names=xts.row.names),
                   mse = if(labelts) rfout$msets else NULL,
                   rsq = if(labelts) 1 - rfout$msets / (var(ytest)*(n-1)/n) else NULL,
                   proximity = if(proximity) 

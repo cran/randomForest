@@ -14,13 +14,10 @@
 \usage{
 \method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
 \method{randomForest}{default}(x, y = NULL, xtest = NULL, ytest = NULL, addclass = 0, 
-    ntree = 500, mtry = ifelse(!is.null(y) && !is.factor(y), 
-        max(floor(ncol(x)/3), 1), floor(sqrt(ncol(x)))), classwt = NULL, cutoff,
-    nodesize = ifelse(!is.null(y) && !is.factor(y), 5, 1), importance = FALSE, 
-    proximity = FALSE, outscale = FALSE, norm.votes = TRUE, do.trace = FALSE, 
-    keep.forest = is.null(xtest), corr.bias=FALSE, ...) 
-NULL
-
+    ntree = 500, mtry, classwt = NULL, cutoff, sampsize,
+    nodesize, importance = FALSE, 
+    proximity = FALSE, oob.prox = TRUE, outscale = FALSE, norm.votes = TRUE,
+    do.trace = FALSE, keep.forest = is.null(xtest), corr.bias=FALSE, ...) 
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -57,9 +54,12 @@ NULL
     Ignored for regression.}
   \item{cutoff}{(Classification only)  A vector of length equal to
     number of classes.  The `winning' class for an observation is the
-    one with the maximum (positive) difference between proportion of
-    votes and cutoff.  Default is 1/k where k is the number of classes
-    (i.e., majority vote wins).}
+    one with the maximum ratio of proportion of votes to cutoff.
+    Default is 1/k where k is the number of classes (i.e., majority vote
+    wins).}
+  \item{sampsize}{(Classification only) Sizes of bootstrap sample to
+    take from the classes.  Use \code{table(y)} for simple stratified
+    samples.} 
   \item{nodesize}{Minimum size of terminal nodes.  Setting this number
     larger causes smaller trees to be grown (and thus take less time).
     Note that the default values are different for classification
@@ -67,6 +67,8 @@ NULL
   \item{importance}{Should importance of predictors be assessed? }
   \item{proximity}{Should proximity measure among the rows be
     calculated?}
+  \item{oob.prox}{Should proximity be calculated only on ``out-of-bag''
+    data?}
   \item{outscale}{Should outlyingness of rows be assessed?  Ignored for
     regression.}
   \item{norm.votes}{If \code{TRUE} (default), the final result of votes
@@ -146,16 +148,14 @@ NULL
   \code{randomForest} object.
 
   Here are the definitions of the variable importance measures.  For
-  classification, define the margin of a case as the proportion of votes
-  for the correct class minus the maximum proportion of votes for the
-  other classes.  The first measure is the percent decrease in average
-  margin when the out-of-bag portion of the data are permuted one
-  variable at a time.  The second measure is the total decrease in Gini
-  index in nodes split by the variable, averaged over all trees.  For
-  regression, the first measure is the percent increase in mean squared
-  residuals when the out-of-bag portion of the data are permuted one
-  variable at a time.  The second measure is the total decrease in sum
-  of squares in nodes split by the variable, averaged over all trees.
+  each tree, the prediction accuracy on the out-of-bag portion of the
+  data is recorded.  Then the same is done after permuting each
+  predictor variable.  The difference between the two accuracies are
+  then averaged over all trees, and normalized by their standard
+  deviation.  The second measure is the total decrease in node
+  impurities from splitting on the variable, averaged over all trees.
+  For classification, the node impurity is measured by the Gini index.
+  For regression, it is measured by residual sum of squares.
 }
 
 \references{
@@ -163,7 +163,7 @@ NULL
   5-32.
 
   Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
-  Random Forests V3.1'', \url{http://oz.berkeley.edu/users/breiman/ Using_random_forests_V3.1.pdf}.
+  Random Forests V3.1'', \url{http://oz.berkeley.edu/users/breiman/Using_random_forests_V3.1.pdf}.
 }
 \author{Andy Liaw \email{andy\_liaw@merck.com} and Matthew Wiener
   \email{matthew\_wiener@merck.com}, based on original Fortran code by
@@ -185,7 +185,7 @@ require(mva)
 iris.mds <- cmdscale(1 - iris.rf$proximity, eig=TRUE)
 op <- par(pty="s")
 pairs(cbind(iris[,1:4], iris.mds$points), cex=0.6, gap=0, 
-      col=c("red", "green", "blue")[codes(iris$Species)],
+      col=c("red", "green", "blue")[as.numeric(iris$Species)],
       main="Iris Data: Predictors and MDS of Proximity Based on RandomForest")
 par(op)
 print(iris.mds$GOF)

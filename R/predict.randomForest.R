@@ -1,6 +1,6 @@
 "predict.randomForest" <-
-  function (object, newdata, type = "response", norm.votes = TRUE, 
-            proximity = FALSE, ...) 
+  function (object, newdata, type = "response", norm.votes = TRUE,
+            predict.all=FALSE, proximity = FALSE, ...) 
 {
   if (!inherits(object, "randomForest")) 
     stop("object not of class randomForest")
@@ -72,90 +72,124 @@
   nrnodes <- object$forest$nrnodes
   show.error <- 0
   x <- t(data.matrix(x))
-  if(proximity) {
+
+  if (predict.all) {
+    if (object$type == "regression") {
+      treepred <- double(ntest * ntree)
+    } else {
+      treepred <- integer(ntest * ntree)
+    }
+  } else {
+    treepred <- numeric(ntest)
+  }
+  
+  if (proximity) {
     proxmatrix <- matrix(0, ntest, ntest)
   } else {
     proxmatrix <- numeric(1)
   }
   if(object$type == "regression") {
+    keepIndex <- 2
+    if (predict.all) keepIndex <- c(keepIndex, 15)
+    if (proximity) keepIndex <- c(keepIndex, 17)
     ans <- .C("runrforest",
               as.double(x),
-              ypred = as.double(numeric(ntest)),
+              ypred = double(ntest),
               as.integer(mdim),
               as.integer(ntest),
               as.integer(ntree),
               as.integer(object$forest$ndbigtree),
-              as.integer(object$forest$treemap),
+              as.integer(aperm(object$forest$treemap, c(2, 1, 3))),
               as.integer(object$forest$nodestatus),
               as.integer(object$forest$nrnodes),
               as.double(object$forest$xbestsplit),
-              as.double(object$forest$avnode),
+              as.double(object$forest$nodepred),
               as.integer(object$forest$bestvar),
               as.integer(object$forest$ncat),
+              as.integer(predict.all),
+              treepred = as.double(treepred),
               as.integer(proximity),
               proximity = as.double(proxmatrix),
               DUP=FALSE,
-              PACKAGE = "randomForest")[c(2, 15)]
+              PACKAGE = "randomForest")[keepIndex]
+    ## Apply bias correction if needed.
     if (!is.null(object$coefs)) {
-      yhat <- ans$ypred + (object$coefs[1] + object$coefs[2] * ans$ypred)
+      yhat <- object$coefs[1] + object$coefs[2] * ans$ypred
     } else {
       yhat <- ans$ypred
     }
+    if (predict.all) {
+      treepred <- matrix(ans$treepred, length(keep),
+                         dimnames=list(rn[keep], NULL))
+    }
     if (!proximity) {
-      res <- yhat
+      res <- if (predict.all)
+        list(aggregate=yhat, individual=treepred) else yhat
     } else {
-      res <- list(pred = yhat, proximity = structure(ans$proximity,
+      res <- list(predicted = yhat, proximity = structure(ans$proximity,
                                      dim=c(ntest, ntest),
                                      dimnames=list(rn, rn)))
     }
   } else {
-    t1 <- .Fortran("runforest",
-                   mdim = as.integer(mdim),
-                   ntest = as.integer(ntest), 
-                   nclass = as.integer(object$forest$nclass),
-                   maxcat = as.integer(maxcat), 
-                   nrnodes = as.integer(nrnodes),
-                   labelsts = as.integer(as.numeric(show.error)), 
-                   jbt = as.integer(ntree),
-                   clts = as.integer(numeric(ntest)), 
-                   xts = as.double(x),
-                   xbestsplit = as.double(object$forest$xbestsplit), 
-                   pid = as.double(object$forest$pid),
-                   cutoff = as.double(object$forest$cutoff),
-                   countts = as.double(numeric(nclass * ntest)),
-                   treemap = as.integer(aperm(object$forest$treemap, 
-                     c(2, 1, 3))),
-                   nodestatus = as.integer(object$forest$nodestatus), 
-                   cat = as.integer(object$forest$ncat),
-                   cbestsplit = as.integer(numeric(maxcat * nrnodes)),
-                   nodeclass = as.integer(object$forest$nodeclass), 
-                   jts = as.integer(numeric(ntest)),
-                   jet = as.integer(numeric(ntest)), 
-                   bestvar = as.integer(object$forest$bestvar),
-                   nodexts = as.integer(numeric(ntest)), 
-                   ndbigtree = as.integer(object$forest$ndbigtree), 
-                   prox = as.integer(as.numeric(proximity)),
-                   proxmatrix = as.double(proxmatrix),
-                   DUP=FALSE,
-                   PACKAGE = "randomForest")
-    out.class.votes <- t(matrix(t1$countts, nr = nclass, nc = ntest))
-    if (norm.votes) 
-      out.class.votes <- t(apply(out.class.votes, 1, function(x) x/sum(x)))
-    z <- matrix(NA, ntest, nclass, dimnames = list(rn, levels(object$predicted)))
-    z[keep, ] <- out.class.votes
-    res <- z
-    if (out.type == 1) {
-      out.class <- max.col(out.class.votes)
-      out.class <- if (ncol(z) > 1) 
-        levels(object$predicted)[max.col(z)]
-      else levels(object$predicted)[1 + (z > 0.5)]
-      out.class <- factor(out.class, levels = levels(object$predicted))
+    countts <- matrix(0, ntest, nclass)
+    t1 <- .C("runforest",
+             mdim = as.integer(mdim),
+             ntest = as.integer(ntest), 
+             nclass = as.integer(object$forest$nclass),
+             maxcat = as.integer(maxcat), 
+             nrnodes = as.integer(nrnodes),
+             jbt = as.integer(ntree),
+             xts = as.double(x),
+             xbestsplit = as.double(object$forest$xbestsplit), 
+             pid = as.double(object$forest$pid),
+             cutoff = as.double(object$forest$cutoff),
+             countts = as.double(countts),
+             treemap = as.integer(aperm(object$forest$treemap, 
+               c(2, 1, 3))),
+             nodestatus = as.integer(object$forest$nodestatus), 
+             cat = as.integer(object$forest$ncat),
+             cbestsplit = as.integer(numeric(maxcat * nrnodes)),
+             nodepred = as.integer(object$forest$nodepred), 
+             treepred = as.integer(treepred),
+             jet = as.integer(numeric(ntest)), 
+             bestvar = as.integer(object$forest$bestvar),
+             nodexts = as.integer(numeric(ntest)), 
+             ndbigtree = as.integer(object$forest$ndbigtree), 
+             predict.all = as.integer(predict.all),
+             prox = as.integer(proximity),
+             proxmatrix = as.double(proxmatrix),
+             DUP=FALSE,
+             PACKAGE = "randomForest")
+    if (out.type > 1) {
+      out.class.votes <- t(matrix(t1$countts, nr = nclass, nc = ntest))
+      if (norm.votes) 
+        out.class.votes <-
+          sweep(out.class.votes, 1, rowSums(out.class.votes), "/")
+      z <- matrix(NA, ntest, nclass, dimnames = list(rn, levels(object$predicted)))
+      z[keep, ] <- out.class.votes
+      res <- z
+    } else {
+##      if (!norm.votes) {
+##        z <- sweep(z, 1, rowSums(z), "/")
+##      }
+##      out.class <- max.col(sweep(z, 2, object$forest$cutoff, "/"))
+##      out.class <- if (ncol(z) > 1) 
+##        levels(object$predicted)[max.col(z)]
+##      else levels(object$predicted)[1 + (z > 0.5)]
+      out.class <- character(length(rn))
+      out.class[keep] <- object$classes[t1$jet]
+      names(out.class[keep]) <- rn[keep]
       res <- out.class
     }
+    if (predict.all) {
+      treepred <- matrix(object$classes[t1$treepred],
+                         nrow=length(keep), dimnames=list(rn[keep], NULL))
+      res <- list(aggregate=res, individual=treepred)
+    }
     if(proximity)
-      res <- list(pred = res, proximity = structure(t1$proxmatrix,
+      res <- list(predicted = res, proximity = structure(t1$proxmatrix,
                                 dim = c(ntest, ntest),
-                                dimnames = list(rn, rn)))
+                                dimnames = list(rn[keep], rn[keep])))
   }
   res
 }

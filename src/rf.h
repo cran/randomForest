@@ -12,6 +12,25 @@
    GNU General Public License for more details.                            
 *******************************************************************/
 
+void rf(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
+	int *sampsize, int *Options, int *ntree, int *nvar,
+	int *ipi, double *pi, double *cut, int *nodesize, 
+        double *outlier, int *outcl, int *counttr, double *prox, 
+	double *imprt, int *nrnodes, int *ndbigtree, 
+	int *nodestatus, int *bestvar, int *treemap, int *nodeclass,
+	double *xbestsplit, double *pid, double *errtr, 
+	int *testdat, double *xts, int *clts, int *nts, double *countts,
+	int *outclts, int *labelts, double *proxts, double *errts);
+
+void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
+	       int *nrnodes, int *jbt,
+	       double *xts, double *xbestsplit, double *pid, 
+	       double *cutoff, double *countts, int *treemap,
+	       int *nodestatus, int *cat, int *cbestsplit,
+	       int *nodeclass, int *jts, int *jet, int *bestvar,
+	       int *nodexts, int *ndbigtree, int *keepPred, 
+	       int *prox, double *proxmatrix);
+
 /* Template of Fortran subroutines to be called from the C wrapper */
 extern void F77_NAME(createclass)(double *, int *, int *, int *, int *,
 				  double *, double *, double *, int *, int *);
@@ -39,7 +58,7 @@ extern void F77_NAME(testreebag)(double *, int *, int *, int *, int *,
 				 double *, int *, int *, int *, int *, int *,
 				 int *, int *, int *, int *, int *); 
 extern void F77_NAME(oob)(int *, int *, int *, int *, int *, int *, int *,
-			  int *, double *, double *, double *, double *, int
+			  int *, double *, double *, int
 			  *, double *, double *);
 extern void F77_NAME(permobmr)(int *, double *, double *, double *, int *,
 			       int *, int *);

@@ -7,7 +7,7 @@
 }
 \usage{
 margin(rf, observed)
-\method{plot}{margin}(x, ...)
+\method{plot}{margin}(x, sort=TRUE, ...)
 }
 \arguments{
   \item{rf}{an object of class \code{\link{randomForest}}, whose
@@ -16,11 +16,12 @@ margin(rf, observed)
     \code{rf}.}
   \item{x}{an object of class \code{margin}, as returned by the function
     \code{margin}.}
+  \item{sort}{Should the data be sorted by their class labels?}
   \item{...}{other graphical parameters to be passed to \code{plot.default}.}
 }
 \value{
   For \code{margin}, the \emph{margin} of observations from the
-  randomForest classifier.  The margin of a data point is defined as the
+  \code{\link{randomForest}} classifier.  The margin of a data point is defined as the
   proportion of votes for the correct class minus maximum proportion of
   votes for the other classes.  Thus under majority votes, positive
   margin means correct classification, and vice versa.

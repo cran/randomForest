@@ -1,4 +1,5 @@
 combine                 Combine Ensembles of Trees
+getTree                 Extract a single tree from a forest.
 grow                    Add trees to an ensemble
 margin                  Margins of randomForest Classifier
 MDSplot                 Multi-dimensional Scaling Plot of Proximity

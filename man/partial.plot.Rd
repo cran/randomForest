@@ -22,8 +22,8 @@ response (regression).
     \code{forest} component.}
   \item{pred.data}{a data frame used for contructing the plot, usually
     the training data used to contruct the random forest.}
-  \item{x.var}{(unquoted) name of the variable for which partial
-    dependence is to be examined.}
+  \item{x.var}{name of the variable for which partial
+    dependence is to be examined (can be either character or unquoted name).}
   \item{which.class}{For classification data, the class to focus on
     (default the first class).}
   \item{add}{whether to add to existing plot (\code{TRUE}) or create a

@@ -428,27 +428,49 @@ c
                rrn=rrn+u*(-2*wr(k)+u)
                rld=rld+u
                rrd=rrd-u
-               wl(k)=wl(k)+u
-               wr(k)=wr(k)-u
+               wl(k) = wl(k) + u
+               wr(k) = wr(k) - u
                               
-               if (b(mvar,nc).lt.b(mvar,a(mvar,nsp+1))) then
-                  if(dmin1(rrd,rld).gt.1.0e-5) then
-                     crit=(rln/rld)+(rrn/rrd)
-                     if (crit.gt.critvar) then
+               if (b(mvar,nc) .lt. b(mvar,a(mvar,nsp+1))) then
+                  if(dmin1(rrd,rld) .gt. 1.0e-5) then
+                     crit = (rln/rld) + (rrn/rrd)
+                     if (crit .gt. critvar) then
                         nbestvar=nsp
                         critvar=crit
                      endif
+c
+c  Break ties at random:
+c                     
+                     if (crit .eq. critvar) then
+                        call rrand(xrand)
+                        if (xrand .gt. 0.5) then
+                           nbestvar=nsp
+                           critvar=crit
+                        end if
+                     end if
+c
                   end if
                end if
  60         continue
  65         continue
 
-            if (critvar.gt.critmax) then
+            if (critvar .gt. critmax) then
                msplit=mvar
                nbest=nbestvar
                critmax=critvar
-            endif
-            
+            end if
+c
+c Break ties at random:
+c            
+            if (critvar .eq. critmax) then
+               call rrand(xrand)
+               if (xrand .gt. 0.5) then
+                  msplit = mvar
+                  nbest = nbestvar
+                  critmax = critvar
+               end if
+            end if
+
          else
 
 c     compute the decrease in impurity given by categorical splits
@@ -466,10 +488,10 @@ c     compute the decrease in impurity given by categorical splits
                do j=1,nclass
                   su=su+tclasscat(j,i)
                end do
-               if(su.gt.0) nnz=nnz+1
+               if(su .gt. 0) nnz=nnz+1
             end do
             if (nnz.eq.1) then
-               critvar=-1.0e25
+               critvar = -1.0e25
             else
                call catmax(pno,pdo,tclasscat,tclasspop,nclass,lcat,
      1              nbestvar,critvar)
@@ -479,17 +501,29 @@ c this last subroutine returns those categories going left in the best split.
 c This is coded into a long integer (see under subroutine catmax below for 
 c details). 
           
-            if (critvar.gt.critmax) then
-               msplit=mvar
-               nbest=nbestvar
-               critmax=critvar
+            if (critvar .gt. critmax) then
+               msplit = mvar
+               nbest = nbestvar
+               critmax = critvar
             endif
-         endif
+c
+c  Break ties at random:
+c            
+            if (critvar .eq. critmax) then
+               call rrand(xrand)
+               if (xrand .gt. 0.5) then
+                  msplit = mvar
+                  nbest = nbestvar
+                  critmax = critvar
+               end if
+            end if
+         end if
  20   continue
  25   continue                
-      decsplit=critmax-crit0
-      if (critmax.lt.-1.0e10) jstat=1
-      
+      decsplit = critmax - crit0
+      if (critmax .lt. -1.0e10) jstat = 1
+
+      return
       end
       
 C     SUBROUTINE CATMAX
@@ -508,10 +542,10 @@ c iterative algorithm we can add later.
       parameter(jmax=100)
       implicit double precision(a-h,o-z)
       double precision tclasscat(nclass,32),tclasspop(nclass),
-     1     tmpclass(jmax)
+     1     tmpclass(jmax), xrand
       integer icat(32) 
       
-      rmaxdec=-1e20
+      rmaxdec = -1e20
       do 10 n=1,(2**(lcat-1))-1
          call myunpack(lcat,n,icat)
          call zervr(tmpclass,jmax)
@@ -534,12 +568,24 @@ c iterative algorithm we can add later.
             prn=prn+tmpclass(j)*tmpclass(j)
  50      continue
          tdec=(pln/pld)+((prn)/(pdo-pld))
-         if (tdec.gt.rmaxdec) then
+         if (tdec .gt. rmaxdec) then
             rmaxdec=tdec
             ncatsplit=n
          endif
+c
+c Break ties at random:
+c
+         if (tdec .eq. rmaxdec) then
+            call rrand(xrand)
+            if (xrand .gt. 0.5) then
+               rmaxdec=tdec
+               ncatsplit=n
+            end if
+         end if
+
  10   continue
       
+      return
       end
 
       
@@ -711,38 +757,50 @@ C     SUBROUTINE TESTREEBAG
       call zerv(jts,nts)
       call zerv(nodex,nts)
       
-      do k=1,ndbigtree
+      do k = 1, ndbigtree
          if(bestvar(k).gt.0) l=cat(bestvar(k))
-         if(l.gt.1) then
+         if(l .gt. 1) then
             ncat=nint(xbestsplit(k))
             call myunpack(l,ncat,icat)
-            do j=1,l
-               cbestsplit(j,k)=icat(j)
+            do j = 1, l
+               cbestsplit(j,k) = icat(j)
             end do
          end if
       end do
             
-      do n=1,nts
-         kt=1
-         do k=1,ndbigtree
-            if (nodestatus(kt).eq.-1) then
-               jts(n)=nodeclass(kt)
-               nodex(n)=kt
+      do n = 1, nts
+         kt = 1
+         do k = 1, ndbigtree
+            if (nodestatus(kt) .eq. -1) then
+c
+c  Terminal node: assign class label
+c
+               jts(n) = nodeclass(kt)
+               nodex(n) = kt
                goto 100
             end if
-            m=bestvar(kt)
-            if (cat(m).eq.1) then
-               if (xts(m,n).le.xbestsplit(kt)) then 
-                  kt=treemap(1,kt)
+            m = bestvar(kt)
+            if (cat(m) .eq. 1) then
+c
+c  Split by a numerical predictor
+c
+               if (xts(m,n) .le. xbestsplit(kt)) then 
+c  Go left:
+                  kt = treemap(1,kt)
                else
+c  Go right:
                   kt=treemap(2,kt)
-               endif
-               
+               end if
             else
-               jcat=nint(xts(m,n))
-               if (cbestsplit(jcat,kt).eq.1) then
+c
+c  Split by a categorical predictor
+c
+               jcat = nint(xts(m,n))
+               if (cbestsplit(jcat,kt) .eq. 1) then
+c  Go left
                   kt=treemap(1,kt)
                else
+c  Go right
                   kt=treemap(2,kt)
                endif
             endif
@@ -750,6 +808,7 @@ C     SUBROUTINE TESTREEBAG
  100     continue
       end do
       
+      return
       end
       
 C     SUBROUTINE COMPTSERR
@@ -759,7 +818,7 @@ C     SUBROUTINE COMPTSERR
       implicit double precision (a-h,o-z)
       integer jts(ntest),clts(ntest),jet(ntest), ntest, nclass
       double precision countts(nclass,ntest), pid(nclass),
-     *     cutoff(nclass), nvote, cmax
+     *     cutoff(nclass), nvote, cmax, crit, xrand
       
       rmissts=0.0
       do n=1,ntest
@@ -780,11 +839,22 @@ c
          do j=1,nclass
 c Original code:
 c          if (countts(j,n).gt.cmax) then
-            if (countts(j,n) / nvote - cutoff(j) .gt. cmax) then
+            crit = (countts(j,n) / nvote) / cutoff(j)
+            if (crit .gt. cmax) then
                jet(n)=j
 c Original code:
 c               cmax=countts(j,n)
-               cmax = countts(j,n) / nvote - cutoff(j)
+               cmax = crit
+            end if
+c
+c  Break ties at random:
+c            
+            if (crit .eq. cmax) then
+               call rrand(xrand)
+               if (xrand .gt. 0.5) then
+                  jet(n) = j
+                  cmax = crit
+               end if
             end if
          end do
       end do
@@ -871,11 +941,11 @@ C     SUBROUTINE UNIF & FUNCTION NSELECT
 C     SUBROUTINE OOB
 C     Modified by A. Liaw 1/10/2003 (Deal with cutoff)      
       subroutine oob(nsample,nclass,jin,cl,jtr,jerr,counttr,out,
-     1     errtr,errc,rmargin,q,jest,wtt,cutoff)
+     1     errtr,errc,jest,wtt,cutoff)
       implicit double precision (a-h,o-z)      
       integer jin(nsample),cl(nsample),jtr(nsample),out(nsample),
-     1     jerr(nsample),jest(nsample),counttr(nclass,nsample)
-      double precision rmargin(nsample),q(nclass,nsample),wtt(nsample),
+     1     jerr(nsample),jest(nsample),counttr(nclass,nsample),noob
+      double precision wtt(nsample),
      1     errtr, rmiss, rmissc, cutoff(nclass), qq
       
       inderr=1
@@ -894,29 +964,38 @@ C     Modified by A. Liaw 1/10/2003 (Deal with cutoff)
       call zerv(jerr,nsample)
       
       rmiss=0.0
+      noob = 0
       do n=1,nsample
          if(out(n).gt.0) then
+            noob = noob + 1
             smax=0.0
             smaxtr=0.0
             do j=1,nclass
 c Original code:
-               q(j,n)=dble(counttr(j,n))/out(n)
-               qq = q(j,n) - cutoff(j)
-               if(j.ne.cl(n)) smax=dmax1(q(j,n),dble(smax))
-               if (qq.gt.smaxtr) then
-                  smaxtr=qq
-                  jest(n)=j
+               qq = dble(counttr(j,n))/out(n)
+               qq = qq / cutoff(j)
+               if(j .ne. cl(n)) smax=dmax1(qq, dble(smax))
+               if (qq .gt. smaxtr) then
+                  smaxtr = qq
+                  jest(n) = j
                end if
+               if (qq .eq. smaxtr) then
+                  call rrand(xrand)
+                  if (xrand .gt. 0.5) then
+                     smaxtr = qq
+                     jest(n) = j
+                  end if
+               end if               
             end do
             if(jest(n).ne.cl(n)) then
-               rmiss=rmiss+1.0
-               jerr(n)=1
+               rmiss = rmiss + 1.0
+               jerr(n) = 1
             end if
-            pth=q(cl(n),n)
-            rmargin(n)=pth-smax
+c            pth=q(cl(n),n)
+c            rmargin(n)=pth-smax
          end if
       end do
-      errtr=rmiss/nsample
+      errtr=rmiss/noob
       end
       
 C     SUBROUTINE PERMOBAR
@@ -1080,62 +1159,71 @@ c prox is 0 if proximity is not wanted, 1 if it is
 c proxmatrix is a matrix of dimension ntest x ntest
 c   if prox is 1, and is unused (and a single double) otherwise
 c
-      subroutine runforest(mdim,ntest,nclass,maxcat,nrnodes,
-     1     labelts,jbt,clts,xts,xbestsplit,pid,cutoff,countts,treemap,
-     1     nodestatus,cat,cbestsplit,nodeclass,jts,jet,bestvar,
-     1     nodexts,ndbigtree, prox, proxmatrix)
-      
-      implicit double precision (a-h,o-z)
-      double precision xts(mdim,ntest),xbestsplit(nrnodes,jbt),
-     1     pid(nclass),cutoff(nclass),
-     1     countts(nclass,ntest),errts, proxmatrix(ntest, ntest)
-      
-      integer treemap(2,nrnodes,jbt),nodestatus(nrnodes,jbt),
-     1     cat(mdim),cbestsplit(maxcat,nrnodes),
-     1     nodeclass(nrnodes,jbt),
-     1     bestvar(nrnodes,jbt),jts(ntest),clts(ntest),jet(ntest),
-     1     nodexts(ntest),ndbigtree(jbt),prox,n1,n2
-
-      call zermr(countts,nclass,ntest)
-      do jb=1,jbt
-         call testreebag(xts,ntest,mdim,treemap(1,1,jb),
-     1        nodestatus(1,jb),
-     1        xbestsplit(1,jb),cbestsplit,bestvar(1,jb),
-     1        nodeclass(1,jb), 
-     1        nrnodes, ndbigtree(jb),cat,nclass,jts,nodexts,maxcat)
-c     
-c if desired, do proximities for this round
+c      subroutine runforest(mdim,ntest,nclass,maxcat,nrnodes,
+c     1     labelts,jbt,clts,xts,xbestsplit,pid,cutoff,countts,treemap,
+c     1     nodestatus,cat,cbestsplit,nodeclass,jts,jet,bestvar,
+c     1     nodexts, ndbigtree, keeppred, allpred, prox, proxmatrix)
+c      
+c      implicit double precision (a-h,o-z)
+c      double precision xts(mdim,ntest),xbestsplit(nrnodes,jbt),
+c     1     pid(nclass),cutoff(nclass),
+c     1     countts(nclass,ntest),errts, proxmatrix(1, 1),
+c     1     allpred(1,1)
+c      
+c      integer treemap(2,nrnodes,jbt),nodestatus(nrnodes,jbt),
+c     1     cat(mdim),cbestsplit(maxcat,nrnodes),
+c     1     nodeclass(nrnodes,jbt),
+c     1     bestvar(nrnodes,jbt),jts(ntest),clts(ntest),jet(ntest),
+c     1     nodexts(ntest),ndbigtree(jbt),prox,n1,n2, keeppred,idx
 c
-         if (prox.eq.1) then
-            do n1=1,ntest
-               do n2=1,ntest
-                  if(nodexts(n1).eq.nodexts(n2)) then
-                     proxmatrix(n1,n2)=proxmatrix(n1,n2) + 1.0
-                  end if
-               end do
-            end do
-         end if
-         call comptserr(countts,jts,clts,jet,ntest,nclass,
-     1        errts,pid,labelts,cutoff)
-         
-      end do
-      
-c     
-c     if proximities requested, do the final adjustment
-c     (division by 2 * number of trees)
-c     
-      
-      if (prox.eq.1) then     
-         do n1=1,ntest
-            do n2=(n1+1),ntest
-               proxmatrix(n1,n2)=proxmatrix(n1,n2)/jbt
-               proxmatrix(n2,n1)=proxmatrix(n1,n2)
-            end do
-            proxmatrix(n1,n1) = 1.0
-         end do
-      end if
-      return
-      end
+c      call zermr(countts,nclass,ntest)
+c      do jb=1,jbt
+c         call testreebag(xts,ntest,mdim,treemap(1,1,jb),
+c     1        nodestatus(1,jb),
+c     1        xbestsplit(1,jb),cbestsplit,bestvar(1,jb),
+c     1        nodeclass(1,jb), 
+c     1        nrnodes, ndbigtree(jb),cat,nclass,jts,nodexts,maxcat)
+cc
+cc  if the individual predictions are requested, keep them
+cc
+c         if (keeppred .eq. 1) then
+c            do n = 1, ntest
+c               allpred(n, jb) = jts(n)
+c            end do
+c         end if
+cc     
+cc if desired, do proximities for this round
+cc
+c         if (prox .eq. 1) then
+c            do n1=1,ntest
+c               do n2=1,ntest
+c                  if(nodexts(n1).eq.nodexts(n2)) then
+c                     proxmatrix(n1,n2)=proxmatrix(n1,n2) + 1.0
+c                  end if
+c               end do
+c            end do
+c         end if
+c         call comptserr(countts,jts,clts,jet,ntest,nclass,
+c     1        errts,pid,labelts,cutoff)
+c         
+c      end do
+c      
+cc     
+cc     if proximities requested, do the final adjustment
+cc     (division by 2 * number of trees)
+cc     
+c      
+c      if (prox.eq.1) then     
+c         do n1=1,ntest
+c            do n2=(n1+1),ntest
+c               proxmatrix(n1,n2)=proxmatrix(n1,n2)/jbt
+c               proxmatrix(n2,n1)=proxmatrix(n1,n2)
+c            end do
+c            proxmatrix(n1,n1) = 1.0
+c         end do
+c      end if
+c      return
+c      end
 
 
 

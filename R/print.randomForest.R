@@ -27,10 +27,15 @@ function(x, ...) {
           round(100*x$rsq[length(x$rsq)], dig=2), "\n", sep="")
       if(!is.null(x$test)) {
         cat("                      Test set rMSE: ",
-            round(x$test$mse[length(x$test$mse)]*100, dig=2), "%\n", sep="")
+            round(x$test$mse[length(x$test$mse)], dig=2), "\n", sep="")
         cat("                    % Var explained: ",
             round(100*x$test$rsq[length(x$test$rsq)], dig=2), "\n", sep="")
-      }
+      }      
+    }
+    if (!is.null(x$coefs)) {
+      cat("  Bias correction applied:\n")
+      cat("  Intercept: ", x$coefs[1], "\n")
+      cat("      Slope: ", x$coefs[2], "\n")
     }
   }
 }

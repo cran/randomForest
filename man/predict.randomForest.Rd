@@ -6,7 +6,7 @@
 }
 \usage{
 \method{predict}{randomForest}(object, newdata, type="response",
-  norm.votes=TRUE, proximity=FALSE, ...)
+  norm.votes=TRUE, predict.all=FALSE, proximity=FALSE, ...)
 }
 \arguments{
   \item{object}{an object of class \code{randomForest}, as that
@@ -19,6 +19,7 @@
   \item{norm.votes}{Should the vote counts be normalized (i.e.,
     expressed as fractions)?  Ignored if \code{object$type} is
     \code{regression}.}
+  \item{predict.all}{Should the predictions of all trees be kept?}
   \item{proximity}{Should proximity measures be computed?  An error is
     issued if \code{object$type} is \code{regression}.}
   \item{...}{not used currently.}
@@ -26,16 +27,24 @@
 
 \value{
   If \code{object$type} is \code{regression}, a vector of predicted
-  values is returned.
+  values is returned.  If \code{predict.all=TRUE}, then the returned
+  object is a list of two components: \code{aggregate}, which is the
+  vector of predicted values by the forest, and \code{individual}, which
+  is a matrix where each column contains prediction by a tree in the
+  forest. 
 
-  If \code{object$type} is \code{classification}, the vector returned
+  If \code{object$type} is \code{classification}, the object returned
   depends on the argument \code{type}:
   \item{response}{predicted classes (the classes with majority vote).}
   \item{prob}{matrix of class probabilities (one column for each class
   and one row for each input).}
-  \item{votes}{matrix of vote counts (one column for each class
+  \item{vote}{matrix of vote counts (one column for each class
   and one row for each new input); either in raw counts or in fractions
   (if \code{norm.votes=TRUE}).}
+
+If \code{predict.all=TRUE}, then the \code{individual} component of the
+returned object is a character matrix where each column contains the
+predicted class by a tree in the forest.
 
 If \code{proximity=TRUE}, the returned object is a list with two
 components: \code{pred} is the prediction (as described above) and

@@ -29,29 +29,25 @@ combine <- function(...) {
     rf$forest$xbestsplit <-
       do.call("cbind", lapply(rflist, function(x) padm0(x$forest$xbestsplit,
                                                         nrnodes)))
-    if(classRF) {
-      rf$forest$nodeclass <-
-        do.call("cbind", lapply(rflist, function(x) padm0(x$forest$nodeclass,
-                                                         nrnodes)))
-    } else {
-      rf$forest$avnode <-
-        do.call("cbind", lapply(rflist, function(x) padm0(x$forest$avnode,
-                                                          nrnodes)))
-    }
+    rf$forest$nodepred <-
+      do.call("cbind", lapply(rflist, function(x) padm0(x$forest$nodepred,
+                                                        nrnodes)))
     tree.dim <- dim(rf$forest$treemap)
     rf$forest$treemap <-
       array(unlist(lapply(rflist, function(x) apply(x$forest$treemap, 2:3,
                                                     pad0, nrnodes))),
             c(nrnodes, 2, ntree))
     rf$forest$ntree <- ntree
+    rf$forest$cutoff <- rflist[[1]]$forest$cutoff
   } else {
     rf$forest <- NULL
   }
 
-  if(classRF) {
+  if (classRF) {
     ## Combine the votes matrix: if raw counts, just add.  Otherwise average.  
     rf$votes <- 0
-    if(any(rf$votes > 1)) {
+    areVotes <- all(sapply(rflist, function(x) any(x$votes > 1)))
+    if (areVotes) {
       for(i in 1:nforest) rf$votes <- rf$votes + rflist[[i]]$votes
     } else {
       warning("randomForest created with norm.votes=TRUE.  Result is averaged (weighted by number of trees), and thus not the most accurate.")

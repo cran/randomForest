@@ -15,9 +15,9 @@ MDSplot <- function(rf, fac, k=2, ...) {
   else
     pal <- rainbow(nlevs)
   if(k <= 2) {
-    plot(rf.mds$points, col=pal[codes(fac)], pch=20, ...)
+    plot(rf.mds$points, col=pal[as.numeric(fac)], pch=20, ...)
   } else {
-    pairs(rf.mds$points, col=pal[codes(fac)], pch=20, ...)
+    pairs(rf.mds$points, col=pal[as.numeric(fac)], pch=20, ...)
   }
   invisible(rf.mds)
 }

@@ -8,13 +8,17 @@
 var.imp.plot(x, sort=TRUE, 
     n.var=min(50, if(is.null(dim(x$importance)))
             length(x$importance) else nrow(x$importance)),
+    class=NULL,
     main=deparse(substitute(x)), ...)
 }
 \arguments{
   \item{x}{An object of class \code{randomForest}.}
   \item{sort}{Should the variables be sorted in decreasing order of
     importance?}
-  \item{n.var}{How many variables to show? (Ignored if \code{sort=FALSE}.)}
+  \item{n.var}{How many variables to show? (Ignored if
+    \code{sort=FALSE}.)}
+  \item{class}{For classification data, an integer or string indicating
+    the class for which variable importance is seeked.}
   \item{main}{plot title.}
   \item{...}{Other graphical parameters.}
 }

@@ -176,7 +176,9 @@
 ##      out.class <- if (ncol(z) > 1) 
 ##        levels(object$predicted)[max.col(z)]
 ##      else levels(object$predicted)[1 + (z > 0.5)]
-      out.class <- character(length(rn))
+      out.class <- factor(rep(NA, length(rn)),
+                          levels=1:length(object$classes),
+                          labels=object$classes)
       out.class[keep] <- object$classes[t1$jet]
       names(out.class[keep]) <- rn[keep]
       res <- out.class

@@ -4,8 +4,9 @@ partial.plot.default <- function(x, ...)
   stop("partial dependence plot not implemented for this class of objects.\n")
 
 partial.plot.randomForest <-
-function (x, pred.data, x.var, which.class, add = FALSE, n.pt = min(length(unique(pred.data[, 
-    xname])), 51), rug = TRUE, ...) 
+  function (x, pred.data, x.var, which.class, add = FALSE,
+            n.pt = min(length(unique(pred.data[, xname])), 51), rug = TRUE,
+            ...) 
 {
     classRF <- x$type != "regression"
     if (is.null(x$forest)) 

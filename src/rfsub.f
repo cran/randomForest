@@ -86,31 +86,31 @@ c     SUBROUTINE PREP
 
       call zerv(nc,nclass)
       do n=1,nsample
-         nc(cl(n))=nc(cl(n))+1
+         nc(cl(n)) = nc(cl(n)) + 1
       end do
 
       if (ipi.eq.0) then
          do 20 j=1,nclass
-            pi(j)=dble(nc(j))/nsample
+            pi(j) = dble(nc(j)) / nsample
  20      continue
       endif
       
       sp=0
       do j=1,nclass
-         sp=sp+pi(j)
+         sp = sp + pi(j)
       end do
-      do j=1,nclass
-         pi(j)=pi(j)/sp
+      do j = 1, nclass
+         pi(j) = pi(j) / sp
       end do
       
       do 30 j=1,nclass
-         if(nc(j).ge.1) then
-            pid(j)=pi(j)*nsample/nc(j)
+         if(nc(j) .ge. 1) then
+            pid(j) = pi(j) * nsample / nc(j)
          else
-            pid(j)=0
+            pid(j) = 0
          end if
-         do n=1,nsample
-            wtt(n)=pid(cl(n))
+         do n = 1, nsample
+            wtt(n) = pid(cl(n))
          end do
  30   continue
 
@@ -217,59 +217,57 @@ c main program.
       
       double precision tclasspop(nclass),classpop(nclass,nrnodes),
      1     tclasscat(nclass,32),win(nsample),wr(nclass),wc(nclass),
-     1     wl(nclass),tgini(mdim)
+     1     wl(nclass),tgini(mdim), xrand
       integer msplit
       
       msplit = 0
       call zerv(nodestatus,nrnodes)
       call zerv(nodestart,nrnodes)
       call zerv(nodepop,nrnodes)
-      call zermr(classpop,nclass,nrnodes)
-      
-      
+      call zermr(classpop,nclass,nrnodes)      
       
       do 20 j=1,nclass
-         classpop(j,1)=tclasspop(j)
+         classpop(j,1) = tclasspop(j)
  20   continue
 
-      ncur=1
-      nodestart(1)=1
-      nodepop(1)=nuse
-      nodestatus(1)=2
+      ncur = 1
+      nodestart(1) = 1
+      nodepop(1) = nuse
+      nodestatus(1) = 2
       
 c     start main loop
 
-      do 30 kbuild=1,nrnodes
+      do 30 kbuild = 1, nrnodes
 
-         if (kbuild.gt.ncur) goto 50
-         if (nodestatus(kbuild).ne.2) goto 30
+         if (kbuild .gt. ncur) goto 50
+         if (nodestatus(kbuild) .ne. 2) goto 30
          
 c     initialize for next call to findbestsplit
 
-         ndstart=nodestart(kbuild)
-         ndend=ndstart+nodepop(kbuild)-1
-         do 40 j=1,nclass
-            tclasspop(j)=classpop(j,kbuild)
+         ndstart = nodestart(kbuild)
+         ndend = ndstart + nodepop(kbuild) - 1
+         do 40 j = 1, nclass
+            tclasspop(j) = classpop(j,kbuild)
  40      continue
-         jstat=0
+         jstat = 0
 
          call findbestsplit(a,b,cl,mdim,nsample,nclass,cat,ndstart,
      1        ndend,tclasspop,tclasscat,msplit,decsplit,nbest,ncase,
      1        jstat,jin,mtry,iv,win,wr,wc,wl,mred,kbuild,mind)
          
          
-         if(jstat.eq.1) then
-            nodestatus(kbuild)=-1
+         if (jstat .eq. 1) then
+            nodestatus(kbuild) = -1
             goto 30
          else
-            bestvar(kbuild)=msplit
-            tgini(msplit)=decsplit+tgini(msplit)
-            if (cat(msplit).eq.1) then
-               bestsplit(kbuild)=a(msplit,nbest)
-               bestsplitnext(kbuild)=a(msplit,nbest+1)
+            bestvar(kbuild) = msplit
+            tgini(msplit) = decsplit + tgini(msplit)
+            if (cat(msplit) .eq. 1) then
+               bestsplit(kbuild) = a(msplit,nbest)
+               bestsplitnext(kbuild) = a(msplit,nbest+1)
             else
-               bestsplit(kbuild)=nbest
-               bestsplitnext(kbuild)=0
+               bestsplit(kbuild) = nbest
+               bestsplitnext(kbuild) = 0
             endif
          endif
                   
@@ -278,77 +276,88 @@ c     initialize for next call to findbestsplit
                   
 c     leftnode no.= ncur+1, rightnode no. = ncur+2.
 
-         nodepop(ncur+1)=ndendl-ndstart+1
-         nodepop(ncur+2)=ndend-ndendl
-         nodestart(ncur+1)=ndstart
-         nodestart(ncur+2)=ndendl+1
+         nodepop(ncur+1) = ndendl - ndstart + 1
+         nodepop(ncur+2) = ndend - ndendl
+         nodestart(ncur+1) = ndstart
+         nodestart(ncur+2) = ndendl + 1
 
 c     find class populations in both nodes
          
          do 60 n=ndstart,ndendl
-            if(cat(msplit).gt.1)then
-               nc=ncase(n)
+            if (cat(msplit) .gt. 1) then
+               nc = ncase(n)
             else
-               nc=ncase(n)
+               nc = ncase(n)
             end if
             j=cl(nc)
-            classpop(j,ncur+1)=classpop(j,ncur+1)+win(nc)
+            classpop(j,ncur+1) = classpop(j,ncur+1) + win(nc)
  60      continue
          do 70 n=ndendl+1,ndend
-            if(cat(msplit).gt.1) then
-               nc=ncase(n)
+            if(cat(msplit) .gt. 1) then
+               nc = ncase(n)
             else
-               nc=ncase(n)
+               nc = ncase(n)
             end if
-            j=cl(nc)
-            classpop(j,ncur+2)=classpop(j,ncur+2)+win(nc)
+            j = cl(nc)
+            classpop(j,ncur+2) = classpop(j,ncur+2) + win(nc)
  70      continue
 
 
 c     check on nodestatus
 
-         nodestatus(ncur+1)=2
-         nodestatus(ncur+2)=2
-         if (nodepop(ncur+1).le.ndsize) nodestatus(ncur+1)=-1
-         if (nodepop(ncur+2).le.ndsize) nodestatus(ncur+2)=-1
+         nodestatus(ncur+1) = 2
+         nodestatus(ncur+2) = 2
+         if (nodepop(ncur+1).le.ndsize) nodestatus(ncur+1) = -1
+         if (nodepop(ncur+2).le.ndsize) nodestatus(ncur+2) = -1
          popt1=0
          popt2=0
          do j=1,nclass
-            popt1=popt1+classpop(j,ncur+1)
-            popt2=popt2+classpop(j,ncur+2)
+            popt1 = popt1 + classpop(j,ncur+1)
+            popt2 = popt2 + classpop(j,ncur+2)
          end do
          
          do j=1,nclass
-            if (classpop(j,ncur+1).eq.popt1) nodestatus(ncur+1)=-1
-            if (classpop(j,ncur+2).eq.popt2) nodestatus(ncur+2)=-1
+            if (classpop(j,ncur+1).eq.popt1) nodestatus(ncur+1) = -1
+            if (classpop(j,ncur+2).eq.popt2) nodestatus(ncur+2) = -1
          end do
 
-         treemap(1,kbuild)=ncur+1
-         treemap(2,kbuild)=ncur+2
-         parent(ncur+1)=kbuild
-         parent(ncur+2)=kbuild
-         nodestatus(kbuild)=1
+         treemap(1,kbuild) = ncur + 1
+         treemap(2,kbuild) = ncur + 2
+         parent(ncur+1) = kbuild
+         parent(ncur+2) = kbuild
+         nodestatus(kbuild) = 1
          ncur=ncur+2
          if (ncur.ge.nrnodes) goto 50
          
  30   continue
  50   continue
 
-      ndbigtree=nrnodes
-      do k=nrnodes,1,-1
-         if (nodestatus(k).eq.0) ndbigtree=ndbigtree-1
-         if (nodestatus(k).eq.2) nodestatus(k)=-1
+      ndbigtree = nrnodes
+      do k=nrnodes, 1, -1
+         if (nodestatus(k) .eq. 0) ndbigtree = ndbigtree - 1
+         if (nodestatus(k) .eq. 2) nodestatus(k) = -1
       end do
 
       
-      do kn=1,ndbigtree
-         if(nodestatus(kn).eq.-1) then
-            pp=0
-            do j=1,nclass
-               if(classpop(j,kn).gt.pp) then
+      do kn = 1, ndbigtree
+         if(nodestatus(kn) .eq. -1) then
+            pp = 0
+            do j = 1, nclass
+               if (classpop(j,kn) .gt. pp) then
                   nodeclass(kn)=j
                   pp=classpop(j,kn)
                end if
+c
+c Break ties at random:
+c
+               if (classpop(j,kn) .eq. pp) then
+                  call rrand(xrand)
+                  if (xrand .gt. 0.5) then
+                     nodeclass(kn)=j
+                     pp=classpop(j,kn)
+                  end if
+               end if
+
             end do
          end if
       end do
@@ -762,7 +771,7 @@ C     SUBROUTINE TESTREEBAG
          if(l .gt. 1) then
             ncat=nint(xbestsplit(k))
             call myunpack(l,ncat,icat)
-            do j = 1, l
+            do j = 1, l 
                cbestsplit(j,k) = icat(j)
             end do
          end if

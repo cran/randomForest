@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    Modifications to get the forest out Matt Wiener Feb. 26, 2002. 
  *****************************************************************/
 
-#include <stdio.h>
+/* #include <stdio.h> */
 #include <R.h>
 #include "rf.h"
 
@@ -123,48 +123,48 @@ void rf(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
 
   tgini =      (double *) S_alloc(mdim, sizeof(double));
-  v =          (double *) S_alloc(nsample, sizeof(double));
-  tx =         (double *) S_alloc(nsample, sizeof(double));
   wl =         (double *) S_alloc(nclass, sizeof(double));
+  wc =         (double *) S_alloc(nclass, sizeof(double));
+  wr =         (double *) S_alloc(nclass, sizeof(double));
   classpop =   (double *) S_alloc(nclass* *nrnodes, sizeof(double));
   /* errimp =     (double *) S_alloc(mimp, sizeof(double)); */
   /* rimpmarg =   (double *) S_alloc(mdim*nsample, sizeof(double)); */
   tclasscat =  (double *) S_alloc(nclass*32, sizeof(double));
   tclasspop =  (double *) S_alloc(nclass, sizeof(double));
   /* rmargin =    (double *) S_alloc(nsample, sizeof(double)); */
+  v =          (double *) S_alloc(nsample, sizeof(double));
+  tx =         (double *) S_alloc(nsample, sizeof(double));
   win =        (double *) S_alloc(nsample, sizeof(double));
   tp =         (double *) S_alloc(nsample, sizeof(double));
-  wc =         (double *) S_alloc(nclass, sizeof(double));
-  wr =         (double *) S_alloc(nclass, sizeof(double));
   wtt =        (double *) S_alloc(nsample, sizeof(double));
+  iw =         (double *) S_alloc(nsample, sizeof(double));
+  tdx =        (double *) S_alloc(nsample0, sizeof(double));
+  sm =         (double *) S_alloc(nsample0, sizeof(double));
+  p =          (double *) S_alloc(nsample0, sizeof(double));
   /* diffmarg =   (double *) S_alloc(mdim, sizeof(double)); */
   /* cntmarg =    (double *) S_alloc(mdim, sizeof(double)); */
   /* rmissimp =   (double *) S_alloc(mimp, sizeof(double)); */
   tout =       (double *) S_alloc(near, sizeof(double));
-  tdx =        (double *) S_alloc(nsample0, sizeof(double));
-  sm =         (double *) S_alloc(nsample0, sizeof(double));
-  p =          (double *) S_alloc(nsample0, sizeof(double));
   /* q =          (double *) S_alloc(nclass*nsample, sizeof(double)); */
-  iw =         (double *) S_alloc(nsample, sizeof(double));
   sqsd =       (double *) S_alloc(mdim * nclass, sizeof(double));
   sqsdall =    (double *) S_alloc(mdim, sizeof(double));
   
-  out =           (int *) S_alloc(nsample, sizeof(int));
   /* countimp =      (int *) S_alloc(nimp*mimp, sizeof(int)); */
   bestsplitnext = (int *) S_alloc(*nrnodes, sizeof(int));
   bestsplit =     (int *) S_alloc(*nrnodes, sizeof(int));
   nodepop =       (int *) S_alloc(*nrnodes, sizeof(int));
   parent =        (int *) S_alloc(*nrnodes, sizeof(int));
+  nodestart =     (int *) S_alloc(*nrnodes, sizeof(int));
+  out =           (int *) S_alloc(nsample, sizeof(int));
   jin =           (int *) S_alloc(nsample, sizeof(int));
   ndble =         (int *) S_alloc(nsample0, sizeof(int));
   nodex =         (int *) S_alloc(nsample, sizeof(int));
   nodexts =       (int *) S_alloc(ntest, sizeof(int));
-  nodestart =     (int *) S_alloc(*nrnodes, sizeof(int));
   ta =            (int *) S_alloc(nsample, sizeof(int));
   ncase =         (int *) S_alloc(nsample, sizeof(int));
   jerr =          (int *) S_alloc(nsample, sizeof(int));
-  iv =            (int *) S_alloc(mdim, sizeof(int)); 
   isort =         (int *) S_alloc(nsample, sizeof(int));
+  iv =            (int *) S_alloc(mdim, sizeof(int)); 
   ncp =           (int *) S_alloc(near, sizeof(int));
   clp =           (int *) S_alloc(near, sizeof(int));
   jtr =           (int *) S_alloc(nsample, sizeof(int));
@@ -499,13 +499,13 @@ void rf(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
       /* class-specific measures */
       for (k = 0; k < nclass; ++k) {
 	av = imprt[m + k*mdim] / *ntree;
-	/* se = sqrt( ((sqsd[m + k*mdim] / *ntree) - av * av) / *ntree ); */
-	imprt[m + k*mdim] = av; /* / se; */
+	se = sqrt( ((sqsd[m + k*mdim] / *ntree) - av * av) / *ntree ); 
+	imprt[m + k*mdim] = (se <= 0.0) ? -1000.0 - av : av / se;
       }
       /* overall measures */
       av = imprt[m + nclass*mdim] / *ntree;
       se = sqrt( ((sqsdall[m] / *ntree) - av * av) / *ntree );
-      imprt[m + nclass*mdim] = av; /* / se; */
+      imprt[m + nclass*mdim] = (se <= 0.0) ? -1000.0 - av : av / se; 
       imprt[m + (nclass+1)*mdim] = tgini[m];
     }
 
@@ -534,16 +534,17 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
   }
 
   for (jb = 0; jb < *jbt; ++jb) {
-
     idxNodes = jb * *nrnodes;
+
     /* Offset for prediction by individual tree: if prediction is to be 
        kept, advance the index by the number of cases. */
+
     idxSample = *keepPred ? jb * *ntest : 0;
 
     /* predict by the jb-th tree */
     F77_CALL(testreebag)(xts, ntest, mdim, treemap + 2*idxNodes,
 			 nodestatus + idxNodes, xbestsplit + idxNodes,
-			 cbestsplit + idxNodes, bestvar + idxNodes, 
+			 cbestsplit, bestvar + idxNodes, 
 			 nodeclass + idxNodes, nrnodes, ndbigtree + jb, 
 			 cat, nclass, jts + idxSample, nodexts, maxcat);
 
@@ -581,7 +582,6 @@ void runforest(int *mdim, int *ntest, int *nclass, int *maxcat,
       }
     }
   }
-
 
   /* if proximities requested, do the final adjustment 
      (division by number of trees) */

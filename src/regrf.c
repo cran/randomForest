@@ -1,6 +1,4 @@
 /************************************************************************
-     Last change:  LB   13 Mar 2002   12:01 pm
-
       copyright 1999 by leo Breiman
       this is free software and can be used for any purpose. 
       It comes with no guarantee.  
@@ -19,7 +17,8 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	   int *treemap, double *avnode, int *mbest, double *upper,
 	   double *mse, double *rsq, int *keepf, int *testdat,
 	   double *xts, int *nts, double *yts, int *labelts, 
-	   double *ypred, double *proxts, double *msets, double *coef)
+	   double *ypred, double *proxts, double *msets, double *coef, 
+	   int *nout)
 {
   /*************************************************************************
    Input:
@@ -50,7 +49,7 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   int i, k, m, mr, mrind, n, nls, ntrue, jout, nimp, mimp, jb, idx, ntest;
   int *oobpair;
 
-  int *jdex, *nodepop, *npert, *ip, *nperm, *parent, *nout, *jin, *isort, 
+  int *jdex, *nodepop, *npert, *ip, *nperm, *parent, *jin, *isort, 
     *nodestart, *ncase, *nbrterm, *jperm, *incl, *mind, *nodex, *nodexts;
   
   nimp = (*imp) ? *nsample : 1;
@@ -59,43 +58,43 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 
   if (*jprint == 0) *jprint = *jbt + 1;
 
-  yb         = (double *) R_alloc(*nsample, sizeof(double));
-  rsnodecost = (double *) R_alloc(*nrnodes, sizeof(double));
-  bestcrit   = (double *) R_alloc(*nrnodes, sizeof(double));
-  sd         = (double *) R_alloc(*mdim, sizeof(double));
-  wts        = (double *) R_alloc(*nsample, sizeof(double));
-  v          = (double *) R_alloc(*nsample, sizeof(double));
-  ut         = (double *) R_alloc(*nsample, sizeof(double));
-  xt         = (double *) R_alloc(*nsample, sizeof(double));
-  xb         = (double *) R_alloc(*mdim * *nsample, sizeof(double));
-  ytr        = (double *) R_alloc(*nsample, sizeof(double));
-  ytree      = (double *) R_alloc(ntest, sizeof(double));
-  yl         = (double *) R_alloc(*nsample, sizeof(double));
-  xa         = (double *) R_alloc(3 * *mdim, sizeof(double));
-  utr        = (double *) R_alloc(*nsample, sizeof(double));
-  /* predimp    = (double *) R_alloc(nimp * mimp, sizeof(double)); */
-  sse        = (double *) R_alloc(mimp, sizeof(double));
-  za         = (double *) R_alloc(*mdim, sizeof(double));
-  tgini      = (double *) R_alloc(*mdim, sizeof(double));
+  yb         = (double *) S_alloc(*nsample, sizeof(double));
+  wts        = (double *) S_alloc(*nsample, sizeof(double));
+  v          = (double *) S_alloc(*nsample, sizeof(double));
+  ut         = (double *) S_alloc(*nsample, sizeof(double));
+  xt         = (double *) S_alloc(*nsample, sizeof(double));
+  ytr        = (double *) S_alloc(*nsample, sizeof(double));
+  yl         = (double *) S_alloc(*nsample, sizeof(double));
+  utr        = (double *) S_alloc(*nsample, sizeof(double));
+  rsnodecost = (double *) S_alloc(*nrnodes, sizeof(double));
+  bestcrit   = (double *) S_alloc(*nrnodes, sizeof(double));
+  xa         = (double *) S_alloc(3 * *mdim, sizeof(double));
+  sd         = (double *) S_alloc(*mdim, sizeof(double));
+  xb         = (double *) S_alloc(*mdim * *nsample, sizeof(double));
+  sse        = (double *) S_alloc(mimp, sizeof(double));
+  za         = (double *) S_alloc(*mdim, sizeof(double));
+  tgini      = (double *) S_alloc(*mdim, sizeof(double));
 
-  jdex       = (int *) R_alloc(*nsample, sizeof(int));
-  nodepop    = (int *) R_alloc(*nrnodes, sizeof(int));
-  npert      = (int *) R_alloc(*nsample, sizeof(int));
-  ip         = (int *) R_alloc(*mdim, sizeof(int));
-  nperm      = (int *) R_alloc(*nsample, sizeof(int));
-  parent     = (int *) R_alloc(*nrnodes, sizeof(int));
-  nout       = (int *) R_alloc(*nsample, sizeof(int));
-  jin        = (int *) R_alloc(*nsample, sizeof(int));
-  isort      = (int *) R_alloc(*nsample, sizeof(int));
-  nodestart  = (int *) R_alloc(*nrnodes, sizeof(int));
-  ncase      = (int *) R_alloc(*nsample, sizeof(int));
-  nbrterm    = (int *) R_alloc(*nrnodes, sizeof(int));
-  jperm      = (int *) R_alloc(*jbt, sizeof(int));
-  incl       = (int *) R_alloc(*mdim, sizeof(int));
-  mind       = (int *) R_alloc(*mdim, sizeof(int)); 
-  nodex      = (int *) R_alloc(*nsample, sizeof(double));
-  nodexts    = (int *) R_alloc(ntest, sizeof(double));
-  if (*oobprox) oobpair = (int *) R_alloc(*nsample * *nsample, sizeof(int));
+  jdex       = (int *) S_alloc(*nsample, sizeof(int));
+  npert      = (int *) S_alloc(*nsample, sizeof(int));
+  nperm      = (int *) S_alloc(*nsample, sizeof(int));
+  jin        = (int *) S_alloc(*nsample, sizeof(int));
+  isort      = (int *) S_alloc(*nsample, sizeof(int));
+  ncase      = (int *) S_alloc(*nsample, sizeof(int));
+  nodex      = (int *) S_alloc(*nsample, sizeof(int));
+  nodepop    = (int *) S_alloc(*nrnodes, sizeof(int));
+  parent     = (int *) S_alloc(*nrnodes, sizeof(int));
+  nodestart  = (int *) S_alloc(*nrnodes, sizeof(int));
+  nbrterm    = (int *) S_alloc(*nrnodes, sizeof(int));
+  incl       = (int *) S_alloc(*mdim, sizeof(int));
+  mind       = (int *) S_alloc(*mdim, sizeof(int)); 
+  ip         = (int *) S_alloc(*mdim, sizeof(int));
+  jperm      = (int *) S_alloc(*jbt, sizeof(int));
+  if (*testdat) {
+    ytree      = (double *) S_alloc(ntest, sizeof(double));
+    nodexts    = (int *) S_alloc(ntest, sizeof(int));
+  }
+  if (*oobprox) oobpair = (int *) S_alloc(*nsample * *nsample, sizeof(int));
 
   averrb = 0.0;
   avy = 0.0;
@@ -416,12 +415,11 @@ void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree,
 		double *upper, double *avnodes, int *mbest, int *cat,
 		int *keepPred, double *allpred, int *iprox, double *proximity) 
 {
-  
   int i, j, k, n, idx, *nodex;
   double *ytree;
 
-  ytree = (double *) R_alloc(*ntest, sizeof(double));
-  nodex = (int *) R_alloc(*ntest, sizeof(int));
+  ytree = (double *) S_alloc(*ntest, sizeof(double));
+  nodex = (int *) S_alloc(*ntest, sizeof(int));
 
   if (*iprox) {
     for (i = 0; i < *ntest; ++i) {

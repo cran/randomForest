@@ -11,6 +11,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
   if (!classRF && length(unique(y)) <= 5) {
     warning("The response has five or fewer unique values.  Are you sure you want to do regression?")
   }
+  if (classRF && !is.null(y) && addclass==0 && length(unique(y)) < 2) {
+    stop("Need at least two classes to do classification.")
+  }
   n <- nrow(x)
   p <- ncol(x)
   if(n == 0)
@@ -144,7 +147,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     nrnodes <- 2 * trunc(nboot / nodesize) + 1
   } else {
     ## For regression trees, need to do this to get maximal trees.
-    nrnodes <- 2*nsample + 1
+    nrnodes <- 2 * floor(nsample/max(1, nodesize - 2)) + 1
   }
 
   testdat <- !is.null(xtest)
@@ -228,24 +231,28 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
         treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,]
       }
       ## Turn the predicted class into a factor like y.
-      out.class <- levels(y)[rfout$outcl]
+      out.class <- factor(rfout$outcl, levels=1:nclass,
+                          label=levels(y))
       names(out.class) <- x.row.names
-      con <- table(observed = y, predicted = out.class)
+      con <- table(observed = y, predicted = out.class)[levels(y), levels(y)]
       con <- cbind(con, class.error = 1 - diag(con)/rowSums(con))
     }
     out.votes <- t(matrix(rfout$counttr, nclass, nsample))[1:n, ]
+    oob.times <- rowSums(out.votes)
     if(norm.votes) 
       out.votes <- t(apply(out.votes, 1, function(x) x/sum(x)))
     dimnames(out.votes) <- list(x.row.names, levels(y))
     if(testdat) {
-      out.class.ts <- levels(y)[rfout$outclts]
+      out.class.ts <- factor(rfout$outclts, levels=1:nclass,
+                             label=levels(y))
       names(out.class.ts) <- xts.row.names
       out.votes.ts <- t(matrix(rfout$countts, nclass, ntest))
       dimnames(out.votes.ts) <- list(xts.row.names, levels(y))
       if (norm.votes)
         out.votes.ts <- t(apply(out.votes.ts, 1, function(x) x/sum(x)))
       if(labelts) {
-        testcon <- table(observed = ytest, predicted = out.class.ts)
+        testcon <- table(observed = ytest,
+                         predicted = out.class.ts)[levels(y), levels(y)]
         testcon <- cbind(testcon,
                          class.error = 1 - diag(testcon)/rowSums(testcon))
       }
@@ -257,6 +264,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 err.rate = if(addclass == 0) rfout$errtr else NULL, 
                 confusion = if(addclass == 0) con else NULL,
                 votes = out.votes,
+                oob.times = oob.times,
                 classes = levels(y),
                 importance = if(importance) 
                   matrix(rfout$impout, p, nclass+2,
@@ -328,8 +336,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 proxts = as.double(proxts),
                 msets = as.double(error.test),
                 coef = as.double(numeric(2)),
+                oob.times = as.integer(numeric(n)),
                 DUP=FALSE,
-                PACKAGE="randomForest")[c(15:25, 32:35)]
+                PACKAGE="randomForest")[c(15:25, 32:36)]
     ## Format the forest component, if present.
     if(keep.forest) {
       rfout$nodestatus <- matrix(rfout$nodestatus, ncol = ntree)
@@ -345,6 +354,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 predicted = structure(rfout$ypred, names=x.row.names),
                 mse = rfout$mse,
                 rsq = 1 - rfout$mse / (var(y)*(n-1)/n),
+                oob.times = rfout$oob.times,
                 importance = if(importance) structure(matrix(rfout[[2]],p,2),
                   dimnames=list(x.col.names, c("%IncMSE","IncNodePurity"))) else structure(rfout[[2]], names=x.col.names),
                 proximity = if(proximity) structure(rfout$prox,

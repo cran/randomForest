@@ -6,7 +6,7 @@
 }
 \usage{
 var.imp.plot(x, sort=TRUE, 
-    n.var=min(50, if(is.null(dim(x$importance)))
+    n.var=min(30, if(is.null(dim(x$importance)))
             length(x$importance) else nrow(x$importance)),
     class=NULL,
     main=deparse(substitute(x)), ...)

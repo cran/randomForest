@@ -1,9 +1,10 @@
 Package: randomForest
 Title: Breiman's random forest for classification and regression
-Version: 4.0-1
-Date: 14/10/2003
+Version: 4.0-7
+Date: 2004/01/09
 Depends: R (>= 1.7.0)
 Author: Fortran original by Leo Breiman and Adele Cutler, R port by Andy Liaw and Matthew Wiener. 
 Description: Classification and regression based on a forest of trees using random inputs.
 Maintainer: Andy Liaw <andy_liaw@merck.com>
 License: GPL version 2 or later
+Packaged: Fri Jan  9 13:04:32 2004; andy

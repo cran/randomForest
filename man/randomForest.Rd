@@ -96,11 +96,15 @@
     {unsupervised}.}
   \item{predicted}{the predicted values of the input data based on
     out-of-bag samples.}
-  \item{importance}{a matrix with two columns, each a different measure
-    of importance of the predictors.  If
-    \code{importance=FALSE}, the last measure is still returned.  This
-    measure corresponds to average decrease in node impurity caused by
-    splitting on the variables, and is always computed.}
+  \item{importance}{a matrix with \code{nclass} + 2 (for classification)
+    or two (for regression) columns.  For classification, the first
+    \code{nclass} columns are the class-specific measures computed as
+    mean descrease in accuracy.  The \code{nclass} + 1st column is the
+    mean descrease in accuracy over all classes.  The last column is the
+    mean decrease in Gini index.  For Regression, the first column is
+    the mean decrease in accuracy and the second the mean decrease in MSE.
+    If \code{importance=FALSE}, the last measure is still returned as a
+    vector.}
   \item{ntree}{number of trees grown.}
   \item{mtry}{number of predictors sampled for spliting at each node.}
   \item{forest}{(a list that contains the entire forest; \code{NULL} if 
@@ -114,6 +118,8 @@
   \item{votes}{(classification only) a matrix with one row for each
     input data point and one column for each class, giving the fraction
     or number of `votes' from the random forest.}
+  \item{oob.times}{number of times cases are `out-of-bag' (and thus used
+    in computing OOB error estimate)}
   \item{proximity}{if \code{proximity=TRUE} when
     \code{randomForest} is called, a matrix of proximity measures among
     the input (based on the frequency that pairs of data points are in
@@ -138,7 +144,8 @@
 
 \note{
   The \code{forest} structure is slightly different between
-  classification and regression.
+  classification and regression.  For details on how the trees are
+  stored, see the help page for \code{\link{getTree}}.
 
   If \code{xtest} is given, prediction of the test set is done ``in
   place'' as the trees are grown.  If \code{ytest} is also given, and
@@ -147,12 +154,18 @@
   test set is returned in the \code{test} component of the resulting
   \code{randomForest} object.
 
+  For large data sets, especially those with large number of variables,
+  calling \code{randomForest} via the formula interface is not advised:
+  There may be too much overhead in handling the formula.
+  
   Here are the definitions of the variable importance measures.  For
   each tree, the prediction accuracy on the out-of-bag portion of the
   data is recorded.  Then the same is done after permuting each
   predictor variable.  The difference between the two accuracies are
-  then averaged over all trees, and normalized by their standard
-  deviation.  The second measure is the total decrease in node
+  then averaged over all trees, and normalized by the standard
+  error.  If the standard error is equal to 0 for a variable, the
+  measure is set to -1000 + mean decrease in accuracy (which, most
+  likely, is also 0).  The second measure is the total decrease in node
   impurities from splitting on the variable, averaged over all trees.
   For classification, the node impurity is measured by the Gini index.
   For regression, it is measured by residual sum of squares.

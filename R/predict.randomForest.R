@@ -73,16 +73,14 @@
   show.error <- 0
   x <- t(data.matrix(x))
   if(proximity) {
-    if(object$type == "regression")
-      stop("Proximity has not been implemented for regression.")
     proxmatrix <- matrix(0, ntest, ntest)
   } else {
     proxmatrix <- numeric(1)
   }
   if(object$type == "regression") {
-    res <- .C("runrforest",
+    ans <- .C("runrforest",
               as.double(x),
-              as.double(numeric(ntest)),
+              ypred = as.double(numeric(ntest)),
               as.integer(mdim),
               as.integer(ntest),
               as.integer(ntree),
@@ -94,8 +92,17 @@
               as.double(object$forest$avnode),
               as.integer(object$forest$mbest),
               as.integer(object$forest$ncat),
+              as.integer(proximity),
+              proximity = as.double(proxmatrix),
               DUP=FALSE,
-              PACKAGE = "randomForest")[[2]]
+              PACKAGE = "randomForest")[c(2, 15)]
+    if(!proximity) {
+      res <- ans$ypred
+    } else {
+      res <- list(pred = ans$ypred, proximity = structure(ans$proximity,
+                                     dim=c(ntest, ntest),
+                                     dimnames=list(rn, rn)))
+    }
   } else {
     t1 <- .Fortran("runforest",
                    mdim = as.integer(mdim),
@@ -140,7 +147,9 @@
       res <- out.class
     }
     if(proximity)
-      res <- list(pred = res, proximity = matrix(t1$proxmatrix, nr = ntest))
+      res <- list(pred = res, proximity = structure(t1$proxmatrix,
+                                dim = c(ntest, ntest),
+                                dimnames = list(rn, rn)))
   }
   res
 }

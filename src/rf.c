@@ -35,8 +35,9 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
         double *outlier, int *outcl, int *counttr, double *prox, 
 	double *imprt, int *trace, int *ndbigtree, int *nodestatus, 
 	int *bestvar, int *treemap, int *nodeclass, double *xbestsplit, 
-	double *pid, int *keepf, int *testdat, double *xts, int *clts, int *nts, 
-	double *countts, int *outclts, int *labelts)
+	double *pid, int *keepf, int *testdat, double *xts, int *clts, 
+	int *nts, double *countts, int *outclts, int *labelts, 
+	double *proxts)
 {
   /******************************************************************
    *  C wrapper for random forests:  get input from R and drive
@@ -193,6 +194,17 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
       }
     }
   }
+
+  if(*iprox == 1) {
+    for(n = 0; n < nsample0; ++n)
+      for(k = 0; k < nsample0; ++k)
+	prox[k + n * nsample0] = 0.0;
+    if(*testdat == 1) {
+      for(n = 0; n < ntest; ++n)
+	for(k = 0; k < ntest + nsample0; ++k)
+	  proxts[n + k * ntest] = 0.0;
+    }
+  }
   
   F77_CALL(prep)(cl, &nsample, &nclass, ipi, pi, pid, nc, wtt);
   F77_CALL(makea)(x, &mdim, &nsample, cat, isort, v, at, b, &mdim);
@@ -300,9 +312,6 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 			       &nclass, jvr, nodex, maxcat); 
 	  for(n = 0; n < nsample; n++) {
 	    if(jin[n] == 0 && jtr[n] != jvr[n]) {
-	      assert(jvr[n]-1 + n*nclass + (mr-1)*nclass*nsample < 
-		     nclass * nimp * mimp);
-	      assert(jvr[n]-1 + n*nclass + (mr-1)*nclass*nsample >= 0);
 	      countimp[jvr[n]-1 + n*nclass + (mr-1)*nclass*nsample]++;
 	      countimp[jtr[n]-1 + n*nclass + (mr-1)*nclass*nsample]--;
 	    }
@@ -315,38 +324,45 @@ void rf(double *x, int *ncol, int *nrow, int *cl, int *ncl, int *cat,
 	}
       }
     }
-        
+
     /*  DO PROXIMITIES */
     if(*iprox == 1) {
-      for(n = 0; n < near; n++) {
-	for(k = 0; k < near; k++) {
-	  assert(k < nsample);
-	  assert(n < nsample);
-	  assert(k >= 0);
-	  assert(n >= 0);
-	  assert(k*near + n < near * near);
-	  assert(k*near + n >= 0);
+      for(n = 0; n < near; ++n) {
+	for(k = 0; k < near; ++k) {
 	  if(nodex[k] == nodex[n]) prox[k*near + n] += 1.0;
 	}
       }
+      /* proximity for test data */
+      if(*testdat == 1) {
+	for(n = 0; n < ntest; ++n) {
+	  for(k = 0; k <= n; ++k) {
+	    if(nodexts[k] == nodexts[n]) {
+	      proxts[k * ntest + n] += 1.0;
+	      proxts[n * ntest + k] = proxts[k * ntest + n];
+	    }
+	  }
+	  for(k = 0; k < near; ++k) {
+	    if(nodexts[n] == nodex[k]) proxts[n + ntest * (k+ntest)] += 1.0; 
+	  } 
+	}
+      } 
     }
   }
   PutRNGstate();
       
   /*  PROXIMITY DATA ++++++++++++++++++++++++++++++++*/  
   if(*iprox == 1) {
-    for(n = 0; n < near; n++) {
-      for(k = n + 1; k < near; k++) {
-	assert(k*near + n < near * near);
-	assert(n*near + k < near * near);
-	assert(k*near + n >= 0);
-	assert(n*near + k >= 0);
-	prox[near*k + n] = prox[near*k + n] / jbt;
+    for(n = 0; n < near; ++n) {
+      for(k = n + 1; k < near; ++k) {
+	prox[near*k + n] /= jbt;
 	prox[near*n + k] = prox[near*k + n];
       }
-      assert(near*n + n < near * near);
-      assert(near*n + n >= 0);
       prox[near*n + n] = 1.0;
+    }
+    if(*testdat == 1) {
+      for(n = 0; n < ntest; ++n) 
+	for(k = 0; k < ntest + nsample; ++k) 
+	  proxts[ntest*k + n] /= jbt;
     }
   }
 

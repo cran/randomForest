@@ -35,6 +35,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     if(addclass == 0) addclass <- 1
     y <- factor(c(rep(1, n), rep(2, n)))
     x <- rbind(x, x)
+    keep.forest <- FALSE
   }
   if(!is.element(addclass,0:2))
     stop("addclass can only take on values 0, 1, or 2")
@@ -89,7 +90,12 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     outscale <- 0
   }
 
-  if(proximity) prox <- matrix(0, n, n) else prox <- 0
+  if(proximity) {
+    prox <- matrix(0, n, n)
+    proxts <- if (!is.null(xtest)) matrix(0, ntest, ntest + n) else 0
+  } else {
+    prox <- proxts <- 0
+  }
   
   if(importance) {
     if(classRF) {
@@ -107,11 +113,11 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
     if(is.null(ytest)) {
       ytest <- labelts <- 0
     } else {
-      labelts <- 1
+      labelts <- TRUE
     }
   } else {
     ntest <- xtest <- ytest <- 1
-    labelts <- 0
+    labelts <- FALSE
   }
 
   if(keep.forest) nt <- ntree else nt <- 1
@@ -155,6 +161,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 countts = as.double(numeric(nclass * ntest)),
                 outclts = as.integer(numeric(ntest)),
                 labelts = as.integer(labelts),
+                proxts = as.double(proxts),
                 DUP=FALSE,
                 PACKAGE="randomForest")
     if(addclass == 0) {
@@ -172,10 +179,8 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
       con <- cbind(con, class.error = 1 - diag(con)/rowSums(con))
     }
     out.votes <- t(matrix(rfout$counttr, nclass, nsample))[1:n, ]
-    if(norm.votes) {
+    if(norm.votes) 
       out.votes <- t(apply(out.votes, 1, function(x) x/sum(x)))
-      if(testdat) out.votes.ts <- t(apply(out.votes.ts, 1, function(x) x/sum(x)))
-    }
     dimnames(out.votes) <- list(x.row.names, levels(y))
     if(testdat) {
       out.class.ts <- factor(rfout$outclts, levels = 1:length(levels(y)), 
@@ -183,9 +188,13 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
       names(out.class.ts) <- xts.row.names
       out.votes.ts <- t(matrix(rfout$countts, nclass, ntest))
       dimnames(out.votes.ts) <- list(xts.row.names, levels(y))
-      testcon <- table(observed = ytest, predicted = out.class.ts)
-      testcon <- cbind(testcon,
-                       class.error = 1 - diag(testcon)/rowSums(testcon))
+      if (norm.votes)
+        out.votes.ts <- t(apply(out.votes.ts, 1, function(x) x/sum(x)))
+      if(labelts) {
+        testcon <- table(observed = ytest, predicted = out.class.ts)
+        testcon <- cbind(testcon,
+                         class.error = 1 - diag(testcon)/rowSums(testcon))
+      }
     }    
     out <- list(call = match.call(),
                 type = ifelse(addclass == 0, "classification",
@@ -218,7 +227,10 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                   predicted = out.class.ts,
                   error=if(labelts) mean(ytest != out.class.ts) else NULL,
                   confusion=if(labelts) con else NULL,
-                  votes=out.votes.ts))
+                  votes=out.votes.ts,
+                  proximity = if(proximity) matrix(rfout$proxts, nrow=ntest,
+                    dimnames = list(xts.row.names, c(xts.row.names,
+                      x.row.names))) else NULL))
   } else {
     ypred <- numeric(n)
     rfout <- .C("regrf",
@@ -236,7 +248,7 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 as.integer(proximity),
                 ypred = as.double(ypred),
                 impout = as.double(impout),
-                prox = as.integer(prox),
+                prox = as.double(prox),
                 ndbigtree = as.integer(numeric(ntree)),
                 nodestatus = as.integer(numeric(nt * nrnodes)),
                 treemap = as.integer(numeric(nt * 2 * nrnodes)),
@@ -252,8 +264,9 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                 yts = as.double(ytest),
                 labelts = as.integer(labelts),
                 ytestpred = as.double(numeric(ntest)),
+                proxts = as.double(proxts),
                 DUP=FALSE,
-                PACKAGE="randomForest")[c(13:23, 30)]
+                PACKAGE="randomForest")[c(13:23, 30:31)]
     out <- list(call = match.call(),
                 type = "regression",
                 predicted = structure(rfout$ypred, names=x.row.names),
@@ -264,12 +277,19 @@ function(x, y=NULL,  xtest=NULL, ytest=NULL, addclass=0, ntree=500,
                   dim = c(n, n), dimnames = list(x.row.names, x.row.names)) else NULL,
                 ntree = ntree,
                 mtry = mtry,
-                forest = if(keep.forest) c(rfout[3:8], list(ncat = ncat),
+                forest = if(keep.forest) c(rfout[4:9], list(ncat = ncat),
                   list(nrnodes=nrnodes)) else NULL,
-                test = if(!testdat) NULL else list(predicted = structure(rfout$ytestpred, names=xts.row.names),
+                test = if(testdat) {
+                  list(predicted = structure(rfout$ytestpred,
+                         names=xts.row.names),
                   mse = if(labelts) mean((ytest - rfout$ytestpred)^2) else NULL,
                   rsq = if(labelts) 1 - mean((ytest - rfout$ytestpred)^2) /
-                  (var(ytest)*(n-1)/n)))
+                       (var(ytest)*(n-1)/n),
+                  proximity = if(proximity) 
+                       matrix(rfout$proxts / ntree, nrow = ntest,
+                              dimnames = list(xts.row.names, c(xts.row.names,
+                                x.row.names))) else NULL)
+                  } else NULL)
   }
   class(out) <- "randomForest"
   return(out)

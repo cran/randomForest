@@ -14,11 +14,11 @@
 
 void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize, 
 	   int *nrnodes, int *jbt, int *mtry, int *imp, int *cat, int *jprint,
-	   int *iprox, double *yptr, double *errimp, int *prox, int *ndbigtree,
-	   int *nodestatus, int *treemap, double *avnode, int *mbest, 
-	   double *upper, double *mse, double *rsq, int *keepf, int *testdat,
-	   double *xts, int *nts, double *yts, int *labelts,
-	   double *ypred)
+	   int *iprox, double *yptr, double *errimp, double *prox, 
+	   int *ndbigtree, int *nodestatus, int *treemap, double *avnode, 
+	   int *mbest, double *upper, double *mse, double *rsq, int *keepf, 
+	   int *testdat, double *xts, int *nts, double *yts, int *labelts,
+	   double *ypred, double *proxts)
 {
   /*************************************************************************
    Input:
@@ -122,6 +122,19 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   astr = 0.0;
   asd = 0.0;
 
+  if(*iprox == 1) {
+    for(n = 0; n < *nsample; ++n) {
+      for(k = 0; k < *nsample; ++k) 
+	prox[k * *nsample + n] = 0.0;
+    }
+    if(*testdat == 1) {
+      for(n = 0; n < ntest; ++n) {
+	for(k = 0; k < ntest + *nsample; ++k) 
+	  prox[k * ntest + n] = 0.0;
+      }
+    }
+  }
+
   if(*imp==1) {
     for(n = 0; n < nimp; ++n) {
       for(m = 0; m < mimp; ++m) {
@@ -141,7 +154,11 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
   *************************************/
   for(jb = 0; jb < *jbt; ++jb) {
     idx = (*keepf == 1) ? jb * *nrnodes : 0;
-    for(n = 0; n < *nsample; ++n) jin[n] = 0;
+    for(n = 0; n < *nsample; ++n) {
+      jin[n] = 0;
+      nodex[n] = 0;
+    }
+
     for(n = 0; n < *nsample; ++n) {
       xrand = unif_rand();
       k = ftrunc(xrand * *nsample);
@@ -187,7 +204,10 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
     errb /= *nsample;
 
     if(*testdat == 1) {
-      for(i = 0; i < ntest; ++i) ytree[i] = 0.0;      
+      for(i = 0; i < ntest; ++i) {
+	ytree[i] = 0.0;
+	nodexts[i] = 0;
+      }
       F77_CALL(rtestreebag)(xts, &ntest, mdim, treemap + 2*idx, 
 			    nodestatus + idx, nrnodes, ndbigtree + jb,
 			    ytree, upper + idx, avnode + idx, 
@@ -208,6 +228,31 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
       Rprintf("MSE(OOB)=%f  %%Var(y)=%7.2f\n", errb, 100*errb/vary);
     }
 	   
+    /*  DO PROXIMITIES */
+    if(*iprox == 1) {
+      for(n = 0; n < *nsample; ++n) {
+	for(k = 0; k < *nsample; ++k) {
+	  if(nodex[k] == nodex[n]) prox[k * *nsample + n] += 1.0;
+	}
+      }
+
+      /* proximity for test data */
+      if(*testdat == 1) {
+	for(n = 0; n < ntest; ++n) {
+	  for(k = 0; k <= n; ++k) {
+	    if(nodexts[k] == nodexts[n]) {
+	      proxts[k * ntest + n] += 1.0;
+	      proxts[n * ntest + k] = proxts[k * ntest + n];
+	    }
+	  }
+	  for(k = 0; k < *nsample; ++k) {
+	    if(nodexts[n] == nodex[k]) proxts[n + ntest * (k+ntest)] += 1.0; 
+	  } 
+	}
+      } 
+    }
+
+    /* Variable importance */
     if(*imp == 1) { 
       for (mr = 0; mr < *mdim; ++mr) {
 	mrind = mr + 1;
@@ -232,23 +277,10 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 	errimp[mr] = em / *nsample;
       }
     }
-    /*  DO PROXIMITIES */
-    if(*iprox == 1) {
-      for(n = 0; n < *nsample; n++) {
-	for(k = 0; k < *nsample; k++) {
-	  if(nodex[k] == nodex[n]) prox[k * *nsample + n] ++;
-	}
-      }
-    }
-
   }
   PutRNGstate();
 
   /* end of tree iterations=======================================*/
-  /*	
-    Rprintf("%d: Error = %8.3f, Var(y)=%8.3f, Error/Var(y) = %8.3f\n", 
-    *jbt, errb, vary, errb/vary);
-    */
   *mse = errb;
   *rsq = 1.0 - errb/vary;
 
@@ -263,21 +295,54 @@ void regrf(double *x, double *y, int *nsample, int *mdim, int *nthsize,
 
 void runrforest(double *xts, double *ypred, int *mdim, int *ntest, int *ntree, 
 		int *ndbigtree, int *treemap, int *nodestatus, int *nrnodes, 
-		double *upper, double *avnodes, int *mbest, int *cat) {
+		double *upper, double *avnodes, int *mbest, int *cat,
+		int *iprox, double *proximity) 
+{
   
-  int i, j, idx, *nodex;
+  int i, j, k, n, idx, *nodex;
   double *ytree;
 
   ytree = (double *) R_alloc(*ntest, sizeof(double));
   nodex = (int *) R_alloc(*ntest, sizeof(double));
 
+  for(i = 0; i < *ntest; ++i) {
+    ytree[i] = 0.0;
+    if(*iprox == 1) 
+      for(j = 0; j < *ntest; ++j) {
+	proximity[i + j * *ntest] = 0.0;
+	proximity[j + i * *ntest] = 0.0;
+      }
+  }
+
   for(i = 0; i < *ntree; ++i) {
     idx = i * *nrnodes;
     for(j = 0; j < *ntest; j++) ytree[j] = 0.0;
+
     F77_CALL(rtestreebag)(xts, ntest, mdim, treemap + 2*idx, nodestatus + idx,
 			 nrnodes, ndbigtree + i, ytree, upper + idx, 
 			 avnodes + idx, mbest + idx, cat, nodex);
+
     for(j = 0; j < *ntest; ++j) ypred[j] += ytree[j];
+
+    /* if desired, do proximities for this round */
+    if (*iprox == 1) {
+      for(n = 0; n < *ntest; ++n) {
+	for(k = 0; k <= n; ++k) {
+	  if(nodex[n] == nodex[k]) {
+	    proximity[n + *ntest * k] += 1.0;
+	    proximity[k + *ntest * n] = proximity[n + *ntest * k];
+	  }
+	}
+      }
+    }
   }
   for(i = 0; i < *ntest; ++i) ypred[i] /= *ntree;
+
+  if(*iprox == 1) {
+    for(i = 0; i < *ntest; ++i) {
+      for(j = 0; j < *ntest; ++j) {
+	proximity[i * *ntest + j] /= *ntree;
+      }
+    }
+  }
 }

@@ -122,7 +122,9 @@
   \code{ytest} arguments), this component is a list which contains the
   corresponding \code{predicted}, \code{confusion}, \code{votes} (for
   classification) or \code{predicted}, \code{mse} and \code{rsq} (for
-  regression) for the test set.}
+  regression) for the test set.  If \code{proximity=TRUE}, there is also
+  a component, \code{proximity}, which contains the proximity among the
+  test set as well as proximity between test and training data.}
 
   Note:  The \code{forest} structure is slightly different between
   classification and regression.

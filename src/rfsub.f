@@ -1109,7 +1109,7 @@ c
       if (prox.eq.1) then     
          do n1=1,ntest
             do n2=(n1+1),ntest
-               proxmatrix(n1,n2)=proxmatrix(n1,n2)/(2*jbt)
+               proxmatrix(n1,n2)=proxmatrix(n1,n2)/jbt
                proxmatrix(n2,n1)=proxmatrix(n1,n2)
             end do
             proxmatrix(n1,n1) = 1.0

@@ -31,7 +31,7 @@
 }
 \examples{
 data(mtcars)
-plot(randomForest(mpg ~ ., mtcars, keep=FALSE, ntree=100), log="y")
+plot(randomForest(mpg ~ ., mtcars, keep.forest=FALSE, ntree=100), log="y")
 }
 \author{Andy Liaw}
 \keyword{classif}

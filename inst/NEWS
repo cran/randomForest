@@ -9,6 +9,16 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-9:
+
+* Fixed a bug with unsupervised randomForest(..., keep.forest=TRUE).
+
+* Fixed a bug in regression that caused crash when proximiy=TRUE.
+
+* Added `keep.inbag' argument to randomForest(), which, if set to TRUE,
+  cause randomForest() to return a matrix of indicators that indicate 
+  which case is included in the bootstrap sample to grow the trees. 
+
 Changes in 4.5-8:
 
 * Added some code in predict.randomForest() so it works with randomForest

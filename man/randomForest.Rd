@@ -22,7 +22,8 @@
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity=FALSE, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
-             keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE, ...)
+             keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE,
+             keep.inbag=FALSE, ...)
 \method{print}{randomForest}(x, ...)
 }
 \arguments{
@@ -89,6 +90,9 @@
     to \code{FALSE}.}
   \item{corr.bias}{perform bias correction for regression?  Note:
     Experimental.  Use at your own risk.}
+  \item{keep.inbag}{Should an \code{n} by \code{ntree} matrix be
+    returned that keeps track of which samples are ``in-bag'' in which
+    trees (but not how many times, if sampling with replacement)} 
   \item{...}{optional parameters to be passed to the low level function
     \code{randomForest.default}.}
 }

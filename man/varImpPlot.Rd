@@ -34,7 +34,7 @@ varImpPlot(x, sort=TRUE, n.var=min(30, if(is.null(dim(x$importance)))
 \examples{
 set.seed(4543)
 data(mtcars)
-mtcars.rf <- randomForest(mpg ~ ., data=mtcars, ntree=1000, keep=FALSE,
+mtcars.rf <- randomForest(mpg ~ ., data=mtcars, ntree=1000, keep.forest=FALSE,
                           importance=TRUE)
 varImpPlot(mtcars.rf)
 }

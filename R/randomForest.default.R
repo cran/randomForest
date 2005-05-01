@@ -8,7 +8,8 @@
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity=FALSE, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
-             keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE, ...) {
+             keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE,
+             keep.inbag=FALSE, ...) {
     addclass <- is.null(y)
     classRF <- addclass || is.factor(y)
     if (!classRF && length(unique(y)) <= 5) {
@@ -203,7 +204,8 @@
                     do.trace,
                     keep.forest,
                     replace,
-                    Stratify)),
+                    Stratify,
+                    keep.inbag)),
                     ntree = as.integer(ntree),
                     mtry = as.integer(mtry),
                     ipi = as.integer(ipi),
@@ -233,15 +235,17 @@
                     labelts = as.integer(labelts),
                     proxts = proxts,
                     errts = error.test,
+                    inbag = if (keep.inbag) 
+                    matrix(integer(n * ntree), n) else integer(n),
                     DUP=FALSE,
-                    PACKAGE="randomForest")[-1]
+                    PACKAGE="randomForest")[-1] 
+        if (keep.forest) {
+            ## deal with the random forest outputs
+            max.nodes <- max(rfout$ndbigtree)
+            treemap <- aperm(array(rfout$treemap, dim = c(2, nrnodes, ntree)),
+                             c(2, 1, 3))[1:max.nodes, , , drop=FALSE]
+        }
         if (!addclass) {
-            if (keep.forest) {
-        ## deal with the random forest outputs
-                max.nodes <- max(rfout$ndbigtree)
-                treemap <- array(rfout$treemap, dim = c(2, nrnodes, ntree))
-                treemap <- aperm(treemap, c(2,1,3))[1:max.nodes,,,drop=FALSE]
-            }
             ## Turn the predicted class into a factor like y.
             out.class <- factor(rfout$outcl, levels=1:nclass,
                                 label=levels(y))
@@ -325,7 +329,8 @@
                     votes = out.votes.ts,
                     proximity = if(proximity) matrix(rfout$proxts, nrow=ntest,
                     dimnames = list(xts.row.names, c(xts.row.names,
-                    x.row.names))) else NULL))
+                    x.row.names))) else NULL),
+                    inbag = if (keep.inbag) rfout$inbag else NULL)
     } else {
         rfout <- .C("regRF",
                     x,
@@ -356,7 +361,7 @@
                     bestvar = matrix(integer(nrnodes * nt), ncol=nt),
                     xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
                     mse = double(ntree),
-                    keepf = as.integer(keep.forest),
+                    keep = as.integer(c(keep.forest, keep.inbag)),
                     replace = as.integer(replace),
                     testdat = as.integer(testdat),
                     xts = xtest,
@@ -368,8 +373,10 @@
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
                     oob.times = integer(n),
+                    inbag = if (keep.inbag) 
+                    matrix(integer(n * ntree), n) else integer(1),
                     DUP=FALSE,
-                    PACKAGE="randomForest")[c(16:28, 36:40)]
+                    PACKAGE="randomForest")[c(16:28, 36:41)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)
@@ -426,7 +433,10 @@
                                     dimnames = list(xts.row.names,
                                     c(xts.row.names,
                                     x.row.names))) else NULL)
-                    } else NULL)
+                    } else NULL,
+                    inbag = if (keep.inbag)
+                    matrix(rfout$inbag, nrow(rfout$inbag),
+                           dimnames=list(x.row.names, NULL)) else NULL)
     }
     class(out) <- "randomForest"
     return(out)

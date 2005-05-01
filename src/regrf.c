@@ -28,7 +28,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace, 
            int *testdat, double *xts, int *nts, double *yts, int *labelts, 
            double *yTestPred, double *proxts, double *msets, double *coef, 
-           int *nout) {
+           int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -55,7 +55,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini; 
     
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm, 
-        nsample, mdim;
+        nsample, mdim, keepF, keepInbag;
     int *oobpair, varImp, localImp, *varUsed;
     
     int *in, *nind, *nodex, *nodexts;
@@ -66,6 +66,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     varImp = imp[0];
     localImp = imp[1];
     nPerm = imp[2];
+    keepF = keepf[0];
+    keepInbag = keepf[1];
     
     if (*jprint == 0) *jprint = *nTree + 1;
     
@@ -114,7 +116,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     }
     
     if (*doProx) {
-        zeroDouble(prox, nsample * (nsample + (*testdat ? ntest : 0)));
+        zeroDouble(prox, nsample * nsample);
+	if (*testdat) zeroDouble(proxts, nsample * (nsample + (*testdat)));
     }
     
     if (varImp) {
@@ -139,7 +142,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
      * Start the loop over trees.
      *************************************/
     for (j = 0; j < *nTree; ++j) {
-	idx = (*keepf) ? j * *nrnodes : 0;
+	idx = keepF ? j * *nrnodes : 0;
 	zeroInt(in, nsample);
         zeroInt(varUsed, mdim);
         /* Draw a random sample for growing a tree. */
@@ -168,6 +171,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		}
 	    }
 	}
+	if (keepInbag) {
+	    for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
+	} 
         /* grow the regression tree */
 	regTree(xb, yb, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodestatus + idx, *nrnodes, 

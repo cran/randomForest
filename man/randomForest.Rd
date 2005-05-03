@@ -12,7 +12,7 @@
   proximities among data points.
 }
 \usage{
-\method{randomForest}{formula}(x, data=NULL, ..., subset, na.action=na.fail)
+\method{randomForest}{formula}(formula, data=NULL, ..., subset, na.action=na.fail)
 \method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y)) 
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
@@ -34,7 +34,7 @@
     (NOTE: If given, this argument must be named.)}
   \item{na.action}{A function to specify the action to be taken if NAs
     are found.  (NOTE: If given, this argument must be named.)}
-  \item{x}{a data frame or a matrix of predictors, or a formula
+  \item{x, formula}{a data frame or a matrix of predictors, or a formula
     describing the model to be fitted (for the
     \code{print} method, an \code{randomForest} object).}
   \item{y}{A response vector.  If a factor, classification is assumed,

@@ -9,6 +9,11 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-10:
+
+* Renamed the first argument of randomForest.formula() to `formula', to be
+  consistent with other formula interfaces.
+
 Changes in 4.5-9:
 
 * Fixed a bug with unsupervised randomForest(..., keep.forest=TRUE).

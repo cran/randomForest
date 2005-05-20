@@ -4,7 +4,7 @@ partialPlot.default <- function(x, ...)
     stop("partial dependence plot not implemented for this class of objects.\n")
 
 partialPlot.randomForest <-
-    function (x, pred.data, x.var, which.class, add = FALSE,
+    function (x, pred.data, x.var, which.class, plot=TRUE, add=FALSE,
               n.pt = min(length(unique(pred.data[, xname])), 51), rug = TRUE,
               xlab=deparse(substitute(x.var)), ylab="",
               main=paste("Partial Dependence on", deparse(substitute(x.var))),
@@ -13,7 +13,12 @@ partialPlot.randomForest <-
     classRF <- x$type != "regression"
     if (is.null(x$forest)) 
         stop("The randomForest object must contain the forest.\n")
-    xname <- if (is.name(substitute(x.var))) deparse(substitute(x.var)) else eval(substitute(x.var))
+    x.var <- substitute(x.var)
+    xname <- if (is.character(x.var)) x.var else {
+        if (is.name(x.var)) deparse(x.var) else {
+            eval(x.var)
+        }
+    }
     xv <- pred.data[, xname]
     n <- nrow(pred.data)
     if (classRF) {
@@ -44,8 +49,9 @@ partialPlot.randomForest <-
         if (add) {
             points(1:length(x.pt), y.pt, type="h", lwd=2, ...)
         } else {
-            barplot(y.pt, width=rep(1, length(y.pt)), col="blue", xlab = xlab, 
-                    ylab = ylab, main=main, names.arg=x.pt, ...)
+            if (plot) barplot(y.pt, width=rep(1, length(y.pt)), col="blue",
+                              xlab = xlab, ylab = ylab, main=main,
+                              names.arg=x.pt, ...)
         }
     } else {
         if (is.ordered(xv)) 
@@ -67,10 +73,10 @@ partialPlot.randomForest <-
         if (add) {
             lines(x.pt, y.pt, ...)
         } else {
-            plot(x.pt, y.pt, type = "l", 
-                 xlab=xlab, ylab=ylab, main = main, ...)
+            if (plot) plot(x.pt, y.pt, type = "l", xlab=xlab, ylab=ylab,
+                           main = main, ...)
         }
-        if (rug) {
+        if (rug && plot) {
             if (n.pt > 10) {
                 rug(quantile(xv, seq(0.1, 0.9, by = 0.1)), side = 1)
             } else {

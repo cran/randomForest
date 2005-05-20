@@ -9,6 +9,15 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-11:
+
+* Fixed partialPlot.randomForest() so that if x.var is a character, it's 
+  taken as the name of the variable. 
+
+* Clean up code for importance() and varImpPlot() so that if the 
+  randomForest object only contains one importance measure, varImpPlot()
+  will work as intended.
+
 Changes in 4.5-10:
 
 * Renamed the first argument of randomForest.formula() to `formula', to be

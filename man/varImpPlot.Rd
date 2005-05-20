@@ -5,9 +5,8 @@
   Dotchart of variable importance as measured by a Random Forest
 }
 \usage{
-varImpPlot(x, sort=TRUE, n.var=min(30, if(is.null(dim(x$importance)))
-           length(x$importance) else nrow(x$importance)),
-           class = NULL, scale=TRUE, xlab="Importance", ylab="",
+varImpPlot(x, sort=TRUE, n.var=min(30, nrow(x$importance)),
+           type=NULL, class=NULL, scale=TRUE, 
            main=deparse(substitute(x)), ...) 
 }
 \arguments{
@@ -16,20 +15,17 @@ varImpPlot(x, sort=TRUE, n.var=min(30, if(is.null(dim(x$importance)))
     importance?}
   \item{n.var}{How many variables to show? (Ignored if
     \code{sort=FALSE}.)}
-  \item{class}{For classification data, an integer or string indicating
-    the class for which variable importance is seeked.}
-  \item{scale}{For permutation-based measures, should the measures be
-    divided by their ``standard errors''?}
-  \item{xlab}{label for the x-axis.}
-  \item{ylab}{label for the y-axis.}
+  \item{type, class, scale}{arguments to be passed on to
+    \code{\link{importance}}}
   \item{main}{plot title.}
-  \item{...}{Other graphical parameters.}
+  \item{...}{Other graphical parameters to be passed on to
+    \code{\link{dotchart}}.}
 }
 \value{
-  Invisibly, the importance of the variables.
+  Invisibly, the importance of the variables that were plotted.
 }
 \seealso{
-  \code{\link{randomForest}}
+  \code{\link{randomForest}}, \code{\link{importance}}
 }
 \examples{
 set.seed(4543)

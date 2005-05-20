@@ -13,7 +13,8 @@ response (regression).
 
 \usage{
 \method{partialPlot}{randomForest}(x, pred.data, x.var, which.class,
-      add = FALSE, n.pt = min(length(unique(pred.data[, xname])), 51),
+      plot = TRUE, add = FALSE,
+      n.pt = min(length(unique(pred.data[, xname])), 51),
       rug = TRUE, xlab=deparse(substitute(x.var)), ylab="",
       main=paste("Partial Dependence on", deparse(substitute(x.var))),
       ...) 
@@ -28,8 +29,8 @@ response (regression).
     dependence is to be examined.}
   \item{which.class}{For classification data, the class to focus on
     (default the first class).}
-  \item{add}{whether to add to existing plot (\code{TRUE}) or create a
-    new plot (\code{FALSE}).}
+  \item{plot}{whether the plot should be shown on the graphic device.}
+  \item{add}{whether to add to existing plot (\code{TRUE}).}
   \item{n.pt}{if \code{x.var} is continuous, the number of points on the
     grid for evaluating partial dependence.}
   \item{rug}{whether to draw hash marks at the bottom of the plot

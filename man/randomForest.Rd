@@ -16,7 +16,7 @@
 \method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y)) 
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
-             replace=TRUE, classwt=NULL, cutoff,
+             replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
              importance=FALSE, localImp=FALSE, nPerm=1,
@@ -59,10 +59,11 @@
     one with the maximum ratio of proportion of votes to cutoff.
     Default is 1/k where k is the number of classes (i.e., majority vote
     wins).}
+  \item{strata}{A (factor) variable that is used for stratified sampling.}
   \item{sampsize}{Size(s) of sample to draw.  For classification, if
-    sampsize is a vector of the length the number of classes, then
-    sampling is stratified by class, and the elements of sampsize
-    indicate the numbers to be drawn from the classes.}
+    sampsize is a vector of the length the number of strata, then
+    sampling is stratified by strata, and the elements of sampsize
+    indicate the numbers to be drawn from the strata.}
   \item{nodesize}{Minimum size of terminal nodes.  Setting this number
     larger causes smaller trees to be grown (and thus take less time).
     Note that the default values are different for classification (1)
@@ -166,7 +167,11 @@
   \code{do.trace} is set to some positive integer, then for every
   \code{do.trace} trees, the test set error is printed.  Results for the
   test set is returned in the \code{test} component of the resulting
-  \code{randomForest} object.
+  \code{randomForest} object.  For classification, the \code{votes}
+  component (for training or test set data) contain the votes the cases
+  received for the classes.  If \code{norm.votes=TRUE}, the fraction is
+  given, which can be taken as predicted probabilities for the classes.
+  
 
   For large data sets, especially those with large number of variables,
   calling \code{randomForest} via the formula interface is not advised:

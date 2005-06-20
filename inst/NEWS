@@ -9,6 +9,13 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-12:
+
+* Added the `strata' argument to randomForest, which, in conjunction with
+  `sampsize', allow sampling (with or without replacement) according to a 
+  strata variable (which can be something other than the class variable).
+  Currently only works in classification.
+
 Changes in 4.5-11:
 
 * Fixed partialPlot.randomForest() so that if x.var is a character, it's 

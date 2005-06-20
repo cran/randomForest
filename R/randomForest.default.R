@@ -2,7 +2,7 @@
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y)) 
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
-             replace=TRUE, classwt=NULL, cutoff,
+             replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
              importance=FALSE, localImp=FALSE, nPerm=1,
@@ -147,16 +147,18 @@
     if (Stratify && (!classRF)) stop("sampsize should be of length one")
     if (classRF) {
         if (Stratify) {
+            if (missing(strata)) strata <- y
+            if (!is.factor(strata)) strata <- as.factor(strata)
             nsum <- sum(sampsize)
-            if (length(sampsize) > nlevels(y))
+            if (length(sampsize) > nlevels(strata))
                 stop("sampsize has too many elements.")
             if (any(sampsize <= 0) || nsum == 0)
                 stop("Bad sampsize specification")
             ## If sampsize has names, match to class labels.
             if (!is.null(names(sampsize))) {
-                sampsize <- sampsize[levels(y)]
+                sampsize <- sampsize[levels(strata)]
             }
-            if (any(sampsize > table(y)))
+            if (any(sampsize > table(strata)))
               stop("sampsize can not be larger than class frequency")
         } else {
             nsum <- sampsize
@@ -167,7 +169,7 @@
         nrnodes <- 2 * trunc(sampsize/max(1, nodesize - 4)) + 1
     }
     
-
+    ## Compiled code expects variables in rows and observations in columns.
     x <- t(x)
     storage.mode(x) <- "double"
     if (testdat) {
@@ -196,6 +198,7 @@
                     ncat = as.integer(ncat), 
                     maxcat = as.integer(maxcat),
                     sampsize = as.integer(sampsize),
+                    strata = if (Stratify) as.integer(strata) else integer(1),
                     Options = as.integer(c(addclass,
                     importance,
                     localImp,

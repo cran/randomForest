@@ -36,7 +36,7 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 void F77_SUB(rrand)(double *r) { *r = unif_rand(); }
 
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat, 
-	     int *sampsize, int *Options, int *ntree, int *nvar,
+	     int *sampsize, int *strata, int *Options, int *ntree, int *nvar,
 	     int *ipi, double *classwt, double *cut, int *nodesize, 
 	     int *outcl, int *counttr, double *prox, 
 	     double *imprt, double *impsd, double *impmat, int *nrnodes, 
@@ -85,7 +85,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
      ******************************************************************/
 
     int nsample0, mdim, nclass, addClass, mtry, ntest, nsample, ndsize,
-        mimp, nimp, near, nuse, noutall, nrightall, nrightimpall, keepInbag;
+        mimp, nimp, near, nuse, noutall, nrightall, nrightimpall, 
+	keepInbag, nstrata;
     int jb, j, n, m, k, idxByNnode, idxByNsample, imp, localImp, iprox, 
 	oobprox, keepf, replace, stratify, trace, *nright, 
 	*nrightimp, *nout, *nclts, Ntree;
@@ -94,7 +95,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
 	*jtr, *classFreq, *idmove, *jvr,
 	*at, *a, *b, *mind, *nind, *jts, *oobpair;
-    int **class_idx, *class_size, last, ktmp, anyEmpty, ntry;
+    int **strata_idx, *strata_size, last, ktmp, anyEmpty, ntry;
 
     double av=0.0;
     
@@ -170,16 +171,24 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     normClassWt(cl, nsample, nclass, *ipi, classwt, classFreq);
 
     if (stratify) {
+	/* Count number of strata and frequency of each stratum. */
+	nstrata = 0;
+	for (n = 0; n < nsample0; ++n) 
+	    if (strata[n] > nstrata) nstrata = strata[n];
         /* Create the array of pointers, each pointing to a vector 
-	   of indices of where data of each class is. */
-        class_size = (int  *) S_alloc(nclass, sizeof(int));
-	class_idx =  (int **) S_alloc(nclass, sizeof(int *));
-	for (n = 0; n < nclass; ++n) {
-	    class_idx[n] = (int *) S_alloc(classFreq[n], sizeof(int));
+	   of indices of where data of each stratum is. */
+        strata_size = (int  *) S_alloc(nstrata, sizeof(int));
+	for (n = 0; n < nsample0; ++n) {
+	    strata_size[strata[n] - 1] ++;
 	}
-	for (n = 0; n < nsample; ++n) {
-	    class_size[cl[n] - 1] ++;
-	    class_idx[cl[n]-1][class_size[cl[n]-1] - 1] = n;
+	strata_idx =  (int **) S_alloc(nstrata, sizeof(int *));
+	for (n = 0; n < nstrata; ++n) {
+	    strata_idx[n] = (int *) S_alloc(strata_size[n], sizeof(int));
+	}
+	zeroInt(strata_size, nstrata);
+	for (n = 0; n < nsample0; ++n) {
+	    strata_size[strata[n] - 1] ++;
+	    strata_idx[strata[n] - 1][strata_size[strata[n] - 1] - 1] = n;
 	}
     } else {
 	nind = replace ? NULL : (int *) S_alloc(nsample, sizeof(int));
@@ -239,13 +248,12 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    zeroDouble(win, nsample);
             /* TODO: Put all sampling code into a function. */
             /* drawSample(sampsize, nsample, ); */
-	    if (stratify) {
-		/* stratified sampling by class */
-		if (replace) {
-		    for (n = 0; n < nclass; ++n) {
+	    if (stratify) {  /* stratified sampling */
+		if (replace) {  /* with replacement */
+		    for (n = 0; n < nstrata; ++n) {
 			for (j = 0; j < sampsize[n]; ++j) {
-			    ktmp = (int) (unif_rand() * classFreq[n]);
-			    k = class_idx[n][ktmp];
+			    ktmp = (int) (unif_rand() * strata_size[n]);
+			    k = strata_idx[n][ktmp];
 			    tclasspop[cl[k] - 1] += classwt[cl[k] - 1];
 			    win[k] += classwt[cl[k] - 1];
 			    jin[k] = 1;
@@ -253,21 +261,18 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		    }
 		} else { /* stratified sampling w/o replacement */
 		    /* re-initialize the index array */
-  		    zeroInt(class_size, nclass);
+		    zeroInt(strata_size, nstrata);
 		    for (j = 0; j < nsample; ++j) {
-			class_size[cl[j] - 1] ++;
-			class_idx[cl[j] - 1][class_size[cl[j] - 1] - 1] = j;
+			strata_size[strata[j] - 1] ++;
+			strata_idx[strata[j] - 1][strata_size[strata[j] - 1] - 1] = j;
 		    }
 		    /* sampling without replacement */
-		    for (n = 0; n < nclass; ++n) {
-			last = classFreq[n] - 1;
+		    for (n = 0; n < nstrata; ++n) {
+			last = strata_size[n] - 1;
 			for (j = 0; j < sampsize[n]; ++j) {
 			    ktmp = (int) (unif_rand() * (last+1));
-			    k = class_idx[n][ktmp];
-                            swapInt(class_idx[n][last], class_idx[n][ktmp]);
-                            /* tmp = class_idx[n][last];
-                               class_idx[n][last] = class_idx[n][ktmp];
-                               class_idx[n][ktmp] = tmp; */
+			    k = strata_idx[n][ktmp];
+                            swapInt(strata_idx[n][last], strata_idx[n][ktmp]);
 			    last--;
 			    tclasspop[cl[k] - 1] += classwt[cl[k]-1];
 			    win[k] += classwt[cl[k]-1];

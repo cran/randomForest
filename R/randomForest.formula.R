@@ -5,7 +5,6 @@
 ###
     if (!inherits(formula, "formula"))
         stop("method is only for formula objects")
-    call <- match.call()
     m <- match.call(expand = FALSE)
     names(m)[2] <- "formula"
     if (is.matrix(eval(m$data, parent.frame())))

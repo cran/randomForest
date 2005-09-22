@@ -9,6 +9,21 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-15:
+
+* Fixed error message call in predict.randomForest().
+
+Changes in 4.5-14:
+
+* varImpPlot() was ignoring the `type' argument.
+
+* "<" was used instead of ".lt." in Fortran code, which is not F77-compliant.
+
+Changes in 4.5-13:
+
+* Fixed a bug in randomForest() when biasCorr=TRUE for regression.
+
+* Fixed bug in predict.randomForest() when newdata is a matrix with no rownames.
 Changes in 4.5-12:
 
 * Added the `strata' argument to randomForest, which, in conjunction with

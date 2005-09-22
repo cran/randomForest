@@ -4,7 +4,7 @@ varImpPlot <- function(x, sort=TRUE,
                        main=deparse(substitute(x)), ...) {
     if (!inherits(x, "randomForest"))
         stop("This function only works for objects of class `randomForest'")
-    imp <- importance(x, class=class, scale=scale, ...)
+    imp <- importance(x, class=class, scale=scale, type=type, ...)
     ## If there are more than two columns, just use the last two columns.
     if (ncol(imp) > 2) imp <- imp[, -(1:(ncol(imp) - 2))]
     nmeas <- ncol(imp)

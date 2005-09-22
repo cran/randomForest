@@ -204,6 +204,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 	errb /= jout;
 	/* Do simple linear regression of y on yhat for bias correction. */
 	if (*biasCorr) simpleLinReg(nsample, yptr, y, coef, &errb, nout);
+	
 	/* predict testset data with the current tree */
 	if (*testdat) {
 	    predictRegTree(xts, ntest, mdim, lDaughter + idx,
@@ -292,7 +293,18 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     }
     PutRNGstate();
     /* end of tree iterations=======================================*/
-    
+
+    if (*biasCorr) {  /* bias correction for predicted values */
+	for (n = 0; n < nsample; ++n) {
+	    if (nout[n]) yptr[n] = coef[0] + coef[1] * yptr[n];
+	}
+	if (*testdat) {
+	    for (n = 0; n < ntest; ++n) {
+		yTestPred[n] = coef[0] + coef[1] * yTestPred[n];
+	    }
+	}
+    }
+
     if (*doProx) {
 	for (n = 0; n < nsample; ++n) {
 	    for (k = n + 1; k < nsample; ++k) {
@@ -402,7 +414,7 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
             py = coef[0] + coef[1] * x[i];
 	    dy = y[i] - py;
 	    *mse += dy * dy;
-            y[i] = py;
+            /* y[i] = py; */
 	}
     }
     *mse /= nout;

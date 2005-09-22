@@ -87,7 +87,7 @@ c     initialize for next call to findbestsplit
          else
             bestvar(kbuild) = msplit
             iv(msplit) = 1
-            if (decsplit < 0.0) decsplit = 0.0
+            if (decsplit .lt. 0.0) decsplit = 0.0
             tgini(msplit) = tgini(msplit) + decsplit
             if (cat(msplit) .eq. 1) then
                bestsplit(kbuild) = a(msplit,nbest)

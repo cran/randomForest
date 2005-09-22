@@ -11,7 +11,7 @@
         stop("type must be one of 'response', 'prob', 'vote'")
     if (out.type == 4) out.type <- 1
     if (out.type != 1 && object$type == "regression")
-        error("'prob' or 'vote' not meaningful for regression")
+        stop("'prob' or 'vote' not meaningful for regression")
     if (out.type == 2) 
         norm.votes <- TRUE
     if (missing(newdata)) {
@@ -67,6 +67,7 @@
             stop("missing values in newdata")
         keep <- 1:nrow(x)
         rn <- rownames(x)
+        if (is.null(rn)) rn <- keep
     }
     if (is.data.frame(x)) {
         for(i in seq(along=ncol(x))) {

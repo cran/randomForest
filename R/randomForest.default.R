@@ -35,6 +35,8 @@
     }
 
     ## Make sure mtry is in reasonable range.
+    if (mtry < 1 || mtry > p)
+        warning("invalid mtry: reset to within valid range")
     mtry <- max(1, min(p, round(mtry)))
     if (!is.null(y)) {
         if (length(y) != n) stop("length of response must be the same as predictors")
@@ -397,7 +399,7 @@
                 rfout$rightDaughter[1:max.nodes, , drop=FALSE]
         }
         cl <- match.call()
-        cl <- as.name("randomForest")
+        cl[[1]] <- as.name("randomForest")
         out <- list(call = cl,
                     type = "regression",
                     predicted = structure(rfout$ypred, names=x.row.names),

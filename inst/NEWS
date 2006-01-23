@@ -9,6 +9,11 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-16:
+
+* Fixed some typos in the documentation source files (e.g., \note vs. \notes,
+  etc).
+
 Changes in 4.5-15:
 
 * Fixed error message call in predict.randomForest().

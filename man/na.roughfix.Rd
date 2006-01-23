@@ -20,7 +20,7 @@ na.roughfix(object, ...)
   at random).  If \code{object} contains no \code{NA}s, it is returned
   unaltered. 
 }
-\notes{
+\note{
   This is used as a starting point for imputing missing values by random
   forest.
 }

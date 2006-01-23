@@ -19,7 +19,7 @@
   object is a matrix where the first column is the out-of-bag estimate
   of error, and the second column is for the test set.
 }
-\notes{
+\note{
   This function does not work for \code{randomForest} objects that have
   \code{type=unsupervised}.
   

@@ -21,7 +21,7 @@ MDSplot(rf, fac, k=2, palette=NULL, pch=20, ...)
   The output of \code{\link[mva]{cmdscale}} on 1 - \code{rf$proximity} is
   returned invisibly.
 }
-\Note{
+\note{
   If \code{k > 2}, \code{\link{pairs}} is used to produce the
   scatterplot matrix of the coordinates.
 }

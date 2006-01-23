@@ -45,11 +45,11 @@
 \seealso{
   \code{\link{randomForest}}, \code{\link{varImpPlot}}
 }
-\example{
+\examples{
 set.seed(4543)
 data(mtcars)
-mtcars.rf <- randomForest(mpg ~ ., data=mtcars, ntree=1000, keep=FALSE,
-                          importance=TRUE)
+mtcars.rf <- randomForest(mpg ~ ., data=mtcars, ntree=1000, 
+                          keep.forest=FALSE, importance=TRUE)
 importance(mtcars.rf)
 importance(mtcars.rf, type=1)
 }

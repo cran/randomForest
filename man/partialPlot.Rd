@@ -13,7 +13,7 @@ response (regression).
 
 \usage{
 \method{partialPlot}{randomForest}(x, pred.data, x.var, which.class,
-      plot = TRUE, add = FALSE,
+      w, plot = TRUE, add = FALSE,
       n.pt = min(length(unique(pred.data[, xname])), 51),
       rug = TRUE, xlab=deparse(substitute(x.var)), ylab="",
       main=paste("Partial Dependence on", deparse(substitute(x.var))),
@@ -29,6 +29,8 @@ response (regression).
     dependence is to be examined.}
   \item{which.class}{For classification data, the class to focus on
     (default the first class).}
+  \item{w}{weights to be used in averaging; if not supplied, mean is not
+  weighted}
   \item{plot}{whether the plot should be shown on the graphic device.}
   \item{add}{whether to add to existing plot (\code{TRUE}).}
   \item{n.pt}{if \code{x.var} is continuous, the number of points on the

@@ -4,7 +4,7 @@ partialPlot.default <- function(x, ...)
     stop("partial dependence plot not implemented for this class of objects.\n")
 
 partialPlot.randomForest <-
-    function (x, pred.data, x.var, which.class, plot=TRUE, add=FALSE,
+    function (x, pred.data, x.var, which.class, w, plot=TRUE, add=FALSE,
               n.pt = min(length(unique(pred.data[, xname])), 51), rug = TRUE,
               xlab=deparse(substitute(x.var)), ylab="",
               main=paste("Partial Dependence on", deparse(substitute(x.var))),
@@ -21,6 +21,7 @@ partialPlot.randomForest <-
     }
     xv <- pred.data[, xname]
     n <- nrow(pred.data)
+    if (missing(w)) w <- rep(1, n)
     if (classRF) {
         if (missing(which.class)) {
             focus <- 1
@@ -39,11 +40,11 @@ partialPlot.randomForest <-
             x.data[, xname] <- factor(rep(x.pt[i], n), levels = x.pt)
             if (classRF) {
                 pr <- predict(x, x.data, type = "prob")
-                y.pt[i] <- mean(log(ifelse(pr[, focus] > 0,
-                                           pr[, focus], 1)) -
-                                rowMeans(log(ifelse(pr > 0, pr, 1))),
-                                na.rm=TRUE)
-            } else y.pt[i] <- mean(predict(x, x.data), na.rm=TRUE)
+                y.pt[i] <- weighted.mean(log(ifelse(pr[, focus] > 0,
+                                                    pr[, focus], 1)) -
+                                         rowMeans(log(ifelse(pr > 0, pr, 1))),
+                                         w, na.rm=TRUE)
+            } else y.pt[i] <- weighted.mean(predict(x, x.data), w, na.rm=TRUE)
 
         }
         if (add) {
@@ -63,11 +64,11 @@ partialPlot.randomForest <-
             x.data[, xname] <- rep(x.pt[i], n)
             if (classRF) {
                 pr <- predict(x, x.data, type = "prob")
-                y.pt[i] <- mean(log(ifelse(pr[, focus] == 0, 1, pr[, focus]))
-                                - rowMeans(log(ifelse(pr == 0, 1, pr))),
-                                na.rm=TRUE)
+                y.pt[i] <- weighted.mean(log(ifelse(pr[, focus] == 0, 1, pr[, focus]))
+                                         - rowMeans(log(ifelse(pr == 0, 1, pr))),
+                                         w, na.rm=TRUE)
             } else {
-                y.pt[i] <- mean(predict(x, x.data), na.rm=TRUE)
+                y.pt[i] <- weighted.mean(predict(x, x.data), w, na.rm=TRUE)
             }
         }
         if (add) {

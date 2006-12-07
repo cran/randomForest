@@ -392,7 +392,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		}
 	    }
 	    Rprintf("\n");
-#ifdef win32
+#ifdef WIN32
 	    R_FlushConsole();
 	    R_ProcessEvents();
 #endif
@@ -484,7 +484,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    }
 	}
 	R_CheckUserInterrupt();
-#ifdef win32
+#ifdef WIN32
 	R_ProcessEvents();
 #endif
         if (keepf) idxByNnode += *nrnodes;

@@ -10,7 +10,7 @@ varImpPlot <- function(x, sort=TRUE,
     nmeas <- ncol(imp)
     if (nmeas > 1) {
         op <- par(mfrow=c(1, 2), mar=c(4, 5, 4, 1), mgp=c(2, .8, 0),
-                  oma=c(0, 0, 2, 0))
+                  oma=c(0, 0, 2, 0), no.readonly=TRUE)
         on.exit(par(op))
     }
     for (i in 1:nmeas) {

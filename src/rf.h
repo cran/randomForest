@@ -1,5 +1,5 @@
 /*******************************************************************
-   Copyright (C) 2001-4 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+   Copyright (C) 2001-7 Leo Breiman, Adele Cutler and Merck & Co., Inc.
   
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -82,13 +82,17 @@ void computeProximity(double *prox, int oobprox, int *node, int *inbag,
                       int *oobpair, int n);
 
 /* Template of Fortran subroutines to be called from the C wrapper */
-extern void F77_NAME(buildtree)(int *, int *, int *, int *, int *, int *, int *, int
-				*, int *, int *, int *, int *, double *, int
-				*, int *, int *, double *, double *, double
-				*, int *, int *, int *, int *, int *,
-				int *, int *, int *, int *, int *, double *,
-				double *, double *, double *, int *, int *,
-				int *); 
+extern void F77_NAME(buildtree)(int *a, int *b, int *cl, int *cat, 
+				int *maxcat, int *mdim, int *nsample, 
+				int *nclass, int *treemap, int *bestvar, 
+				int *bestsplit, int *bestsplitnext, 
+				double *tgini, int *nodestatus, int *nodepop, 
+				int *nodestart, double *classpop, 
+				double *tclasspop, double *tclasscat, 
+				int *ta, int *nrnodes, int *, 
+				int *, int *, int *, int *, int *, int *, 
+				double *, double *, double *,
+				int *, int *, int *); 
 
 /* Node status */
 #define NODE_TERMINAL -1

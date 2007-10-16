@@ -106,18 +106,21 @@
         treepred <- numeric(ntest)
     }
     proxmatrix <- if (proximity) matrix(0, ntest, ntest) else numeric(1)
-    nodexts <- if (nodes) integer(ntest*ntree) else integer(ntest)
+    nodexts <- if (nodes) integer(ntest * ntree) else integer(ntest)
   
     if (object$type == "regression") {
             if (!is.null(object$forest$treemap)) {
-                object$forest$leftDaughter <- object$forest$treemap[,1,, drop=FALSE]
-                object$forest$rightDaughter <- object$forest$treemap[,2,, drop=FALSE]
+                object$forest$leftDaughter <-
+                    object$forest$treemap[,1,, drop=FALSE]
+                object$forest$rightDaughter <-
+                    object$forest$treemap[,2,, drop=FALSE]
                 object$forest$treemap <- NULL
     }
 
         keepIndex <- "ypred"
         if (predict.all) keepIndex <- c(keepIndex, "treepred")
         if (proximity) keepIndex <- c(keepIndex, "proximity")
+        if (nodes) keepIndex <- c(keepIndex, "nodexts")
         ans <- .C("regForest",
                   as.double(x),
                   ypred = double(ntest),
@@ -138,6 +141,8 @@
                   treepred = as.double(treepred),
                   as.integer(proximity),
                   proximity = as.double(proxmatrix),
+                  nodes = as.integer(nodes),
+                  nodexts = as.integer(nodexts),
                   DUP=FALSE,
                   PACKAGE = "randomForest")[keepIndex]
         ## Apply bias correction if needed.
@@ -154,11 +159,15 @@
             res <- if (predict.all)
                 list(aggregate=yhat, individual=treepred) else yhat
         } else {
-            res <- list(predicted = yhat, proximity = structure(ans$proximity,
-                                          dim=c(ntest, ntest),
-                                          dimnames=list(rn, rn)))
+            res <- list(predicted = yhat,
+                        proximity = structure(ans$proximity,
+                        dim=c(ntest, ntest), dimnames=list(rn, rn)))
         }
-    } else {
+            if (nodes) {
+                attr(res, "nodes") <- matrix(ans$nodexts, ntest, ntree,
+                                             dimnames=list(rn[keep], 1:ntree))
+            }
+        } else {
         countts <- matrix(0, ntest, nclass)
         t1 <- .C("classForest",
                  mdim = as.integer(mdim),

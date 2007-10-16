@@ -9,6 +9,25 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-19:
+
+* In classification, if sampsize is small and sampling is not stratified,
+  the actual sample might be larger than specified in some trees.  Now fixed.
+
+* Fixed combine() to work on regression randomForest objects and for 
+  cases when ntree is small.
+
+* randomForest.default() for regression was unnecessarily creating 
+  a matrix of 0s for localImportance when importance=TRUE but 
+  localImp=FALSE.  (Thanks to Robert McGehee for reporting these
+  bugs.)
+
+* predict.randomForest(..., nodes=TRUE) now works for regression.
+
+Changes in 4.5-18:
+
+* Added S-PLUS 8 compatibility.
+
 Changes in 4.5-17:
 
 * Added `w' (for weights) to partialPlot.randomForest().

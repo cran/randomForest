@@ -2,7 +2,7 @@
 \alias{plot.randomForest}
 \title{Plot method for randomForest objects}
 \description{
-  Plot the error rates or MSE of a randomForest object}
+  Plot the error rates or MSE of a randomForest object
 }
 \usage{
 \method{plot}{randomForest}(x, type="l", main=deparse(substitute(x)), ...)

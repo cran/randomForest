@@ -1,5 +1,5 @@
 /*******************************************************************
-   Copyright (C) 2001-4 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+   Copyright (C) 2001-7 Leo Breiman, Adele Cutler and Merck & Co., Inc.
   
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -343,29 +343,37 @@ void regForest(double *x, double *ypred, int *mdim, int *n,
                int *nodestatus, int *nrnodes, double *xsplit, 
                double *avnodes, int *mbest, int *treeSize, int *cat, 
                int *maxcat, int *keepPred, double *allpred, int *doProx, 
-               double *proxMat) {
-    int i, j, idx, *nodex, *junk;
+               double *proxMat, int *nodes, int *nodex) {
+    int i, j, idx1, idx2, *junk;
     double *ytree;
 
+    junk = NULL;
     ytree = (double *) S_alloc(*n, sizeof(double));
-    nodex = (int *) S_alloc(*n, sizeof(int));
+    if (*nodes) {
+	zeroInt(nodex, *n * *ntree);
+    } else {
+	zeroInt(nodex, *n);
+    }
     if (*doProx) zeroDouble(proxMat, *n * *n);
     if (*keepPred) zeroDouble(allpred, *n * *ntree);
-    idx = 0;
+    idx1 = 0;
+    idx2 = 0;
     for (i = 0; i < *ntree; ++i) {
 	zeroDouble(ytree, *n);
-	predictRegTree(x, *n, *mdim, lDaughter + idx, rDaughter + idx, 
-                       nodestatus + idx, ytree, xsplit + idx, 
-                       avnodes + idx, mbest + idx, treeSize[i], cat, *maxcat,
-                       nodex);
+	predictRegTree(x, *n, *mdim, lDaughter + idx1, rDaughter + idx1, 
+                       nodestatus + idx1, ytree, xsplit + idx1, 
+                       avnodes + idx1, mbest + idx1, treeSize[i], cat, *maxcat,
+                       nodex + idx2);
 
 	for (j = 0; j < *n; ++j) ypred[j] += ytree[j];
 	if (*keepPred) {
 	    for (j = 0; j < *n; ++j) allpred[j + i * *n] = ytree[j];
 	}
 	/* if desired, do proximities for this round */
-	if (*doProx) computeProximity(proxMat, 0, nodex, junk, junk, *n);
-	idx += *nrnodes; /* increment the offset */
+	if (*doProx) computeProximity(proxMat, 0, nodex + idx2, junk, 
+				      junk, *n);
+	idx1 += *nrnodes; /* increment the offset */
+	if (*nodes) idx2 += *n;
     }
     for (i = 0; i < *n; ++i) ypred[i] /= *ntree;
     if (*doProx) {

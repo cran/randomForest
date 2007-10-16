@@ -1,5 +1,5 @@
 /*****************************************************************
-Copyright (C) 2001-4 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+Copyright (C) 2001-7 Leo Breiman, Adele Cutler and Merck & Co., Inc.
   
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -100,7 +100,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     double av=0.0;
     
     double *tgini, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
-        *tp, *wc, *wr;
+        *tp, *wr;
 
     addClass = Options[0];
     imp      = Options[1];
@@ -127,7 +127,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 
     tgini =      (double *) S_alloc(mdim, sizeof(double));
     wl =         (double *) S_alloc(nclass, sizeof(double));
-    wc =         (double *) S_alloc(nclass, sizeof(double));
     wr =         (double *) S_alloc(nclass, sizeof(double));
     classpop =   (double *) S_alloc(nclass* *nrnodes, sizeof(double));
     tclasscat =  (double *) S_alloc(nclass*32, sizeof(double));
@@ -242,13 +241,13 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	    zeroInt(treemap + 2*idxByNnode, 2 * *nrnodes);
 	    zeroDouble(xbestsplit + idxByNnode, *nrnodes);
 	    zeroInt(nodeclass + idxByNnode, *nrnodes);
-	    zeroInt(jin, nsample);
             zeroInt(varUsed, mdim);
-	    zeroDouble(tclasspop, nclass);
-	    zeroDouble(win, nsample);
             /* TODO: Put all sampling code into a function. */
             /* drawSample(sampsize, nsample, ); */
 	    if (stratify) {  /* stratified sampling */
+		zeroInt(jin, nsample);
+		zeroDouble(tclasspop, nclass);
+		zeroDouble(win, nsample);
 		if (replace) {  /* with replacement */
 		    for (n = 0; n < nstrata; ++n) {
 			for (j = 0; j < sampsize[n]; ++j) {
@@ -284,6 +283,9 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		anyEmpty = 0;
 		ntry = 0;
 		do {
+		    zeroInt(jin, nsample);
+		    zeroDouble(tclasspop, nclass);
+		    zeroDouble(win, nsample);
 		    if (replace) {
 			for (n = 0; n < *sampsize; ++n) {
 			    k = unif_rand() * nsample;      
@@ -298,8 +300,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			    ktmp = (int) (unif_rand() * (last+1));
 			    k = nind[ktmp];
                             swapInt(nind[ktmp], nind[last]);
-			    /* nind[ktmp] = nind[last];
-                               nind[last] = k; */
 			    last--;
 			    tclasspop[cl[k] - 1] += classwt[cl[k]-1];
 			    win[k] += classwt[cl[k]-1];
@@ -311,7 +311,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			if (tclasspop[n] == 0) anyEmpty = 1;
 		    }
 		    ntry++;
-		} while (anyEmpty && ntry <= 5); 
+		} while (anyEmpty && ntry <= 10); 
 	    }
       
             /* If need to keep indices of inbag data, do that here. */
@@ -332,8 +332,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 				nodestatus + idxByNnode, nodepop, 
 				nodestart, classpop, tclasspop, tclasscat, 
 				ta, nrnodes, idmove, &ndsize, ncase,  
-				jin, &mtry, varUsed, nodeclass + idxByNnode, 
-				ndbigtree + jb, win, wr, wc, wl, &mdim, 
+				&mtry, varUsed, nodeclass + idxByNnode, 
+				ndbigtree + jb, win, wr, wl, &mdim, 
 				&nuse, mind);
 	    /* if the "tree" has only the root node, start over */
 	} while (ndbigtree[jb] == 1);
@@ -551,6 +551,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
     idxNodes = 0;
     offset1 = 0;
     offset2 = 0;
+    junk = NULL;
 
     for (j = 0; j < *ntree; ++j) {
 	/* predict by the j-th tree */

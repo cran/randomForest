@@ -412,7 +412,7 @@
                         matrix(rfout$impout, ncol=1,
                                dimnames=list(x.col.names, "IncNodePurity")),
                     importanceSD=if (importance) rfout$impSD else NULL,
-                    localImportance = if (importance)
+                    localImportance = if (localImp)
                     matrix(rfout$impmat, p, n, dimnames=list(x.col.names,
                                                x.row.names)) else NULL,
                     proximity = if (proximity) matrix(rfout$prox, n, n,

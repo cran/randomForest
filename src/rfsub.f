@@ -1,4 +1,4 @@
-c     Copyright (C) 2001-4  Leo Breiman and Adele Cutler and Merck & Co, Inc.
+c     Copyright (C) 2001-7  Leo Breiman and Adele Cutler and Merck & Co, Inc.
 c     This program is free software; you can redistribute it and/or
 c     modify it under the terms of the GNU General Public License
 c     as published by the Free Software Foundation; either version 2
@@ -20,8 +20,8 @@ c     SUBROUTINE BUILDTREE
       subroutine buildtree(a, b, cl, cat, maxcat, mdim, nsample, 
      1     nclass, treemap, bestvar, bestsplit, bestsplitnext, tgini,
      1     nodestatus,nodepop, nodestart, classpop, tclasspop, 
-     1     tclasscat,ta,nrnodes, idmove, ndsize, ncase, jin, mtry, iv,
-     1     nodeclass, ndbigtree, win, wr, wc, wl, mred, nuse, mind)
+     1     tclasscat,ta,nrnodes, idmove, ndsize, ncase, mtry, iv,
+     1     nodeclass, ndbigtree, win, wr, wl, mred, nuse, mind)
 
 c     Buildtree consists of repeated calls to two subroutines, Findbestsplit
 c     and Movedata.  Findbestsplit does just that--it finds the best split of
@@ -45,10 +45,10 @@ c     main program.
      1     nodepop(nrnodes), nodestart(nrnodes),
      1     bestsplitnext(nrnodes), idmove(nsample),
      1     ncase(nsample), b(mdim,nsample),
-     1     jin(nsample), iv(mred), nodeclass(nrnodes), mind(mred)
+     1     iv(mred), nodeclass(nrnodes), mind(mred)
       
       double precision tclasspop(nclass), classpop(nclass, nrnodes),
-     1     tclasscat(nclass, 32), win(nsample), wr(nclass), wc(nclass),
+     1     tclasscat(nclass, 32), win(nsample), wr(nclass),
      1     wl(nclass), tgini(mdim), xrand
       integer msplit
       
@@ -79,8 +79,7 @@ c     initialize for next call to findbestsplit
 
          call findbestsplit(a,b,cl,mdim,nsample,nclass,cat,maxcat,
      1        ndstart, ndend,tclasspop,tclasscat,msplit, decsplit,
-     1        nbest,ncase, jstat,jin,mtry,win,wr,wc,wl,mred,kbuild,
-     1        mind)
+     1        nbest,ncase, jstat,mtry,win,wr,wl,mred,mind)
          if (jstat .eq. -1) then
             nodestatus(kbuild) = -1
             goto 30 
@@ -181,13 +180,13 @@ c     next larger value of msplit.  If msplit is categorical, then nsplit is
 c     the coding into an integer of the categories going left.
       subroutine findbestsplit(a, b, cl, mdim, nsample, nclass, cat,
      1     maxcat, ndstart, ndend, tclasspop, tclasscat, msplit, 
-     2     decsplit, nbest, ncase, jstat, jin, mtry, win, wr, wc, wl,
-     3     mred, kbuild, mind)
+     2     decsplit, nbest, ncase, jstat, mtry, win, wr, wl,
+     3     mred, mind)
       implicit double precision(a-h,o-z)      
       integer a(mdim,nsample), cl(nsample), cat(mdim),
-     1     ncase(nsample), b(mdim,nsample), jin(nsample), nn, j          
+     1     ncase(nsample), b(mdim,nsample), nn, j          
       double precision tclasspop(nclass), tclasscat(nclass,32), dn(32),
-     1     win(nsample), wr(nclass), wc(nclass), wl(nclass), xrand
+     1     win(nsample), wr(nclass), wl(nclass), xrand
       integer mind(mred), ncmax, ncsplit,nhit
       ncmax = 10
       ncsplit = 512
@@ -361,27 +360,27 @@ c     shift case. nos. right and left for numerical variables.
          
  40   continue
       ndo=0
-      if(ndo.eq.1) then
-	 do 140 msh=1,mdim
-            if (cat(msh).gt.1) then
-               k=ndstart-1
-               do 150 n=ndstart,ndend
-                  ih=ncase(n)
-                  if (idmove(ih).eq.1) then
-                     k=k+1
-                     ta(k)=a(msh,ih)
+      if (ndo.eq.1) then
+         do 140 msh = 1, mdim
+            if (cat(msh) .gt. 1) then
+               k = ndstart - 1
+               do 150 n = ndstart, ndend
+                  ih = ncase(n)
+                  if (idmove(ih) .eq. 1) then
+                     k = k + 1
+                     ta(k) = a(msh, ih)
                   endif
  150           continue
-               do 160 n=ndstart,ndend
-                  ih=ncase(n)
-                  if (idmove(ih).eq.0) then 
-                     k=k+1
-                     ta(k)=a(msh,ih)
+               do 160 n = ndstart, ndend
+                  ih = ncase(n)
+                  if (idmove(ih) .eq. 0) then 
+                     k = k + 1
+                     ta(k) = a(msh,ih)
                   endif
  160           continue
                
-               do 170 k=ndstart,ndend
-                  a(msh,k)=ta(k)
+               do 170 k = ndstart, ndend
+                  a(msh,k) = ta(k)
  170           continue
             endif
             

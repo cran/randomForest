@@ -219,6 +219,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
             leftDen = 0.0;
             zeroDouble(wl, nClass);
             for (j = 0; j < nClass; ++j) wr[j] = classCount[j];
+	    ntie = 1;
             for (j = ndstart; j <= ndend - 1; ++j) {
                 nc = a[mvar, j-1];
                 u = weight[nc];
@@ -238,10 +239,13 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
                             *splitVar = mvar;
                         }
                         /* Break ties at random: */
-                        if (crit == critmax && unif_rand() > 0.5) {
-                            *bestSplit = j;
-                            critmax = crit;
-                            *splitVar = mvar;
+                        if (crit == critmax) {
+			    ntie++;
+			    if (unif_rand() > 1.0 / ntie) {
+				*bestSplit = j;
+				critmax = crit;
+				*splitVar = mvar;
+			    }
                         }
                     }
                 }

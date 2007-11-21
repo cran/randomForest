@@ -69,24 +69,30 @@
         rn <- rownames(x)
         if (is.null(rn)) rn <- keep
     }
-    if (is.data.frame(x)) {
-        for(i in seq(along=ncol(x))) {
-            if(is.ordered(x[[i]])) x[[i]] <- as.numeric(x[[i]])
-        }
-        cat.new <- sapply(x, function(x) if (is.factor(x) && !is.ordered(x)) 
-                          length(levels(x)) else 1)
-        if (length(cat.new) != length(object$forest$ncat))
-            stop("Number of variables in newdata does not match the model.")
-        if (!all(object$forest$ncat == cat.new)) 
-      stop("Type of predictors in new data do not match that of the training data.")
-    }
     vname <- if (is.null(dim(object$importance))) {
         names(object$importance)
     } else {
         rownames(object$importance)
     }
-    if (any(colnames(x) != vname))
-        stop("names of predictor variables do not match")
+    if (any(! vname %in% colnames(x)))
+        stop("variables in the training data missing in newdata")
+    x <- x[, vname, drop=FALSE]
+    if (is.data.frame(x)) {
+        xfactor <- which(sapply(x, is.factor))
+        if (length(xfactor) > 0) {
+            for (i in xfactor) {
+                if (any(! levels(x[[i]]) %in% object$forest$xlevels[[i]]))
+                    stop("New factor levels not present in the training data")
+                x[[i]] <-
+                    factor(object$forest$xlevels[[i]][match(x[[i]], object$forest$xlevels[[i]])],
+                           levels=object$forest$xlevels[[i]])
+            }
+        }
+        cat.new <- sapply(x, function(x) if (is.factor(x) && !is.ordered(x)) 
+                          length(levels(x)) else 1)
+        if (!all(object$forest$ncat == cat.new)) 
+      stop("Type of predictors in new data do not match that of the training data.")
+    }
     mdim <- ncol(x)
     ntest <- nrow(x)
     ntree <- object$forest$ntree

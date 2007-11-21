@@ -1,3 +1,6 @@
+## mylevels() returns levels if given a factor, otherwise 0.
+mylevels <- function(x) if (is.factor(x)) levels(x) else 0
+
 "randomForest.default" <-
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y)) 
@@ -54,17 +57,24 @@
     if (!is.null(ytest) && any(is.na(ytest))) stop("NA not permitted in ytest")
 
     if (is.data.frame(x)) {
-        ncat <- sapply(x, function(x) if(is.factor(x) && !is.ordered(x))
-                       length(levels(x)) else 1)
+        xlevels <- lapply(x, mylevels)
+        ncat <- sapply(xlevels, length)
+        ## Treat ordered factors as numerics.
+        ncat <- ifelse(sapply(x, is.ordered), 1, ncat)
         x <- data.matrix(x)
         if(testdat) {
             if(!is.data.frame(xtest))
                 stop("xtest must be data frame if x is")
-            ncatts <- sapply(xtest, function(x) if(is.factor(x) &&
-                                                   !is.ordered(x))
-                             length(levels(x)) else 1)
-            if(!all(ncat == ncatts))
-                stop("columns of x and xtest must be the same type")
+            xfactor <- which(sapply(xtest, is.factor))
+            if (length(xfactor) > 0) {
+                for (i in xfactor) {
+                    if (any(! levels(xtest[[i]]) %in% xlevels[[i]]))
+                        stop("New factor levels in xtest not present in x")
+                    xtest[[i]] <-
+                        factor(xlevels[[i]][match(xtest[[i]], xlevels[[i]])],
+                               levels=xlevels[[i]])
+                }
+            }
             xtest <- data.matrix(xtest)
         }
     } else {
@@ -321,8 +331,10 @@
                              nc = ntree)[1:max.nodes,, drop=FALSE],
                              xbestsplit = matrix(rfout$xbestsplit,
                              nc = ntree)[1:max.nodes,, drop=FALSE],
-                             pid = rfout$classwt, cutoff = cutoff, ncat = ncat, maxcat = maxcat, 
-                             nrnodes = max.nodes, ntree = ntree, nclass = nclass)
+                             pid = rfout$classwt, cutoff=cutoff, ncat=ncat,
+                             maxcat = maxcat, 
+                             nrnodes = max.nodes, ntree = ntree,
+                             nclass = nclass, xlevels=xlevels)
                     },
                     y = if (addclass) NULL else y,
                     test = if(!testdat) NULL else list(
@@ -424,7 +436,7 @@
                               "rightDaughter", "nodepred", "bestvar",
                               "xbestsplit")],
                       list(ncat = ncat), list(nrnodes=max.nodes),
-                      list(ntree=ntree)) else NULL,
+                      list(ntree=ntree), list(xlevels=xlevels)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
                     y = y,
                     test = if(testdat) {

@@ -117,7 +117,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     
     if (*doProx) {
         zeroDouble(prox, nsample * nsample);
-	if (*testdat) zeroDouble(proxts, nsample * (nsample + (*testdat)));
+	if (*testdat) zeroDouble(proxts, ntest * (nsample + ntest));
     }
     
     if (varImp) {
@@ -241,7 +241,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 	
 	/*  DO PROXIMITIES */
 	if (*doProx) {
-            computeProximity(prox, *oobprox, nodex, in, oobpair, nsample); 
+	    computeProximity(prox, *oobprox, nodex, in, oobpair, nsample); 
 	    /* proximity for test data */
 	    if (*testdat) {
                 /* In the next call, in and oobpair are not used. */

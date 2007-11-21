@@ -544,7 +544,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
                  int *nodestatus, int *cat, int *nodeclass, int *jts, 
                  int *jet, int *bestvar, int *node, int *treeSize, 
                  int *keepPred, int *prox, double *proxMat, int *nodes) {
-    int j, n, n1, n2, idxNodes, offset1, offset2, *junk;
+    int j, n, n1, n2, idxNodes, offset1, offset2, *junk, ntie;
     double crit, cmax;
 
     zeroDouble(countts, *nclass * *ntest);
@@ -577,6 +577,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
     /* Aggregated prediction is the class with the maximum votes/cutoff */
     for (n = 0; n < *ntest; ++n) {
 	cmax = 0.0;
+	ntie = 1;
 	for (j = 0; j < *nclass; ++j) {
 	    crit = (countts[j + n * *nclass] / *ntree) / cutoff[j];
 	    if (crit > cmax) {
@@ -584,7 +585,10 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
 		cmax = crit;
 	    }
 	    /* Break ties at random: */
-	    if (crit == cmax && unif_rand() > 0.5) jet[n] = j + 1;
+	    if (crit == cmax) {
+		ntie++;
+		if (unif_rand() > 1.0 / ntie) jet[n] = j + 1;
+	    }
 	}
     }
 
@@ -608,7 +612,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
 void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 	 int *counttr, int *out, double *errtr, int *jest,
 	 double *cutoff) {
-    int j, n, noob, *noobcl;
+    int j, n, noob, *noobcl, ntie;
     double qq, smax, smaxtr;
 
     noobcl  = (int *) S_alloc(nclass, sizeof(int));
@@ -622,6 +626,7 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 	    noobcl[cl[n]-1]++;
 	    smax = 0.0;
 	    smaxtr = 0.0;
+	    ntie = 1;
 	    for (j = 0; j < nclass; ++j) {
 		qq = (((double) counttr[j + n*nclass]) / out[n]) / cutoff[j];
 		if (j+1 != cl[n]) smax = (qq > smax) ? qq : smax;
@@ -632,9 +637,12 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 		    jest[n] = j+1;
 		}
 		/* break tie at random */
-		if (qq == smaxtr && unif_rand() > 0.5) {
-                    smaxtr = qq;
-                    jest[n] = j+1;
+		if (qq == smaxtr) {
+		    ntie++;
+		    if (unif_rand() > 1.0 / ntie) {
+			smaxtr = qq;
+			jest[n] = j+1;
+		    }
 		}
 	    }
 	    if (jest[n] != cl[n]) {
@@ -652,7 +660,7 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 		  int nclass, int nvote, double *errts,
 		  int labelts, int *nclts, double *cutoff) {
-    int j, n;
+    int j, n, ntie;
     double cmax, crit;
   
     for (n = 0; n < ntest; ++n) countts[jts[n]-1 + n*nclass] += 1.0;
@@ -660,6 +668,7 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
     /*  Prediction is the class with the maximum votes */
     for (n = 0; n < ntest; ++n) {
 	cmax=0.0;
+	ntie = 1;
 	for (j = 0; j < nclass; ++j) {
 	    crit = (countts[j + n*nclass] / nvote) / cutoff[j];
 	    if (crit > cmax) {
@@ -667,9 +676,12 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 		cmax = crit;
 	    }
 	    /*  Break ties at random: */
-	    if (crit == cmax && unif_rand() > 0.5) {
-		jet[n] = j+1;
-		cmax = crit;
+	    if (crit == cmax) {
+		ntie++;
+		if (unif_rand() > 1.0 / ntie) {
+		    jet[n] = j+1;
+		    cmax = crit;
+		}
 	    }
 	}
     } 

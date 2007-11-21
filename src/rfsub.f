@@ -50,7 +50,7 @@ c     main program.
       double precision tclasspop(nclass), classpop(nclass, nrnodes),
      1     tclasscat(nclass, 32), win(nsample), wr(nclass),
      1     wl(nclass), tgini(mdim), xrand
-      integer msplit
+      integer msplit, ntie
       
       msplit = 0
       call zerv(nodestatus,nrnodes)
@@ -153,6 +153,7 @@ c     form prediction in terminal nodes
       do kn = 1, ndbigtree
          if(nodestatus(kn) .eq. -1) then
             pp = 0
+            ntie = 1
             do j = 1, nclass
                if (classpop(j,kn) .gt. pp) then
                   nodeclass(kn) = j
@@ -160,8 +161,9 @@ c     form prediction in terminal nodes
                end if
 c     Break ties at random:
                if (classpop(j,kn) .eq. pp) then
+                  ntie = ntie + 1
                   call rrand(xrand)
-                  if (xrand .gt. 0.5) then
+                  if (xrand .lt. 1.0 / ntie) then
                      nodeclass(kn)=j
                      pp=classpop(j,kn)
                   end if
@@ -187,7 +189,7 @@ c     the coding into an integer of the categories going left.
      1     ncase(nsample), b(mdim,nsample), nn, j          
       double precision tclasspop(nclass), tclasscat(nclass,32), dn(32),
      1     win(nsample), wr(nclass), wl(nclass), xrand
-      integer mind(mred), ncmax, ncsplit,nhit
+      integer mind(mred), ncmax, ncsplit,nhit, ntie
       ncmax = 10
       ncsplit = 512
 c     compute initial values of numerator and denominator of Gini
@@ -225,6 +227,7 @@ c     Split on a numerical predictor.
             do j = 1, nclass
                wr(j) = tclasspop(j)
             end do
+            ntie = 1
             do nsp = ndstart, ndend-1
                nc = a(mvar, nsp)
                u = win(nc)
@@ -246,8 +249,9 @@ c     If neither nodes is empty, check the split.
                      end if
 c     Break ties at random:
                      if (crit .eq. critmax) then
+                        ntie = ntie + 1
                         call rrand(xrand)
-                        if (xrand .gt. 0.5) then
+                        if (xrand .lt. 1.0 / ntie) then
                            nbest = nsp
                            critmax = crit
                            msplit = mvar

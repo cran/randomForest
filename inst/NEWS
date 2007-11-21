@@ -9,6 +9,17 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-20:
+
+* Fixed a memory bug in the C code when the test set is given and 
+  proximity is requested in regression.  (Reported by Clayton Springer.)
+
+* Fixed the one-pass random tie-breaking algorithm in various places.
+
+* Added code to check consistency of levels for factors in the predictors,
+  as well as allowing missing levels of factors and extraneous variables in 
+  predict(..., newdata).  (Thanks to Nick Crookston for suggesting a patch.)
+
 Changes in 4.5-19:
 
 * In classification, if sampsize is small and sampling is not stratified,

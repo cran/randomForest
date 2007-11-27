@@ -20,7 +20,7 @@
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
              importance=FALSE, localImp=FALSE, nPerm=1,
-             proximity=FALSE, oob.prox=proximity,
+             proximity, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
              keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE,
              keep.inbag=FALSE, ...)
@@ -228,6 +228,12 @@ ozone.rf <- randomForest(Ozone ~ ., data=airquality, mtry=3,
 print(ozone.rf)
 ## Show "importance" of variables: higher value mean more important:
 round(importance(ozone.rf), 2)
+
+## "x" can be a matrix instead of a data frame:
+set.seed(17)
+x <- matrix(runif(5e2), 100)
+y <- gl(2, 50)
+(myrf <- randomForest(x, y))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

@@ -9,6 +9,11 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-22:
+
+* Allow unsupervised randomForest not to produce a proximity matrix (by
+  specifying proximity=FALSE), suggested by Nick Crookston.
+
 Changes in 4.5-21:
 
 * The added check for factor level consistency in predictor variables in

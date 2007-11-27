@@ -9,7 +9,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
              importance=FALSE, localImp=FALSE, nPerm=1,
-             proximity=FALSE, oob.prox=proximity,
+             proximity, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
              keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE,
              keep.inbag=FALSE, ...) {
@@ -126,7 +126,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
     } else addclass <- FALSE  
 
-    if (addclass) proximity <- TRUE
+    if (missing(proximity)) proximity <- addclass
     if (proximity) {
         prox <- matrix(0.0, n, n)
         proxts <- if (testdat) matrix(0, ntest, ntest + n) else double(1)

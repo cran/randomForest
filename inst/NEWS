@@ -9,6 +9,12 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-21:
+
+* The added check for factor level consistency in predictor variables in
+  4.5-20 was not working for predictors given in a matrix (reported by
+  Ramon Diaz-Uriate).
+
 Changes in 4.5-20:
 
 * Fixed a memory bug in the C code when the test set is given and 

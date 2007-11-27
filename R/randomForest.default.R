@@ -79,6 +79,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
     } else {
         ncat <- rep(1, p)
+        xlevels <- as.list(rep(0, p))
     }
     maxcat <- max(ncat)
     if (maxcat > 32)

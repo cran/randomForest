@@ -79,7 +79,7 @@
     x <- x[, vname, drop=FALSE]
     if (is.data.frame(x)) {
         xfactor <- which(sapply(x, is.factor))
-        if (length(xfactor) > 0) {
+        if (length(xfactor) > 0 && "xlevels" %in% names(object$forest)) {
             for (i in xfactor) {
                 if (any(! levels(x[[i]]) %in% object$forest$xlevels[[i]]))
                     stop("New factor levels not present in the training data")

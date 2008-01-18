@@ -9,6 +9,13 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-23:
+
+* Fixed tuneRF() to work with R version > 2.6.1.
+
+* Make predict.randomForest() more backward compatible with randomForest 
+  objects created from versions older than 4.5-21.
+
 Changes in 4.5-22:
 
 * Allow unsupervised randomForest not to produce a proximity matrix (by

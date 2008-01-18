@@ -17,7 +17,8 @@ tuneRF <- function(x, y, mtryStart=if(is.factor(y)) floor(sqrt(ncol(x))) else
   }
 
   oobError <- list()
-  oobError[[as.character(mtryStart)]] <- errorOld  
+  oobError[[1]] <- errorOld
+  names(oobError)[1] <- mtryStart  
   
   for (direction in c("left", "right")) {
     if (trace) cat("Searching", direction, "...\n")
@@ -53,8 +54,9 @@ tuneRF <- function(x, y, mtryStart=if(is.factor(y)) floor(sqrt(ncol(x))) else
       }
     }
   }
-  res <- unlist(oobError)[order(as.numeric(names(oobError)))]
-  res <- cbind(mtry=as.numeric(names(res)), OOBError=res)
+  mtry <- sort(as.numeric(names(oobError)))
+  res <- unlist(oobError[as.character(mtry)])
+  res <- cbind(mtry=mtry, OOBError=res)
 
   if (plot) {
     plot(res, xlab=expression(m[try]), ylab="OOB Error", type="o", log="x",

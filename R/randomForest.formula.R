@@ -1,5 +1,5 @@
 "randomForest.formula" <-
-    function(formula, data = NULL, ..., subset, na.action = na.fail) {	
+    function(formula, data = NULL, ..., subset, na.action = na.fail) {
 ### formula interface for randomForest.
 ### code gratefully stolen from svm.formula (package e1071).
 ###
@@ -16,6 +16,11 @@
     m$na.action <- na.action
     m[[1]] <- as.name("model.frame")
     m <- eval(m, parent.frame())
+    ## Drop any "negative" terms in the formula.
+    ## test with:
+    ## randomForest(Fertility~.-Catholic+(Catholic<50),data=swiss,mtry=2)
+    m <- model.frame(formula(terms(formula(attr(m, "terms")), simplify=TRUE)),
+                     data.frame(m))
     Terms <- attr(m, "terms")
     attr(Terms, "intercept") <- 0
     y <- model.response(m)
@@ -28,7 +33,7 @@
     cl[[1]] <- as.name("randomForest")
     ret$call <- cl
     ret$terms <- Terms
-    if (!is.null(attr(m, "na.action"))) 
+    if (!is.null(attr(m, "na.action")))
         ret$na.action <- attr(m, "na.action")
     class(ret) <- c("randomForest.formula", "randomForest")
     return(ret)

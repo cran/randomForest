@@ -1,5 +1,7 @@
 TODO (not promised):
 
+* Need to fix handling of ordered factors in predictors (urgent)!
+
 * Implement the new scheme of handling classwt in classification.
 
 * Allow categorical predictors with more than 32 categories.
@@ -9,10 +11,22 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-25:
+
+* In regression, the out-of-bag estimate of MSE and R-squared for the
+  first few trees (for which not all observations have been OOB yet),
+  were computed wrong, leading to gross over-estimates of MSEs for the
+  first few trees.  This did not affect the final MSE and R-squared
+  for the whole forest; i.e., the first few elements of the `mse'
+  component (and thus the corresponding elements in `rsq') in the
+  randomForest object are wrong, but others are correct.
+
+  (Thanks to Ulrike Gromping for pointing out this problem, as well
+   as the one fixed in 4.5-24.)
+
 Changes in 4.5-24:
 
 * randomForest.formula() did not exclude terms preceded by -.
-
 
 Changes in 4.5-23:
 

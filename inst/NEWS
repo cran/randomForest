@@ -1,6 +1,4 @@
-TODO (not promised):
-
-* Need to fix handling of ordered factors in predictors (urgent)!
+Wishlist (formerly TODO):
 
 * Implement the new scheme of handling classwt in classification.
 
@@ -11,6 +9,10 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-27:
+
+* Fixed handling of ordered factors in predict.randomForest().
+
 Changes in 4.5-26:
 
 * Fix formula parsing so use of functions in formula won't trigger errors.

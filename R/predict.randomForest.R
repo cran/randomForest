@@ -90,14 +90,14 @@
                 if (any(! levels(x[[i]]) %in% object$forest$xlevels[[i]]))
                     stop("New factor levels not present in the training data")
                 x[[i]] <-
-                    factor(object$forest$xlevels[[i]][match(x[[i]], object$forest$xlevels[[i]])],
-                           levels=object$forest$xlevels[[i]])
+                    factor(x[[i]],
+                           levels=levels(x[[i]])[match(levels(x[[i]]), object$forest$xlevels[[i]])])
             }
         }
         cat.new <- sapply(x, function(x) if (is.factor(x) && !is.ordered(x))
                           length(levels(x)) else 1)
         if (!all(object$forest$ncat == cat.new))
-      stop("Type of predictors in new data do not match that of the training data.")
+            stop("Type of predictors in new data do not match that of the training data.")
     }
     mdim <- ncol(x)
     ntest <- nrow(x)

@@ -1,18 +1,18 @@
 "predict.randomForest" <-
     function (object, newdata, type = "response", norm.votes = TRUE,
-              predict.all=FALSE, proximity = FALSE, nodes=FALSE, cutoff, ...) 
+              predict.all=FALSE, proximity = FALSE, nodes=FALSE, cutoff, ...)
 {
-    if (!inherits(object, "randomForest")) 
+    if (!inherits(object, "randomForest"))
         stop("object not of class randomForest")
     if (is.null(object$forest)) stop("No forest component in the object")
     out.type <- charmatch(tolower(type),
                           c("response", "prob", "vote", "class"))
-    if (is.na(out.type)) 
+    if (is.na(out.type))
         stop("type must be one of 'response', 'prob', 'vote'")
     if (out.type == 4) out.type <- 1
     if (out.type != 1 && object$type == "regression")
         stop("'prob' or 'vote' not meaningful for regression")
-    if (out.type == 2) 
+    if (out.type == 2)
         norm.votes <- TRUE
     if (missing(newdata)) {
         if (object$type == "regression") return(object$predicted)
@@ -24,7 +24,7 @@
                             proximity = object$proximity))
             } else return(object$predicted)
         }
-        if (norm.votes) { 
+        if (norm.votes) {
             t1 <- t(apply(object$votes, 1, function(x) { x/sum(x) }))
             if(proximity) return(list(pred = t1, proximity = object$proximity))
             else return(t1)
@@ -48,7 +48,7 @@
         }
     }
 
-    if (object$type == "unsupervised") 
+    if (object$type == "unsupervised")
         stop("Can't predict unsupervised forest.")
 
     if (inherits(object, "randomForest.formula")) {
@@ -58,12 +58,12 @@
         x <- model.frame(Terms, newdata, na.action = na.omit)
         keep <- match(row.names(x), rn)
     } else {
-        if (is.null(dim(newdata))) 
+        if (is.null(dim(newdata)))
             dim(newdata) <- c(1, length(newdata))
         x <- newdata
-        if (nrow(x) == 0) 
+        if (nrow(x) == 0)
             stop("newdata has 0 rows")
-        if (any(is.na(x))) 
+        if (any(is.na(x)))
             stop("missing values in newdata")
         keep <- 1:nrow(x)
         rn <- rownames(x)
@@ -74,9 +74,15 @@
     } else {
         rownames(object$importance)
     }
-    if (any(! vname %in% colnames(x)))
-        stop("variables in the training data missing in newdata")
-    x <- x[, vname, drop=FALSE]
+    if (is.null(colnames(x))) {
+        if (ncol(x) != length(vname)) {
+            stop("number of variables in newdata does not match that in the training data")
+        }
+    } else {
+        if (any(! vname %in% colnames(x)))
+            stop("variables in the training data missing in newdata")
+        x <- x[, vname, drop=FALSE]
+    }
     if (is.data.frame(x)) {
         xfactor <- which(sapply(x, is.factor))
         if (length(xfactor) > 0 && "xlevels" %in% names(object$forest)) {
@@ -88,9 +94,9 @@
                            levels=object$forest$xlevels[[i]])
             }
         }
-        cat.new <- sapply(x, function(x) if (is.factor(x) && !is.ordered(x)) 
+        cat.new <- sapply(x, function(x) if (is.factor(x) && !is.ordered(x))
                           length(levels(x)) else 1)
-        if (!all(object$forest$ncat == cat.new)) 
+        if (!all(object$forest$ncat == cat.new))
       stop("Type of predictors in new data do not match that of the training data.")
     }
     mdim <- ncol(x)
@@ -99,7 +105,9 @@
     maxcat <- max(object$forest$ncat)
     nclass <- object$forest$nclass
     nrnodes <- object$forest$nrnodes
-    show.error <- 0
+    ## get rid of warning:
+    op <- options(warn=-1)
+    on.exit(options(op))
     x <- t(data.matrix(x))
 
     if (predict.all) {
@@ -113,7 +121,7 @@
     }
     proxmatrix <- if (proximity) matrix(0, ntest, ntest) else numeric(1)
     nodexts <- if (nodes) integer(ntest * ntree) else integer(ntest)
-  
+
     if (object$type == "regression") {
             if (!is.null(object$forest$treemap)) {
                 object$forest$leftDaughter <-
@@ -177,26 +185,26 @@
         countts <- matrix(0, ntest, nclass)
         t1 <- .C("classForest",
                  mdim = as.integer(mdim),
-                 ntest = as.integer(ntest), 
+                 ntest = as.integer(ntest),
                  nclass = as.integer(object$forest$nclass),
-                 maxcat = as.integer(maxcat), 
+                 maxcat = as.integer(maxcat),
                  nrnodes = as.integer(nrnodes),
                  jbt = as.integer(ntree),
                  xts = as.double(x),
-                 xbestsplit = as.double(object$forest$xbestsplit), 
+                 xbestsplit = as.double(object$forest$xbestsplit),
                  pid = as.double(object$forest$pid),
                  cutoff = as.double(cutoff),
                  countts = as.double(countts),
-                 treemap = as.integer(aperm(object$forest$treemap, 
+                 treemap = as.integer(aperm(object$forest$treemap,
                  c(2, 1, 3))),
-                 nodestatus = as.integer(object$forest$nodestatus), 
+                 nodestatus = as.integer(object$forest$nodestatus),
                  cat = as.integer(object$forest$ncat),
-                 nodepred = as.integer(object$forest$nodepred), 
+                 nodepred = as.integer(object$forest$nodepred),
                  treepred = as.integer(treepred),
-                 jet = as.integer(numeric(ntest)), 
+                 jet = as.integer(numeric(ntest)),
                  bestvar = as.integer(object$forest$bestvar),
                  nodexts = nodexts,
-                 ndbigtree = as.integer(object$forest$ndbigtree), 
+                 ndbigtree = as.integer(object$forest$ndbigtree),
                  predict.all = as.integer(predict.all),
                  prox = as.integer(proximity),
                  proxmatrix = as.double(proxmatrix),
@@ -205,7 +213,7 @@
                  PACKAGE = "randomForest")
         if (out.type > 1) {
             out.class.votes <- t(matrix(t1$countts, nr = nclass, nc = ntest))
-            if (norm.votes) 
+            if (norm.votes)
                 out.class.votes <-
                     sweep(out.class.votes, 1, rowSums(out.class.votes), "/")
             z <- matrix(NA, length(rn), nclass,

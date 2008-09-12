@@ -11,6 +11,13 @@ TODO (not promised):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-26:
+
+* Fix formula parsing so use of functions in formula won't trigger errors.
+
+* predict.randomForest() did not work when given a matrix without column
+  names as the newdata.
+
 Changes in 4.5-25:
 
 * In regression, the out-of-bag estimate of MSE and R-squared for the

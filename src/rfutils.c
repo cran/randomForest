@@ -249,12 +249,12 @@ void computeProximity(double *prox, int oobprox, int *node, int *inbag,
 }
 
 int pack(int nBits, int *bits) {
-    int i = nBits, pack=0;
+    int i = nBits, pack = 0;
     while (--i >= 0) pack += bits[i] << i;
     return(pack);
 }
 
-void unpack(int pack, int *bits) {
+void unpack(unsigned int pack, int *bits) {
 /* pack is a 4-byte integer.  The sub. returns icat, an integer array of 
    zeroes and ones corresponding to the coefficients in the binary expansion 
    of pack. */   

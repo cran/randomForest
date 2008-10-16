@@ -1,15 +1,15 @@
 /*******************************************************************
    Copyright (C) 2001-7 Leo Breiman, Adele Cutler and Merck & Co., Inc.
-  
+
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; either version 2
    of the License, or (at your option) any later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.                            
+   GNU General Public License for more details.
 *******************************************************************/
 
 #include <R.h>
@@ -17,7 +17,7 @@
 #include "rf.h"
 
 #ifdef C_CLASSTREE
-void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample, 
+void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
                int nclass, int *treemap, int *bestvar, double *bestsplit,
                double *bestsplitnext, double *tgini, int *nodeStatus,
                int *nodePop, int *nodeStart, double *tclassPop, int maxNodes,
@@ -46,28 +46,28 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
           bestsplitnext(numNodes),idmove(nsample),
           ncase(nsample),parent(numNodes),b(mdim,nsample),
           jin(nsample),iv(mred),nodeclass(numNodes),mind(mred)
-      
-      
+
+
       double precision tclasspop(nclass),classpop(nclass,numNodes),
      1     tclasscat(nclass,32),win(nsample),wr(nclass),wc(nclass),
      1     wl(nclass),tgini(mdim), xrand
- */          
-    int msplit = 0, i, j;      
+ */
+    int msplit = 0, i, j;
     zeroInt(nodeStatus, maxNodes);
     zeroInt(nodeStart, maxNodes);
     zeroInt(nodePop, maxNodes);
     zeroDouble(classPop, nclass * maxNodes);
-      
+
     for (i = 0; i < nclass; ++i) classPop[i] = tclassPop[i];
     ncur = 1;
     nodeStart[0] = 1;
     nodePop[0] = *nuse;
     nodeStatus[0] = NODE_TOSPLIT;
-    /* 2: not split yet, 1: split, -1: terminal */      
+    /* 2: not split yet, 1: split, -1: terminal */
     /* start main loop */
     for (i = 0; i < numNodes; ++i) {
         if (i > ncur - 1) break;
-        if (nodeStatus[i] != NODE_TOSPLIT) continue; 
+        if (nodeStatus[i] != NODE_TOSPLIT) continue;
         /* initialize for next call to findbestsplit */
         ndstart = nodeStart[i];
         ndend = ndstart + nodePop[i] - 1;
@@ -79,10 +79,10 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
                                 ndstart, ndend, tclassPop, tclasscat,
                                 &msplit, &decsplit, &nbest, ncase, &jstat,
                                 inBag, mTry, win, wr, wc, wl, mred, i, mind);
-        if (jstat == 1) { 
+        if (jstat == 1) {
             nodeStatus[i] = NODE_TERMINAL;
             continue;
-        } else { 
+        } else {
             bestvar[i] = msplit;
             varUsed[msplit - 1] = 1;
             tgini[msplit - 1] += decsplit;
@@ -93,7 +93,7 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
                   bestsplit[i] = nbest;
                   bestsplitnext[i] = 0;
             }
-        }          
+        }
         F77_CALL(movedata)(a, ta, mdim, nsample, ndstart, ndend, idmove,
                            ncase, msplit, cat, nbest, ndendl);
         /* leftnode no.= ncur+1, rightnode no. = ncur+2. */
@@ -124,12 +124,12 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
             popt2 += classPop[j + (ncur+2) * mdim];
         }
         for (j = 0; j < nclass; ++j) {
-            if (classPop[j + (ncur+1) * mdim] == popt1) 
+            if (classPop[j + (ncur+1) * mdim] == popt1)
                 nodeStatus[ncur+1] = NODE_TERMINAL;
-            if (classPop[j + (ncur+2) * mdim] == popt2) 
+            if (classPop[j + (ncur+2) * mdim] == popt2)
                 nodeStatus[ncur+2] = NODE_TERMINAL;
         }
-        
+
         treemap[i * 2] = ncur + 1;
         treemap[1 + i * 2] = ncur + 2;
         nodeStatus[i] = NODE_INTERIOR;
@@ -161,16 +161,16 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
 
 
 
-void findBestSplit(int *a, double *b, int *class, int mDim, int nSample, 
-                   int nClass, int *nCat, int maxCat, int ndStart, int ndEnd, 
-                   double *classCount, double *classCatTable, 
+void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
+                   int nClass, int *nCat, int maxCat, int ndStart, int ndEnd,
+                   double *classCount, double *classCatTable,
                    int *splitVar, double *decGini, int *bestSplit,
                    int *ncase, int *splitStatus, int *inBag, int mtry,
                    double *weight, double *wr, double *wc, double *wl,
                    int *currentNode, int *mind) {
 /*
       subroutine findbestsplit(a, b, cl, mdim, nsample, nclass, cat,
-     1     maxcat, ndstart, ndend, tclasspop, tclasscat, msplit, 
+     1     maxcat, ndstart, ndend, tclasspop, tclasscat, msplit,
      2     decsplit, nbest, ncase, jstat, jin, mtry, win, wr, wc, wl,
      3     mred, kbuild, mind) */
 /*
@@ -183,7 +183,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
 
 
     integer a(mdim,nsample), cl(nsample), cat(mdim),
-     1     ncase(nsample), b(mdim,nsample), jin(nsample), nn, j          
+     1     ncase(nsample), b(mdim,nsample), jin(nsample), nn, j
       double precision tclasspop(nclass), tclasscat(nclass,32), dn(32),
      1     win(nsample), wr(nclass), wc(nclass), wl(nclass), xrand
       integer mind(mred), ncmax, ncsplit,nhit
@@ -269,8 +269,8 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
             }
             nhit = 0;
             if (nNotEmpty > 1) {
-                F77_CALL(catmax)(parentden, classcatTable, classCount, 
-                                 &nclass, &lcat, bestSplit, &critmax, &nhit, 
+                F77_CALL(catmax)(parentden, classcatTable, classCount,
+                                 &nclass, &lcat, bestSplit, &critmax, &nhit,
                                  &maxcat, &ncmax, &ncsplit);
             }
             if (nhit) *splitVar = mvar;
@@ -286,22 +286,22 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
 
 
 
-void F77_NAME(catmax)(double *parentDen, double *tclasscat, 
-                      double *tclasspop, int *nclass, int *lcat, 
-                      int *ncatsp, double *critmax, int *nhit, 
+void F77_NAME(catmax)(double *parentDen, double *tclasscat,
+                      double *tclasspop, int *nclass, int *lcat,
+                      int *ncatsp, double *critmax, int *nhit,
                       int *maxcat, int *ncmax, int *ncsplit) {
-/* This finds the best split of a categorical variable with lcat 
-   categories and nclass classes, where tclasscat(j, k) is the number 
-   of cases in class j with category value k. The method uses an 
-   exhaustive search over all partitions of the category values if the 
-   number of categories is 10 or fewer.  Otherwise ncsplit randomly 
+/* This finds the best split of a categorical variable with lcat
+   categories and nclass classes, where tclasscat(j, k) is the number
+   of cases in class j with category value k. The method uses an
+   exhaustive search over all partitions of the category values if the
+   number of categories is 10 or fewer.  Otherwise ncsplit randomly
    selected splits are tested and best used. */
     int j, k, n, icat[32], nsplit;
     double leftNum, leftDen, rightNum, decGini, *leftCatClassCount;
-    
+
     leftCatClassCount = (double *) Calloc(*nclass, double);
     *nhit = 0;
-    nsplit = *lcat > *ncmax ? 
+    nsplit = *lcat > *ncmax ?
         *ncsplit : (int) pow(2.0, (double) *lcat - 1) - 1;
 
     for (n = 0; n < nsplit; ++n) {
@@ -312,7 +312,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
                efficient algorithm */
             for (j = 0; j < *lcat; ++j) icat[j] = unif_rand() > 0.5 ? 1 : 0;
         } else {
-            unpack(n + 1, icat);
+            unpack((unsigned int) n + 1, icat);
         }
         for (j = 0; j < *nclass; ++j) {
             leftCatClassCount[j] = 0;
@@ -339,7 +339,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
         if (decGini > *critmax) {
             *critmax = decGini;
             *nhit = 1;
-            *ncatsp = *lcat > *ncmax ? pack(*lcat, icat) : n + 1;
+            *ncatsp = *lcat > *ncmax ? pack((unsigned int) *lcat, icat) : n + 1;
         }
     }
     Free(leftCatClassCount);
@@ -349,7 +349,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
 
 /* Find best split of with categorical variable when there are two classes */
 void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
-                       int *nclass, int *nCat, int *nbest, double *critmax, 
+                       int *nclass, int *nCat, int *nbest, double *critmax,
                        int *nhit, double *catCount) {
 
     double catProportion[32], cp[32], cm[32];
@@ -359,7 +359,7 @@ void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
 
     *nhit = 0;
     for (i = 0; i < *nCat; ++i) {
-        catProportion[i] = catCount[i] ? 
+        catProportion[i] = catCount[i] ?
             tclasscat[i * *nclass] / catCount[i] : 0.0;
         kcat[i] = i + 1;
     }
@@ -396,7 +396,7 @@ void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
     if (*nhit == 1) {
         zeroInt(kcat, *nCat);
         for (i = 0; i < *nCat; ++i) {
-            catProportion[i] = catCount[i] ? 
+            catProportion[i] = catCount[i] ?
                 tclasscat[i * *nclass] / catCount[i] : 0.0;
             kcat[i] = catProportion[i] < bestsplit ? 1 : 0;
         }
@@ -411,7 +411,8 @@ void predictClassTree(double *x, int n, int mdim, int *treemap,
 		      int *bestvar, int *nodeclass,
 		      int treeSize, int *cat, int nclass,
 		      int *jts, int *nodex, int maxcat) {
-    int m, npack, i, j, k, *cbestsplit;
+    int m, i, j, k, *cbestsplit;
+	unsigned int npack;
 
     /* decode the categorical splits */
     if (maxcat > 1) {
@@ -420,7 +421,7 @@ void predictClassTree(double *x, int n, int mdim, int *treemap,
         for (i = 0; i < treeSize; ++i) {
             if (nodestatus[i] != NODE_TERMINAL) {
                 if (cat[bestvar[i] - 1] > 1) {
-                    npack = (int) xbestsplit[i];
+                    npack = (unsigned int) xbestsplit[i];
                     /* unpack `npack' into bits */
                     for (j = 0; npack; npack >>= 1, ++j) {
                         cbestsplit[j + i*maxcat] = npack & 01;

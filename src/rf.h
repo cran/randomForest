@@ -63,7 +63,7 @@ void predictClassTree(double *x, int n, int mdim, int *treemap,
 		      int *jts, int *nodex, int maxcat);
 
 int pack(int l, int *icat);
-void unpack(int npack, int *icat);
+void unpack(unsigned int npack, int *icat);
 
 void zeroInt(int *x, int length);
 void zeroDouble(double *x, int length);

@@ -9,6 +9,11 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Change in 4.5-28:
+
+* randomForest() would segfault if there are 32-level factors among the
+  predictor variables.
+
 Changes in 4.5-27:
 
 * Fixed handling of ordered factors in predict.randomForest().

@@ -240,6 +240,10 @@ y <- gl(2, 50)
 (swiss.rf <- randomForest(sqrt(Fertility) ~ . - Catholic + I(Catholic < 50),
                           data=swiss))
 (predict(swiss.rf, swiss))
+## Test use of 32-level factor as a predictor:
+set.seed(1)
+x <- data.frame(x1=gl(32, 5), x2=runif(160), y=rnorm(160))
+(rf1 <- randomForest(x[-3], x[[3]], ntree=10))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

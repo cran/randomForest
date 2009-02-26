@@ -104,7 +104,7 @@
 
   \item{call}{the original call to \code{randomForest}}
   \item{type}{one of \code{regression}, \code{classification}, or
-    {unsupervised}.}
+    \code{unsupervised}.}
   \item{predicted}{the predicted values of the input data based on
     out-of-bag samples.}
   \item{importance}{a matrix with \code{nclass} + 2 (for classification)

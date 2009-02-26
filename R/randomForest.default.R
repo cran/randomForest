@@ -3,11 +3,11 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
 
 "randomForest.default" <-
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
-             mtry=if (!is.null(y) && !is.factor(y)) 
+             mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
-             nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1, 
+             nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
@@ -18,21 +18,21 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     if (!classRF && length(unique(y)) <= 5) {
         warning("The response has five or fewer unique values.  Are you sure you want to do regression?")
     }
-    if (classRF && !addclass && length(unique(y)) < 2) 
+    if (classRF && !addclass && length(unique(y)) < 2)
         stop("Need at least two classes to do classification.")
     n <- nrow(x)
     p <- ncol(x)
     if (n == 0) stop("data (x) has 0 rows")
     x.row.names <- rownames(x)
     x.col.names <- if (is.null(colnames(x))) 1:ncol(x) else colnames(x)
-    
+
     ## overcome R's lazy evaluation:
     keep.forest <- keep.forest
-    
+
     testdat <- !is.null(xtest)
     if (testdat) {
         if (ncol(x) != ncol(xtest))
-            stop("x and xtest must have same number of columns") 
+            stop("x and xtest must have same number of columns")
         ntest <- nrow(xtest)
         xts.row.names <- rownames(xtest)
     }
@@ -84,7 +84,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     maxcat <- max(ncat)
     if (maxcat > 32)
         stop("Can not handle categorical predictors with more than 32 categories.")
-    
+
     if (classRF) {
         nclass <- length(levels(y))
         ## Check for empty classes:
@@ -124,7 +124,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
             classwt <- rep(1, nclass)
             ipi <- 0
         }
-    } else addclass <- FALSE  
+    } else addclass <- FALSE
 
     if (missing(proximity)) proximity <- addclass
     if (proximity) {
@@ -138,7 +138,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         importance <- TRUE
         impmat <- matrix(0, p, n)
     } else impmat <- double(1)
-    
+
     if (importance) {
         if (nPerm < 1) nPerm <- as.integer(1) else nPerm <- as.integer(nPerm)
         if (classRF) {
@@ -153,7 +153,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         impout <- double(p)
         impSD <- double(1)
     }
-    
+
     nsample <- if (addclass) 2 * n else n
     Stratify <- length(sampsize) > 1
     if ((!Stratify) && sampsize > nrow(x)) stop("sampsize too large")
@@ -181,7 +181,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         ## For regression trees, need to do this to get maximal trees.
         nrnodes <- 2 * trunc(sampsize/max(1, nodesize - 4)) + 1
     }
-    
+
     ## Compiled code expects variables in rows and observations in columns.
     x <- t(x)
     storage.mode(x) <- "double"
@@ -208,7 +208,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     xdim = as.integer(c(p, n)),
                     y = as.integer(y),
                     nclass = as.integer(nclass),
-                    ncat = as.integer(ncat), 
+                    ncat = as.integer(ncat),
                     maxcat = as.integer(maxcat),
                     sampsize = as.integer(sampsize),
                     strata = if (Stratify) as.integer(strata) else integer(1),
@@ -251,10 +251,10 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     labelts = as.integer(labelts),
                     proxts = proxts,
                     errts = error.test,
-                    inbag = if (keep.inbag) 
+                    inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(n),
                     DUP=FALSE,
-                    PACKAGE="randomForest")[-1] 
+                    PACKAGE="randomForest")[-1]
         if (keep.forest) {
             ## deal with the random forest outputs
             max.nodes <- max(rfout$ndbigtree)
@@ -272,7 +272,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
         out.votes <- t(matrix(rfout$counttr, nclass, nsample))[1:n, ]
         oob.times <- rowSums(out.votes)
-        if(norm.votes) 
+        if(norm.votes)
             out.votes <- t(apply(out.votes, 1, function(x) x/sum(x)))
         dimnames(out.votes) <- list(x.row.names, levels(y))
         if(testdat) {
@@ -303,7 +303,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     votes = out.votes,
                     oob.times = oob.times,
                     classes = levels(y),
-                    importance = if (importance) 
+                    importance = if (importance)
                     matrix(rfout$impout, p, nclass+2,
                            dimnames = list(x.col.names,
                            c(levels(y), "MeanDecreaseAccuracy",
@@ -323,7 +323,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     ntree = ntree,
                     mtry = mtry,
                     forest = if (!keep.forest) NULL else {
-                        list(ndbigtree = rfout$ndbigtree, 
+                        list(ndbigtree = rfout$ndbigtree,
                              nodestatus = matrix(rfout$nodestatus,
                              nc = ntree)[1:max.nodes,, drop=FALSE],
                              bestvar = matrix(rfout$bestvar, nc = ntree)[1:max.nodes,, drop=FALSE],
@@ -333,7 +333,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                              xbestsplit = matrix(rfout$xbestsplit,
                              nc = ntree)[1:max.nodes,, drop=FALSE],
                              pid = rfout$classwt, cutoff=cutoff, ncat=ncat,
-                             maxcat = maxcat, 
+                             maxcat = maxcat,
                              nrnodes = max.nodes, ntree = ntree,
                              nclass = nclass, xlevels=xlevels)
                     },
@@ -391,7 +391,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
                     oob.times = integer(n),
-                    inbag = if (keep.inbag) 
+                    inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
                     DUP=FALSE,
                     PACKAGE="randomForest")[c(16:28, 36:41)]
@@ -413,9 +413,14 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
         cl <- match.call()
         cl[[1]] <- as.name("randomForest")
+        ## Make sure those obs. that have not been OOB get NA as prediction.
+        ypred <- rfout$ypred
+        if (any(rfout$oob.times < 1)) {
+            ypred[rfout$oob.times == 0] <- NA
+        }
         out <- list(call = cl,
                     type = "regression",
-                    predicted = structure(rfout$ypred, names=x.row.names),
+                    predicted = structure(ypred, names=x.row.names),
                     mse = rfout$mse,
                     rsq = 1 - rfout$mse / (var(y) * (n-1) / n),
                     oob.times = rfout$oob.times,
@@ -446,7 +451,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                              mse = if(labelts) rfout$msets else NULL,
                              rsq = if(labelts) 1 - rfout$msets /
                                         (var(ytest) * (n-1) / n) else NULL,
-                             proximity = if (proximity) 
+                             proximity = if (proximity)
                              matrix(rfout$proxts / ntree, nrow = ntest,
                                     dimnames = list(xts.row.names,
                                     c(xts.row.names,

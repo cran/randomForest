@@ -9,6 +9,15 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Change in 4.5-30:
+
+* In regression, cases that had not been out-of-bag now gets NA as prediction
+  (as in classification).
+
+Change in 4.5-29:
+
+* Fixed a couple of benign errors in help pages spotted by the new Rd parser.
+
 Change in 4.5-28:
 
 * randomForest() would segfault if there are 32-level factors among the

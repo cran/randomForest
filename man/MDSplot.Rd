@@ -18,7 +18,7 @@ MDSplot(rf, fac, k=2, palette=NULL, pch=20, ...)
   \item{...}{other graphical parameters.}
 }
 \value{
-  The output of \code{\link[mva]{cmdscale}} on 1 - \code{rf$proximity} is
+  The output of \code{\link[stats]{cmdscale}} on 1 - \code{rf$proximity} is
   returned invisibly.
 }
 \note{

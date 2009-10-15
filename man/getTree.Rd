@@ -3,7 +3,7 @@
 \title{Extract a single tree from a forest.}
 \description{
   This function extract the structure of a tree from a
-  \code{randomForest} object. 
+  \code{randomForest} object.
 }
 \usage{
 getTree(rfobj, k=1, labelVar=FALSE)
@@ -17,7 +17,7 @@ getTree(rfobj, k=1, labelVar=FALSE)
 \value{
   A matrix (or data frame, if \code{labelVar=TRUE}) with six columns and
   number of rows equal to total number of nodes in the tree.  The six
-  columns are: 
+  columns are:
   \item{left daughter}{the row where the left daughter node is; 0 if the
   node is terminal}
   \item{right daughter}{the row where the right daughter node is; 0 if
@@ -32,8 +32,8 @@ getTree(rfobj, k=1, labelVar=FALSE)
 }
 \details{
   For numerical predictors, data with values of the variable less than
-  the splitting point go to the left daughter node.
-  
+  or equal to the splitting point go to the left daughter node.
+
   For categorical predictors, the splitting point is represented by an
   integer, whose binary expansion gives the identities of the categories
   that goes to left or right.  For example, if a predictor has three

@@ -1,29 +1,36 @@
-margin <- function(rf, observed) {
-    if( !inherits(rf, "randomForest") ) {
-        stop("margin defined for Random Forests")
+margin <- function(x, ...) {
+    UseMethod("margin")
+}
+
+margin.randomForest <- function(x, ...) {
+    if (x$type == "regression") {
+        stop("margin not defined for regression Random Forests")
     }
-    if( is.null(rf$votes) ) {
+    if( is.null(x$votes) ) {
         stop("margin is only defined if votes are present")
     }
-    if( !is.factor(observed) ) {
+    margin(x$votes, x$y, ...)
+}
+
+margin.default <- function(x, observed, ...) {
+    if ( !is.factor(observed) ) {
         stop(deparse(substitute(observed)), " is not a factor")
     }
-    augD <- rf$votes
-    if( any(augD > 1) ) {
-        augD <- sweep(augD, 1, rowSums(augD), "/")
+    if (ncol(x) != nlevels(observed))
+        stop("number of columns in x must equal the number of levels in observed")
+    if (! all(colnames(x) %in% levels(observed)) ||
+        ! all(levels(observed) %in% colnames(x)))
+        stop("column names of x must match levels of observed")
+    ## If the votes are not in fractions, normalize them to fractions.
+    if ( any(x > 1) ) x <- sweep(x, 1, rowSums(x), "/")
+    position <- match(as.character(observed), colnames(x))
+    margin <- numeric(length(observed))
+    for (i in seq_along(observed)) {
+        margin[i] <- x[i, position[i]] - max(x[i,])
     }
-    augD <- data.frame(augD, observed)
-    names(augD) <- c(dimnames(rf$votes)[[2]], "observed")
-    nlev <- length(levels(observed))
-    
-    ans<- apply(augD, 1, function(x) { pos <- match(x[nlev+1], names(x));
-                                       t1 <- as.numeric(x[pos]);
-                                       t2 <- max(as.numeric(x[-c(pos, nlev+1)]));
-                                       t1 - t2 }
-                )
-    names(ans) <- observed
-    class(ans) <- "margin"
-    ans
+    names(margin) <- observed
+    class(margin) <- "margin"
+    margin
 }
 
 plot.margin <- function(x, sort=TRUE, ...) {
@@ -37,3 +44,4 @@ plot.margin <- function(x, sort=TRUE, ...) {
     }
     plot.default(x, col=pal[as.numeric(nF)], pch=20, ... )
 }
+

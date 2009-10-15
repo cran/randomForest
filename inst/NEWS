@@ -9,6 +9,21 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-31:
+
+* Added a new option `maxnodes' in randomForest() that limits the size of
+  trees.
+
+* margin() is now generic with a method for randomForest objects.
+
+* Fixed the help page for getTree() about how data are split on numeric
+  variables (`<=' instead of `<').
+
+* Fixed predict.randomForest() so that if the randomForest object is of
+  type "regression" and built from the formula interface and newdata
+  contains NAs, NAs are returned in the corresponding positions (instead
+  of being dropped altogether).
+
 Change in 4.5-30:
 
 * In regression, cases that had not been out-of-bag now gets NA as prediction

@@ -8,6 +8,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
+             maxnodes=NULL,
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
@@ -181,7 +182,12 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         ## For regression trees, need to do this to get maximal trees.
         nrnodes <- 2 * trunc(sampsize/max(1, nodesize - 4)) + 1
     }
-
+    if (!is.null(maxnodes)) {
+        ## convert # of terminal nodes to total # of nodes
+        maxnodes <- 2 * maxnodes - 1
+        if (maxnodes > nrnodes) warning("maxnodes exceeds its max value.")
+        nrnodes <- min(c(nrnodes, maxnodes, 1))
+    }
     ## Compiled code expects variables in rows and observations in columns.
     x <- t(x)
     storage.mode(x) <- "double"
@@ -272,10 +278,11 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
         out.votes <- t(matrix(rfout$counttr, nclass, nsample))[1:n, ]
         oob.times <- rowSums(out.votes)
-        if(norm.votes)
+        if (norm.votes)
             out.votes <- t(apply(out.votes, 1, function(x) x/sum(x)))
         dimnames(out.votes) <- list(x.row.names, levels(y))
-        if(testdat) {
+        class(out.votes) <- c(class(out.votes), "votes")
+        if (testdat) {
             out.class.ts <- factor(rfout$outclts, levels=1:nclass,
                                    label=levels(y))
             names(out.class.ts) <- xts.row.names
@@ -284,6 +291,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
             if (norm.votes)
                 out.votes.ts <- t(apply(out.votes.ts, 1,
                                         function(x) x/sum(x)))
+            class(out.votes.ts) <- c(class(out.votes.ts), "votes")
             if (labelts) {
                 testcon <- table(observed = ytest,
                                  predicted = out.class.ts)[levels(y), levels(y)]

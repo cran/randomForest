@@ -26,7 +26,8 @@
         }
         if (norm.votes) {
             t1 <- t(apply(object$votes, 1, function(x) { x/sum(x) }))
-            if(proximity) return(list(pred = t1, proximity = object$proximity))
+            class(t1) <- c(class(t1), "votes")
+            if (proximity) return(list(pred = t1, proximity = object$proximity))
             else return(t1)
         } else {
             if (proximity) return(list(pred = object$votes, proximity = object$proximity))
@@ -159,24 +160,27 @@
                   nodexts = as.integer(nodexts),
                   DUP=FALSE,
                   PACKAGE = "randomForest")[keepIndex]
-        ## Apply bias correction if needed.
-        if (!is.null(object$coefs)) {
-            yhat <- object$coefs[1] + object$coefs[2] * ans$ypred
-        } else {
-            yhat <- ans$ypred
-        }
-        if (predict.all) {
-            treepred <- matrix(ans$treepred, length(keep),
-                               dimnames=list(rn[keep], NULL))
-        }
-        if (!proximity) {
-            res <- if (predict.all)
-                list(aggregate=yhat, individual=treepred) else yhat
-        } else {
-            res <- list(predicted = yhat,
-                        proximity = structure(ans$proximity,
-                        dim=c(ntest, ntest), dimnames=list(rn, rn)))
-        }
+            ## Apply bias correction if needed.
+            yhat <- rep(NA, length(rn))
+            names(yhat) <- rn
+            if (!is.null(object$coefs)) {
+                yhat[keep] <- object$coefs[1] + object$coefs[2] * ans$ypred
+            } else {
+                yhat[keep] <- ans$ypred
+            }
+            if (predict.all) {
+                treepred <- matrix(NA, length(rn),
+                                   dimnames=list(rn, NULL))
+                treepred[keep,] <- ans$treepred
+            }
+            if (!proximity) {
+                res <- if (predict.all)
+                    list(aggregate=yhat, individual=treepred) else yhat
+            } else {
+                res <- list(predicted = yhat,
+                            proximity = structure(ans$proximity,
+                            dim=c(ntest, ntest), dimnames=list(rn, rn)))
+            }
             if (nodes) {
                 attr(res, "nodes") <- matrix(ans$nodexts, ntest, ntree,
                                              dimnames=list(rn[keep], 1:ntree))
@@ -219,6 +223,7 @@
             z <- matrix(NA, length(rn), nclass,
                         dimnames=list(rn, object$classes))
             z[keep, ] <- out.class.votes
+             class(z) <- c(class(z), "votes")
             res <- z
         } else {
             out.class <- factor(rep(NA, length(rn)),

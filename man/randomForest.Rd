@@ -19,6 +19,7 @@
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
+             maxnodes = NULL,
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
@@ -68,6 +69,10 @@
     larger causes smaller trees to be grown (and thus take less time).
     Note that the default values are different for classification (1)
     and regression (5).}
+  \item{maxnodes}{Maximum number of terminal nodes trees in the forest
+	can have.  If not given, trees are grown to the maximum possible
+	(subject to limits by \code{nodesize}).  If set larger than maximum
+	possible, a warning is issued.}
   \item{importance}{Should importance of predictors be assessed? }
   \item{localImp}{Should casewise importance measure be computed?
     (Setting this to \code{TRUE} will override \code{importance}.) }

@@ -32,7 +32,7 @@
     one with the maximum ratio of proportion of votes to cutoff.
     Default is taken from the \code{forest$cutoff} component of
     \code{object} (i.e., the setting used when running
-    \code{\link{randomForest}}).} 
+    \code{\link{randomForest}}).}
   \item{...}{not used currently.}
 }
 
@@ -42,7 +42,7 @@
   object is a list of two components: \code{aggregate}, which is the
   vector of predicted values by the forest, and \code{individual}, which
   is a matrix where each column contains prediction by a tree in the
-  forest. 
+  forest.
 
   If \code{object$type} is \code{classification}, the object returned
   depends on the argument \code{type}:
@@ -65,6 +65,12 @@ components: \code{pred} is the prediction (as described above) and
 If \code{nodes=TRUE}, the returned object has a ``nodes'' attribute,
 which is an n by ntree matrix, each column containing the node number
 that the cases fall in for that tree.
+
+NOTE: If the \code{object} inherits from \code{randomForest.formula},
+then any data with \code{NA} are silently omitted.  The returned value
+will contain \code{NA} correspondingly in the aggregated and individual
+tree predictions (if requested), but not in the proximity or node
+matrices.
 }
 \references{
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),

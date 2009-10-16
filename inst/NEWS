@@ -9,6 +9,11 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-32:
+
+* Fixed a bug in predict.randomForest(..., predict.all=TRUE) introduced in
+  4.5-31.  Added examples in ?predict.randomForest for the options.
+
 Changes in 4.5-31:
 
 * Added a new option `maxnodes' in randomForest() that limits the size of

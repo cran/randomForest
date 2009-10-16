@@ -169,7 +169,7 @@
                 yhat[keep] <- ans$ypred
             }
             if (predict.all) {
-                treepred <- matrix(NA, length(rn),
+                treepred <- matrix(NA, length(rn), ntree,
                                    dimnames=list(rn, NULL))
                 treepred[keep,] <- ans$treepred
             }

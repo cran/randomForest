@@ -67,10 +67,10 @@ which is an n by ntree matrix, each column containing the node number
 that the cases fall in for that tree.
 
 NOTE: If the \code{object} inherits from \code{randomForest.formula},
-then any data with \code{NA} are silently omitted.  The returned value
-will contain \code{NA} correspondingly in the aggregated and individual
-tree predictions (if requested), but not in the proximity or node
-matrices.
+then any data with \code{NA} are silently omitted from the prediction.
+The returned value will contain \code{NA} correspondingly in the
+aggregated and individual tree predictions (if requested), but not in
+the proximity or node matrices.
 }
 \references{
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
@@ -89,6 +89,12 @@ ind <- sample(2, nrow(iris), replace = TRUE, prob=c(0.8, 0.2))
 iris.rf <- randomForest(Species ~ ., data=iris[ind == 1,])
 iris.pred <- predict(iris.rf, iris[ind == 2,])
 table(observed = iris[ind==2, "Species"], predicted = iris.pred)
+## Get prediction for all trees.
+predict(iris.rf, iris[ind == 2,], predict.all=TRUE)
+## Proximities.
+predict(iris.rf, iris[ind == 2,], proximity=TRUE)
+## Nodes matrix.
+str(attr(predict(iris.rf, iris[ind == 2,], nodes=TRUE), "nodes"))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

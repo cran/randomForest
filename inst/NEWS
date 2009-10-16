@@ -9,6 +9,13 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-33:
+
+* Fixed a _long standing_ bug (existed since the original Fortran) in
+  randomForest(): If importance=TRUE and proximity=TRUE, the proximity
+  matrix returned is incorrect.  Those computed with importance=FALSE, or
+  with predict.randomForest(..., proximity=TRUE) are correct.
+
 Changes in 4.5-32:
 
 * Fixed a bug in predict.randomForest(..., predict.all=TRUE) introduced in

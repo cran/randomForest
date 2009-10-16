@@ -1,5 +1,5 @@
 /*******************************************************************
-   Copyright (C) 2001-7 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+   Copyright (C) 2001-9 Leo Breiman, Adele Cutler and Merck & Co., Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -431,22 +431,22 @@ void predictClassTree(double *x, int n, int mdim, int *treemap,
         }
     }
     for (i = 0; i < n; ++i) {
-	k = 0;
-	while (nodestatus[k] != NODE_TERMINAL) {
+		k = 0;
+		while (nodestatus[k] != NODE_TERMINAL) {
             m = bestvar[k] - 1;
             if (cat[m] == 1) {
-  	        /* Split by a numerical predictor */
-	        k = (x[m + i * mdim] <= xbestsplit[k]) ?
-		    treemap[k * 2] - 1 : treemap[1 + k * 2] - 1;
-	    } else {
-	        /* Split by a categorical predictor */
-	        k = cbestsplit[(int) x[m + i * mdim] - 1 + k * maxcat] ?
-		    treemap[k * 2] - 1 : treemap[1 + k * 2] - 1;
-	    }
-	}
-	/* Terminal node: assign class label */
-	jts[i] = nodeclass[k];
-	nodex[i] = k + 1;
+				/* Split by a numerical predictor */
+				k = (x[m + i * mdim] <= xbestsplit[k]) ?
+					treemap[k * 2] - 1 : treemap[1 + k * 2] - 1;
+			} else {
+				/* Split by a categorical predictor */
+				k = cbestsplit[(int) x[m + i * mdim] - 1 + k * maxcat] ?
+					treemap[k * 2] - 1 : treemap[1 + k * 2] - 1;
+			}
+		}
+		/* Terminal node: assign class label */
+		jts[i] = nodeclass[k];
+		nodex[i] = k + 1;
     }
     if (maxcat > 1) Free(cbestsplit);
 }

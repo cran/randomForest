@@ -399,6 +399,22 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			R_CheckUserInterrupt();
 		}
 
+		/*  DO PROXIMITIES */
+		if (iprox) {
+            computeProximity(prox, oobprox, nodex, jin, oobpair, near);
+			/* proximity for test data */
+			if (*testdat) {
+                computeProximity(proxts, 0, nodexts, jin, oobpair, ntest);
+                /* Compute proximity between testset and training set. */
+				for (n = 0; n < ntest; ++n) {
+					for (k = 0; k < near; ++k) {
+						if (nodexts[n] == nodex[k])
+							proxts[n + ntest * (k+ntest)] += 1.0;
+					}
+				}
+			}
+		}
+
 		/*  DO VARIABLE IMPORTANCE  */
 		if (imp) {
 			nrightall = 0;
@@ -429,9 +445,11 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					/* Count how often correct predictions are made with
 					   the modified data. */
 					for (n = 0; n < nsample; n++) {
+						/* Restore the original data for that variable. */
+						x[m + n*mdim] = tx[n];
 						if (jin[n] == 0) {
 							if (jvr[n] == cl[n]) {
-								nrightimp[cl[n] - 1]++;
++								nrightimp[cl[n] - 1]++;
 								nrightimpall++;
 							}
 							if (localImp && jvr[n] != jtr[n]) {
@@ -442,8 +460,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 								}
 							}
 						}
-						/* Restore the original data for that variable. */
-						x[m + n*mdim] = tx[n];
 					}
 					/* Accumulate decrease in proportions of correct
 					   predictions. */
@@ -468,21 +484,6 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 			}
 		}
 
-		/*  DO PROXIMITIES */
-		if (iprox) {
-            computeProximity(prox, oobprox, nodex, jin, oobpair, near);
-			/* proximity for test data */
-			if (*testdat) {
-                computeProximity(proxts, 0, nodexts, jin, oobpair, ntest);
-                /* Compute proximity between testset and training set. */
-				for (n = 0; n < ntest; ++n) {
-					for (k = 0; k < near; ++k) {
-						if (nodexts[n] == nodex[k])
-							proxts[n + ntest * (k+ntest)] += 1.0;
-					}
-				}
-			}
-		}
 		R_CheckUserInterrupt();
 #ifdef WIN32
 		R_ProcessEvents();

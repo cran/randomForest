@@ -187,8 +187,8 @@ void permuteOOB(int m, double *x, int *in, int nsample, int mdim) {
     tp = (double *) Calloc(nsample, double);
 
     for (i = 0; i < nsample; ++i) {
-	/* make a copy of the OOB part of the data into tp (for permuting) */
-	if (in[i] == 0) {
+		/* make a copy of the OOB part of the data into tp (for permuting) */
+		if (in[i] == 0) {
             tp[nOOB] = x[m + i*mdim];
             nOOB++;
         }
@@ -196,20 +196,20 @@ void permuteOOB(int m, double *x, int *in, int nsample, int mdim) {
     /* Permute tp */
     last = nOOB;
     for (i = 0; i < nOOB; ++i) {
-	k = (int) last * unif_rand();
-	tmp = tp[last - 1];
-	tp[last - 1] = tp[k];
-	tp[k] = tmp;
-	last--;
+		k = (int) last * unif_rand();
+		tmp = tp[last - 1];
+		tp[last - 1] = tp[k];
+		tp[k] = tmp;
+		last--;
     }
 
     /* Copy the permuted OOB data back into x. */
     nOOB = 0;
     for (i = 0; i < nsample; ++i) {
-	if (in[i] == 0) {
+		if (in[i] == 0) {
             x[m + i*mdim] = tp[nOOB];
             nOOB++;
-	}
+		}
     }
     Free(tp);
 }

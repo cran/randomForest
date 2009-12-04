@@ -1,6 +1,6 @@
 .onAttach <- function(libname, pkgname) {
-    RFver <- read.dcf(file=system.file("DESCRIPTION", package=pkgname), 
+    RFver <- read.dcf(file=system.file("DESCRIPTION", package=pkgname),
                       fields="Version")
-    message(paste(pkgname, RFver))
-    message("Type rfNews() to see new features/changes/bug fixes.")
+    packageStartupMessage(paste(pkgname, RFver))
+    packageStartupMessage("Type rfNews() to see new features/changes/bug fixes.")
 }

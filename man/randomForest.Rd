@@ -249,6 +249,9 @@ y <- gl(2, 50)
 set.seed(1)
 x <- data.frame(x1=gl(32, 5), x2=runif(160), y=rnorm(160))
 (rf1 <- randomForest(x[-3], x[[3]], ntree=10))
+
+## Grow no more than 4 nodes per tree:
+(treesize(randomForest(Species ~ ., data=iris, maxnodes=4, ntree=30)))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

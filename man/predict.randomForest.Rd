@@ -71,6 +71,9 @@ then any data with \code{NA} are silently omitted from the prediction.
 The returned value will contain \code{NA} correspondingly in the
 aggregated and individual tree predictions (if requested), but not in
 the proximity or node matrices.
+
+NOTE2: Any ties are broken at random, so if this is undesirable, avoid it by
+using odd number \code{ntree} in \code{randomForest()}.
 }
 \references{
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),

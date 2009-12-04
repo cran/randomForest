@@ -186,7 +186,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         ## convert # of terminal nodes to total # of nodes
         maxnodes <- 2 * maxnodes - 1
         if (maxnodes > nrnodes) warning("maxnodes exceeds its max value.")
-        nrnodes <- min(c(nrnodes, maxnodes, 1))
+        nrnodes <- min(c(nrnodes, max(c(maxnodes, 1))))
     }
     ## Compiled code expects variables in rows and observations in columns.
     x <- t(x)

@@ -26,7 +26,7 @@ margin.default <- function(x, observed, ...) {
     position <- match(as.character(observed), colnames(x))
     margin <- numeric(length(observed))
     for (i in seq_along(observed)) {
-        margin[i] <- x[i, position[i]] - max(x[i,])
+        margin[i] <- x[i, position[i]] - max(x[i, -position[i]])
     }
     names(margin) <- observed
     class(margin) <- "margin"

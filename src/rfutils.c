@@ -247,18 +247,23 @@ void computeProximity(double *prox, int oobprox, int *node, int *inbag,
     }
 }
 
-int pack(int nBits, int *bits) {
-    int i = nBits, pack = 0;
+unsigned int pack(int nBits, int *bits) {
+    int i = nBits;
+	unsigned int pack = 0;
     while (--i >= 0) pack += bits[i] << i;
     return(pack);
 }
 
-void unpack(unsigned int pack, int *bits) {
-/* pack is a 4-byte integer.  The sub. returns icat, an integer array of
-   zeroes and ones corresponding to the coefficients in the binary expansion
-   of pack. */
+void unpack(int nBits, unsigned int pack, int *bits) {
+/* pack is a 4-byte integer.  The sub. returns icat, an integer 
+   array of zeroes and ones corresponding to the coefficients 
+   in the binary expansion of pack. */
     int i;
-    for (i = 0; pack != 0; pack >>= 1, ++i) bits[i] = pack & 1;
+    for (i = 0; i < nBits; pack >>= 1, ++i) bits[i] = pack & 1;
+}
+
+void F77_NAME(unpack)(int *nBits, unsigned int *pack, int *bits) {
+	unpack(*nBits, *pack, bits);
 }
 
 #ifdef OLD
@@ -289,7 +294,5 @@ void oldunpack(int l, int npack, int *icat) {
 	icat[i] = npack % 2;
     }
 }
-
-
 
 #endif /* OLD */

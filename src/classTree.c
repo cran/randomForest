@@ -288,7 +288,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
 
 void F77_NAME(catmax)(double *parentDen, double *tclasscat,
                       double *tclasspop, int *nclass, int *lcat,
-                      int *ncatsp, double *critmax, int *nhit,
+                      unsigned int *ncatsp, double *critmax, int *nhit,
                       int *maxcat, int *ncmax, int *ncsplit) {
 /* This finds the best split of a categorical variable with lcat
    categories and nclass classes, where tclasscat(j, k) is the number
@@ -312,7 +312,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
                efficient algorithm */
             for (j = 0; j < *lcat; ++j) icat[j] = unif_rand() > 0.5 ? 1 : 0;
         } else {
-            unpack((unsigned int) n + 1, icat);
+            unpack(*lcat, (unsigned int) n + 1, icat);
         }
         for (j = 0; j < *nclass; ++j) {
             leftCatClassCount[j] = 0;
@@ -349,7 +349,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
 
 /* Find best split of with categorical variable when there are two classes */
 void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
-                       int *nclass, int *nCat, int *nbest, double *critmax,
+                       int *nclass, int *nCat, unsigned int *nbest, double *critmax,
                        int *nhit, double *catCount) {
 
     double catProportion[32], cp[32], cm[32];
@@ -399,8 +399,10 @@ void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
             catProportion[i] = catCount[i] ?
                 tclasscat[i * *nclass] / catCount[i] : 0.0;
             kcat[i] = catProportion[i] < bestsplit ? 1 : 0;
+			/* Rprintf("%i ", kcat[i]); */
         }
         *nbest = pack(*nCat, kcat);
+		/* Rprintf("\nnbest=%u\nnbest=%i\n", *nbest, *nbest); */
     }
 }
 

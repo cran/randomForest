@@ -134,13 +134,13 @@
     \code{randomForest} is run in unsupervised mode or if
     \code{keep.forest=FALSE}.}
   \item{err.rate}{(classification only) vector error rates of the
-    prediction on the input data, the i-th element being the error rate
+    prediction on the input data, the i-th element being the (OOB) error rate
     for all trees up to the i-th.}
   \item{confusion}{(classification only) the confusion matrix of the
-    prediction.}
+    prediction (based on OOB data).}
   \item{votes}{(classification only) a matrix with one row for each
     input data point and one column for each class, giving the fraction
-    or number of `votes' from the random forest.}
+    or number of (OOB) `votes' from the random forest.}
   \item{oob.times}{number of times cases are `out-of-bag' (and thus used
     in computing OOB error estimate)}
   \item{proximity}{if \code{proximity=TRUE} when

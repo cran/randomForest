@@ -8,18 +8,18 @@ c     This program is distributed in the hope that it will be useful,
 c     but WITHOUT ANY WARRANTY; without even the implied warranty of
 c     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 c     GNU General Public License for more details.
-c     
+c
 c     Modified by Andy Liaw and Matt Wiener:
 c     The main program is re-written as a C function to be called from R.
 c     All calls to the uniform RNG is replaced with R's RNG.  Some subroutines
-c     not called are excluded.  Variables and arrays declared as double as 
+c     not called are excluded.  Variables and arrays declared as double as
 c     needed.  Unused variables are deleted.
-c     
+c
 c     SUBROUTINE BUILDTREE
-      
-      subroutine buildtree(a, b, cl, cat, maxcat, mdim, nsample, 
+
+      subroutine buildtree(a, b, cl, cat, maxcat, mdim, nsample,
      1     nclass, treemap, bestvar, bestsplit, bestsplitnext, tgini,
-     1     nodestatus,nodepop, nodestart, classpop, tclasspop, 
+     1     nodestatus,nodepop, nodestart, classpop, tclasspop,
      1     tclasscat,ta,nrnodes, idmove, ndsize, ncase, mtry, iv,
      1     nodeclass, ndbigtree, win, wr, wl, mred, nuse, mind)
 
@@ -37,7 +37,7 @@ c     is split, then its children are numbered ncur+1 (left), and
 c     ncur+2(right), ncur increases to ncur+2 and the next node to be split is
 c     numbered k+1.  When no more nodes can be split, buildtree returns to the
 c     main program.
-      
+
       implicit double precision(a-h,o-z)
       integer a(mdim, nsample), cl(nsample), cat(mdim),
      1     treemap(2,nrnodes), bestvar(nrnodes),
@@ -46,18 +46,18 @@ c     main program.
      1     bestsplitnext(nrnodes), idmove(nsample),
      1     ncase(nsample), b(mdim,nsample),
      1     iv(mred), nodeclass(nrnodes), mind(mred)
-      
+
       double precision tclasspop(nclass), classpop(nclass, nrnodes),
      1     tclasscat(nclass, 32), win(nsample), wr(nclass),
      1     wl(nclass), tgini(mdim), xrand
       integer msplit, ntie
-      
+
       msplit = 0
       call zerv(nodestatus,nrnodes)
       call zerv(nodestart,nrnodes)
       call zerv(nodepop,nrnodes)
-      call zermr(classpop,nclass,nrnodes)      
-      
+      call zermr(classpop,nclass,nrnodes)
+
       do j=1,nclass
          classpop(j, 1) = tclasspop(j)
       end do
@@ -67,6 +67,8 @@ c     main program.
       nodestatus(1) = 2
 c     start main loop
       do 30 kbuild = 1, nrnodes
+c         call intpr("kbuild", 6, kbuild, 1)
+c         call intpr("ncur", 4, ncur, 1)
          if (kbuild .gt. ncur) goto 50
          if (nodestatus(kbuild) .ne. 2) goto 30
 c     initialize for next call to findbestsplit
@@ -80,9 +82,12 @@ c     initialize for next call to findbestsplit
          call findbestsplit(a,b,cl,mdim,nsample,nclass,cat,maxcat,
      1        ndstart, ndend,tclasspop,tclasscat,msplit, decsplit,
      1        nbest,ncase, jstat,mtry,win,wr,wl,mred,mind)
+c         call intpr("jstat", 5, jstat, 1)
+c         call intpr("msplit", 6, msplit, 1)
+c     If the node is terminal, move on.  Otherwise, split.
          if (jstat .eq. -1) then
             nodestatus(kbuild) = -1
-            goto 30 
+            goto 30
          else
             bestvar(kbuild) = msplit
             iv(msplit) = 1
@@ -96,10 +101,11 @@ c     initialize for next call to findbestsplit
                bestsplitnext(kbuild) = 0
             endif
          endif
-         
+
          call movedata(a,ta,mdim,nsample,ndstart,ndend,idmove,ncase,
      1        msplit,cat,nbest,ndendl)
-         
+c         call intpr("ndend", 5, ndend, 1)
+c         call intpr("ndendl", 6, ndendl, 1)
 c     leftnode no.= ncur+1, rightnode no. = ncur+2.
          nodepop(ncur+1) = ndendl - ndstart + 1
          nodepop(ncur+2) = ndend - ndendl
@@ -111,12 +117,14 @@ c     find class populations in both nodes
             nc = ncase(n)
             j=cl(nc)
             classpop(j,ncur+1) = classpop(j,ncur+1) + win(nc)
-         end do 
+         end do
          do n = ndendl+1, ndend
             nc = ncase(n)
             j = cl(nc)
             classpop(j,ncur+2) = classpop(j,ncur+2) + win(nc)
          end do
+c         call intpr("nL", 2, nodepop(ncur+1), 1)
+c         call intpr("nR", 2, nodepop(ncur+2), 1)
 c     check on nodestatus
          nodestatus(ncur+1) = 2
          nodestatus(ncur+2) = 2
@@ -128,7 +136,7 @@ c     check on nodestatus
             popt1 = popt1 + classpop(j,ncur+1)
             popt2 = popt2 + classpop(j,ncur+2)
          end do
-         
+
          do j=1,nclass
             if (classpop(j,ncur+1).eq.popt1) nodestatus(ncur+1) = -1
             if (classpop(j,ncur+2).eq.popt2) nodestatus(ncur+2) = -1
@@ -139,7 +147,6 @@ c     check on nodestatus
          nodestatus(kbuild) = 1
          ncur = ncur+2
          if (ncur.ge.nrnodes) goto 50
-         
  30   continue
  50   continue
 
@@ -151,7 +158,7 @@ c     check on nodestatus
 
 c     form prediction in terminal nodes
       do kn = 1, ndbigtree
-         if(nodestatus(kn) .eq. -1) then
+         if (nodestatus(kn) .eq. -1) then
             pp = 0
             ntie = 1
             do j = 1, nclass
@@ -170,8 +177,13 @@ c     Break ties at random:
                end if
             end do
          end if
+c         call intpr("node", 4, kn, 1)
+c         call intpr("status", 6, nodestatus(kn), 1)
+c         call intpr("pred", 4, nodeclass(kn), 1)
+c         call dblepr("pop1", 4, classpop(1, kn), 1)
+c         call dblepr("pop2", 4, classpop(2, kn), 1)
       end do
-      
+      return
       end
 
 c     SUBROUTINE FINDBESTSPLIT
@@ -181,12 +193,12 @@ c     of value of msplit split on, and nsplitnext is the case number of the
 c     next larger value of msplit.  If msplit is categorical, then nsplit is
 c     the coding into an integer of the categories going left.
       subroutine findbestsplit(a, b, cl, mdim, nsample, nclass, cat,
-     1     maxcat, ndstart, ndend, tclasspop, tclasscat, msplit, 
+     1     maxcat, ndstart, ndend, tclasspop, tclasscat, msplit,
      2     decsplit, nbest, ncase, jstat, mtry, win, wr, wl,
      3     mred, mind)
-      implicit double precision(a-h,o-z)      
+      implicit double precision(a-h,o-z)
       integer a(mdim,nsample), cl(nsample), cat(mdim),
-     1     ncase(nsample), b(mdim,nsample), nn, j          
+     1     ncase(nsample), b(mdim,nsample), nn, j
       double precision tclasspop(nclass), tclasscat(nclass,32), dn(32),
      1     win(nsample), wr(nclass), wl(nclass), xrand
       integer mind(mred), ncmax, ncsplit,nhit, ntie
@@ -201,7 +213,7 @@ c     compute initial values of numerator and denominator of Gini
       end do
       crit0 = pno / pdo
       jstat = 0
-      
+
 c     start main loop through variables to find best split
       critmax = -1.0e25
       do k = 1, mred
@@ -237,7 +249,7 @@ c     Split on a numerical predictor.
                rld = rld + u
                rrd = rrd - u
                wl(k) = wl(k) + u
-               wr(k) = wr(k) - u               
+               wr(k) = wr(k) - u
                if (b(mvar, nc) .lt. b(mvar, a(mvar, nsp + 1))) then
 c     If neither nodes is empty, check the split.
                   if (dmin1(rrd, rld) .gt. 1.0e-5) then
@@ -299,19 +311,19 @@ c               critmax = -1.0e25
 
 C     ==============================================================
 c     SUBROUTINE MOVEDATA
-c     This subroutine is the heart of the buildtree construction. Based on the 
-c     best split the data in the part of the a matrix corresponding to the 
-c     current node is moved to the left if it belongs to the left child and 
+c     This subroutine is the heart of the buildtree construction. Based on the
+c     best split the data in the part of the a matrix corresponding to the
+c     current node is moved to the left if it belongs to the left child and
 c     right if it belongs to the right child.
-      
+
       subroutine movedata(a,ta,mdim,nsample,ndstart,ndend,idmove,
      1     ncase,msplit,cat,nbest,ndendl)
       implicit double precision(a-h,o-z)
       integer a(mdim,nsample),ta(nsample),idmove(nsample),
      1     ncase(nsample),cat(mdim),icat(32)
-      
+
 c     compute idmove=indicator of case nos. going left
-      
+
       if (cat(msplit).eq.1) then
          do nsp=ndstart,nbest
             nc=a(msplit,nsp)
@@ -325,20 +337,20 @@ c     compute idmove=indicator of case nos. going left
       else
          ndendl=ndstart-1
          l=cat(msplit)
-         call myunpack(l,nbest,icat)
+         call unpack(l,nbest,icat)
          do nsp=ndstart,ndend
             nc=ncase(nsp)
             if (icat(a(msplit,nc)).eq.1) then
                idmove(nc)=1
-               ndendl=ndendl+1
+               ndendl=ndendl + 1
             else
                idmove(nc)=0
             endif
          end do
       endif
-      
-c     shift case. nos. right and left for numerical variables.        
-      
+
+c     shift case. nos. right and left for numerical variables.
+
       do 40 msh=1,mdim
          if (cat(msh).eq.1) then
             k=ndstart-1
@@ -351,17 +363,17 @@ c     shift case. nos. right and left for numerical variables.
  50         continue
             do 60 n=ndstart,ndend
                ih=a(msh,n)
-               if (idmove(ih).eq.0) then 
+               if (idmove(ih).eq.0) then
                   k=k+1
                   ta(k)=a(msh,n)
                endif
  60         continue
-            
+
             do 70 k=ndstart,ndend
                a(msh,k)=ta(k)
  70         continue
          endif
-         
+
  40   continue
       ndo=0
       if (ndo.eq.1) then
@@ -377,22 +389,22 @@ c     shift case. nos. right and left for numerical variables.
  150           continue
                do 160 n = ndstart, ndend
                   ih = ncase(n)
-                  if (idmove(ih) .eq. 0) then 
+                  if (idmove(ih) .eq. 0) then
                      k = k + 1
                      ta(k) = a(msh,ih)
                   endif
  160           continue
-               
+
                do 170 k = ndstart, ndend
                   a(msh,k) = ta(k)
  170           continue
             endif
-            
+
  140     continue
       end if
-      
+
 c     compute case nos. for right and left nodes.
-      
+
       if (cat(msplit).eq.1) then
          do 80 n=ndstart,ndend
             ncase(n)=a(msplit,n)
@@ -415,40 +427,40 @@ c     compute case nos. for right and left nodes.
             ncase(k)=ta(k)
  110     continue
       endif
-      
+      return
       end
-      
-      subroutine myunpack(l,npack,icat)
-      
+
+c      subroutine myunpack(l,npack,icat)
+c
 c     npack is a long integer.  The sub. returns icat, an integer of zeroes and
 c     ones corresponding to the coefficients in the binary expansion of npack.
-      
-      integer icat(32),npack
-      do j=1,32
-         icat(j)=0
-      end do
-      n=npack
-      icat(1)=mod(n,2)
-      do k=2,l
-         n=(n-icat(k-1))/2
-         icat(k)=mod(n,2)
-      end do
-      end
-      
+c
+c      integer icat(32),npack
+c      do j=1,32
+c         icat(j)=0
+c      end do
+c      n=npack
+c      icat(1)=mod(n,2)
+c      do k=2,l
+c         n=(n-icat(k-1))/2
+c         icat(k)=mod(n,2)
+c      end do
+c      end
+
       subroutine zerv(ix,m1)
       integer ix(m1)
       do n=1,m1
          ix(n)=0
       end do
       end
-      
+
       subroutine zervr(rx,m1)
       double precision rx(m1)
       do n=1,m1
          rx(n)=0.0d0
       end do
       end
-      
+
       subroutine zerm(mx,m1,m2)
       integer mx(m1,m2)
       do i=1,m1
@@ -457,7 +469,7 @@ c     ones corresponding to the coefficients in the binary expansion of npack.
          end do
       end do
       end
-      
+
       subroutine zermr(rx,m1,m2)
       double precision rx(m1,m2)
       do i=1,m1

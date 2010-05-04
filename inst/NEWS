@@ -1,5 +1,9 @@
 Wishlist (formerly TODO):
 
+* There are still errors in the classification mode with predictors
+  having 32 categories.  Don't use such predictors for now.  I will 
+  try my best to fix it in the next version.
+
 * Implement the new scheme of handling classwt in classification.
 
 * Allow categorical predictors with more than 32 categories.
@@ -9,9 +13,19 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-35:
+
+* Fixed an error in partialPlot.randomForest().  Now the partial 
+  dependence plots for classification data should be more sensible.
+  (Thanks to Adele Cutler for the bug report and patch.)
+
+* Re-worded part of the help pages regarding variable importance 
+  calculation.
+
 Changes in 4.5-34:
 
-* Fixed infinite loop when randomForest() is called with non-null maxnodes.
+* Fixed infinite loop when randomForest() is called with non-null 
+  maxnodes.
 
 * Fixed a bug in margin.default() that gave nonsensical results.
 

@@ -17,10 +17,11 @@ outlier.default <- function(x, cls=NULL, ...) {
     id <- if (is.null(rownames(x))) 1:n else rownames(x)
     outlier <- structure(rep(NA, n), names=id)
     for (i in lvl) {
-        out <- rowSums(x[cls == i, cls == i]^2)
+        iclass <- cls == i
+        out <- rowSums(x[iclass, iclass]^2)
         out <- n / ifelse(out == 0, 1, out)
         out <- (out - median(out)) / mad(out)
-        outlier[names(out)] <- out
+        outlier[iclass] <- out
     }
     outlier
 }

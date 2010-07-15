@@ -36,8 +36,8 @@ getTree(rfobj, k=1, labelVar=FALSE)
 
   For categorical predictors, the splitting point is represented by an
   integer, whose binary expansion gives the identities of the categories
-  that goes to left or right.  For example, if a predictor has three
-  categories, and the split point is 13.  The binary expansion of 5 is
+  that goes to left or right.  For example, if a predictor has four
+  categories, and the split point is 13.  The binary expansion of 13 is
   (1, 0, 1, 1) (because \eqn{13 = 1*2^0 + 0*2^1 + 1*2^2 + 1*2^3}), so cases with
   categories 1, 3, or 4 in this predictor get sent to the left, and the rest
   to the right.

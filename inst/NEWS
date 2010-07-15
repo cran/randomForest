@@ -1,7 +1,7 @@
 Wishlist (formerly TODO):
 
 * There are still errors in the classification mode with predictors
-  having 32 categories.  Don't use such predictors for now.  I will 
+  having 32 categories.  Don't use such predictors for now.  I will
   try my best to fix it in the next version.
 
 * Implement the new scheme of handling classwt in classification.
@@ -13,18 +13,28 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.5-36:
+
+* outlier() now works when the input matrix to randomForest() has no
+  row names.  (Reported by Rau Carrio Gaspar.)
+
+* na.roughfix() is now much faster on some data (fixed based on idea from
+  Hadley Wickham; problem reported by Mike Williamson.)
+
+* Corrected typos in the description of categorical splits in ?getTree.
+
 Changes in 4.5-35:
 
-* Fixed an error in partialPlot.randomForest().  Now the partial 
+* Fixed an error in partialPlot.randomForest().  Now the partial
   dependence plots for classification data should be more sensible.
   (Thanks to Adele Cutler for the bug report and patch.)
 
-* Re-worded part of the help pages regarding variable importance 
+* Re-worded part of the help pages regarding variable importance
   calculation.
 
 Changes in 4.5-34:
 
-* Fixed infinite loop when randomForest() is called with non-null 
+* Fixed infinite loop when randomForest() is called with non-null
   maxnodes.
 
 * Fixed a bug in margin.default() that gave nonsensical results.

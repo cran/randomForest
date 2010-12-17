@@ -14,12 +14,11 @@ getTree <- function(rfobj, k=1, labelVar=FALSE) {
                     rfobj$forest$nodepred[,k])[1:rfobj$forest$ndbigtree[k],]
   } else {
       tree <- cbind(rfobj$forest$treemap[,,k],
-                    rfobj$forest$rightDaughter[,k],
                     rfobj$forest$bestvar[,k],
                     rfobj$forest$xbestsplit[,k],
                     rfobj$forest$nodestatus[,k],
                     rfobj$forest$nodepred[,k])[1:rfobj$forest$ndbigtree[k],]
-  }      
+  }
 
   dimnames(tree) <- list(1:nrow(tree), c("left daughter", "right daughter",
                                          "split var", "split point",

@@ -13,6 +13,19 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-1:
+
+* The package now includes the rfcv() function for feature selection.  See
+  the reference in the help page for details.
+
+* predict.randomForest() was not retaining names of observations in some
+  cases.
+
+Changes in 4.5-37:
+
+* Many repeated calls to predict.randomForest() should run faster, thanks
+  to Philip Pham and Rory Martin who pointed out some unnecessary overhead.
+
 Changes in 4.5-36:
 
 * outlier() now works when the input matrix to randomForest() has no

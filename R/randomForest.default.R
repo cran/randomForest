@@ -208,6 +208,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     nt <- if (keep.forest) ntree else 1
 
     if (classRF) {
+        cwt <- classwt
+        threshold <- cutoff
         error.test <- if (labelts) double((nclass+1) * ntree) else double(1)
         rfout <- .C("classRF",
                     x = x,
@@ -231,8 +233,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     ntree = as.integer(ntree),
                     mtry = as.integer(mtry),
                     ipi = as.integer(ipi),
-                    classwt = as.double(classwt),
-                    cutoff = as.double(cutoff),
+                    classwt = as.double(cwt),
+                    cutoff = as.double(threshold),
                     nodesize = as.integer(nodesize),
                     outcl = integer(nsample),
                     counttr = integer(nclass * nsample),

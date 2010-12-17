@@ -130,27 +130,45 @@
                 object$forest$rightDaughter <-
                     object$forest$treemap[,2,, drop=FALSE]
                 object$forest$treemap <- NULL
-    }
+            }
 
-        keepIndex <- "ypred"
-        if (predict.all) keepIndex <- c(keepIndex, "treepred")
-        if (proximity) keepIndex <- c(keepIndex, "proximity")
-        if (nodes) keepIndex <- c(keepIndex, "nodexts")
-        ans <- .C("regForest",
+            keepIndex <- "ypred"
+            if (predict.all) keepIndex <- c(keepIndex, "treepred")
+            if (proximity) keepIndex <- c(keepIndex, "proximity")
+            if (nodes) keepIndex <- c(keepIndex, "nodexts")
+            ## Ensure storage mode is what is expected in C.
+            if (! is.integer(object$forest$leftDaughter))
+                storage.mode(object$forest$leftDaughter) <- "integer"
+            if (! is.integer(object$forest$rightDaughter))
+                storage.mode(object$forest$rightDaughter) <- "integer"
+            if (! is.integer(object$forest$nodestatus))
+                storage.mode(object$forest$nodestatus) <- "integer"
+            if (! is.double(object$forest$xbestsplit))
+                storage.mode(object$forest$xbestsplit) <- "double"
+            if (! is.double(object$forest$nodepred))
+                storage.mode(object$forest$nodepred) <- "double"
+            if (! is.integer(object$forest$bestvar))
+                storage.mode(object$forest$bestvar) <- "integer"
+            if (! is.integer(object$forest$ndbigtree))
+                storage.mode(object$forest$ndbigtree) <- "integer"
+            if (! is.integer(object$forest$ncat))
+                storage.mode(object$forest$ncat) <- "integer"
+
+            ans <- .C("regForest",
                   as.double(x),
                   ypred = double(ntest),
                   as.integer(mdim),
                   as.integer(ntest),
                   as.integer(ntree),
-                  as.integer(object$forest$leftDaughter),
-                  as.integer(object$forest$rightDaughter),
-                  as.integer(object$forest$nodestatus),
-                  as.integer(object$forest$nrnodes),
-                  as.double(object$forest$xbestsplit),
-                  as.double(object$forest$nodepred),
-                  as.integer(object$forest$bestvar),
-                  as.integer(object$forest$ndbigtree),
-                  as.integer(object$forest$ncat),
+                  object$forest$leftDaughter,
+                  object$forest$rightDaughter,
+                  object$forest$nodestatus,
+                  nrnodes,
+                  object$forest$xbestsplit,
+                  object$forest$nodepred,
+                  object$forest$bestvar,
+                  object$forest$ndbigtree,
+                  object$forest$ncat,
                   as.integer(maxcat),
                   as.integer(predict.all),
                   treepred = as.double(treepred),
@@ -158,7 +176,7 @@
                   proximity = as.double(proxmatrix),
                   nodes = as.integer(nodes),
                   nodexts = as.integer(nodexts),
-                  DUP=FALSE,
+                  DUP=TRUE,
                   PACKAGE = "randomForest")[keepIndex]
             ## Apply bias correction if needed.
             yhat <- rep(NA, length(rn))
@@ -190,25 +208,25 @@
         t1 <- .C("classForest",
                  mdim = as.integer(mdim),
                  ntest = as.integer(ntest),
-                 nclass = as.integer(object$forest$nclass),
+                 nclass = object$forest$nclass,
                  maxcat = as.integer(maxcat),
                  nrnodes = as.integer(nrnodes),
                  jbt = as.integer(ntree),
                  xts = as.double(x),
-                 xbestsplit = as.double(object$forest$xbestsplit),
-                 pid = as.double(object$forest$pid),
+                 xbestsplit = object$forest$xbestsplit,
+                 pid = object$forest$pid,
                  cutoff = as.double(cutoff),
                  countts = as.double(countts),
-                 treemap = as.integer(aperm(object$forest$treemap,
-                 c(2, 1, 3))),
-                 nodestatus = as.integer(object$forest$nodestatus),
-                 cat = as.integer(object$forest$ncat),
-                 nodepred = as.integer(object$forest$nodepred),
+                 treemap = aperm(object$forest$treemap,
+                 c(2, 1, 3)),
+                 nodestatus = object$forest$nodestatus,
+                 cat = object$forest$ncat,
+                 nodepred = object$forest$nodepred,
                  treepred = as.integer(treepred),
                  jet = as.integer(numeric(ntest)),
-                 bestvar = as.integer(object$forest$bestvar),
+                 bestvar = object$forest$bestvar,
                  nodexts = nodexts,
-                 ndbigtree = as.integer(object$forest$ndbigtree),
+                 ndbigtree = object$forest$ndbigtree,
                  predict.all = as.integer(predict.all),
                  prox = as.integer(proximity),
                  proxmatrix = as.double(proxmatrix),
@@ -230,7 +248,7 @@
                                 levels=1:length(object$classes),
                                 labels=object$classes)
             out.class[keep] <- object$classes[t1$jet]
-            names(out.class[keep]) <- rn[keep]
+            names(out.class)[keep] <- rn[keep]
             res <- out.class
         }
         if (predict.all) {

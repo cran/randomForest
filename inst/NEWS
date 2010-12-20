@@ -13,6 +13,12 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-2:
+
+* Part of the enhancement in 4.5-37 causes segfault in R-2.12.x.  That part
+  has been reverted to the older code for the time being while the problem
+  is investigated further.
+
 Changes in 4.6-1:
 
 * The package now includes the rfcv() function for feature selection.  See

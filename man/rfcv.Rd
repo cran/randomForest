@@ -57,12 +57,13 @@ with(result, plot(n.var, error.cv, log="x", type="o", lwd=2))
 ## The following can take a while to run, so if you really want to try
 ## it, copy and paste the code into R.
 
-\dontrun{result <- replicate(5, rfcv(myiris, iris$Species),
-simplify=FALSE)}
-\dontrun{error.cv <- sapply(result, "[[", "error.cv")}
-\dontrun{matplot(result[[1]]$n.var, cbind(rowMeans(error.cv), error.cv), type="l",
+\dontrun{
+result <- replicate(5, rfcv(myiris, iris$Species), simplify=FALSE)
+error.cv <- sapply(result, "[[", "error.cv")
+matplot(result[[1]]$n.var, cbind(rowMeans(error.cv), error.cv), type="l",
         lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, log="x",
-        xlab="Number of variables", ylab="CV Error")}
+        xlab="Number of variables", ylab="CV Error")
+}
 }
 \author{Andy Liaw}
 \keyword{classif}

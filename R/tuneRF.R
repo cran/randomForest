@@ -10,6 +10,7 @@ tuneRF <- function(x, y, mtryStart=if(is.factor(y)) floor(sqrt(ncol(x))) else
     randomForest(x, y, mtry=mtryStart, ntree=ntreeTry,
                  keep.forest=FALSE, ...)$mse[ntreeTry]
   }
+  if (errorOld < 0) stop("Initial setting gave 0 error and no room for improvement.")
   if (trace) {
     cat("mtry =", mtryStart, " OOB error =",
         if (classRF) paste(100*round(errorOld, 4), "%", sep="") else

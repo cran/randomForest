@@ -144,15 +144,20 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
     for (k = 0; k < ndbigtree; ++k) {
         if (nodeStatus[k] == NODE_TERMINAL) {
             pp = 0;
+            ntie = 1;
             for (j = 0; j < nclass; ++j) {
                 if (classPop[j + k * nclass] > pp) {
                     nodeClass[k] = j;
                     pp = classPop[j + k * nclass];
+                    ntie = 1;
                 }
                 /* Break ties at random: */
-                if (classPop[j + k * nclass] == pp && unif_rand() > 0.5) {
-                    nodeClass[k] = j;
-                    pp = classPop[j + k * nclass];
+                if (classPop[j + k * nclass] == pp) {
+                	if (unif_rand() < 1.0 / ntie) {
+                		nodeClass[k] = j;
+                		pp = classPop[j + k * nclass];
+                	}
+                	ntie++;
                 }
             }
         }
@@ -237,15 +242,16 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
                             *bestSplit = j;
                             critmax = crit;
                             *splitVar = mvar;
+                            ntie = 1;
                         }
                         /* Break ties at random: */
                         if (crit == critmax) {
-			    ntie++;
-			    if (unif_rand() > 1.0 / ntie) {
-				*bestSplit = j;
-				critmax = crit;
-				*splitVar = mvar;
-			    }
+                        	if (unif_rand() < 1.0 / ntie) {
+                        		*bestSplit = j;
+                        		critmax = crit;
+                        		*splitVar = mvar;
+                        	}
+                        	ntie++;
                         }
                     }
                 }

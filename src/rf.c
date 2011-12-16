@@ -313,6 +313,8 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					ntry++;
 				} while (anyEmpty && ntry <= 10);
 			}
+			/* If some classes are still empty, throw an error. */
+			if (anyEmpty) error("Some class has no data after 10 sampling attempts.");
 
             /* If need to keep indices of inbag data, do that here. */
             if (keepInbag) {
@@ -585,11 +587,12 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
 			if (crit > cmax) {
 				jet[n] = j + 1;
 				cmax = crit;
+				ntie = 1;
 			}
 			/* Break ties at random: */
 			if (crit == cmax) {
+				if (unif_rand() < 1.0 / ntie) jet[n] = j + 1;
 				ntie++;
-				if (unif_rand() > 1.0 / ntie) jet[n] = j + 1;
 			}
 		}
     }
@@ -630,22 +633,23 @@ void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
 	    smaxtr = 0.0;
 	    ntie = 1;
 	    for (j = 0; j < nclass; ++j) {
-		qq = (((double) counttr[j + n*nclass]) / out[n]) / cutoff[j];
-		if (j+1 != cl[n]) smax = (qq > smax) ? qq : smax;
-		/* if vote / cutoff is larger than current max, re-set max and
-		   change predicted class to the current class */
-		if (qq > smaxtr) {
-		    smaxtr = qq;
-		    jest[n] = j+1;
-		}
-		/* break tie at random */
-		if (qq == smaxtr) {
-		    ntie++;
-		    if (unif_rand() > 1.0 / ntie) {
-			smaxtr = qq;
-			jest[n] = j+1;
-		    }
-		}
+	    	qq = (((double) counttr[j + n*nclass]) / out[n]) / cutoff[j];
+	    	if (j+1 != cl[n]) smax = (qq > smax) ? qq : smax;
+	    	/* if vote / cutoff is larger than current max, re-set max and
+		   	   change predicted class to the current class */
+	    	if (qq > smaxtr) {
+	    		smaxtr = qq;
+	    		jest[n] = j+1;
+	    		ntie = 1;
+	    	}
+	    	/* break tie at random */
+	    	if (qq == smaxtr) {
+	    		if (unif_rand() < 1.0 / ntie) {
+	    			smaxtr = qq;
+	    			jest[n] = j+1;
+	    		}
+	    		ntie++;
+	    	}
 	    }
 	    if (jest[n] != cl[n]) {
 		errtr[cl[n]] += 1.0;
@@ -676,14 +680,15 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 			if (crit > cmax) {
 				jet[n] = j+1;
 				cmax = crit;
+				ntie = 1;
 			}
 			/*  Break ties at random: */
 			if (crit == cmax) {
-				ntie++;
-				if (unif_rand() > 1.0 / ntie) {
+				if (unif_rand() < 1.0 / ntie) {
 					jet[n] = j+1;
 					cmax = crit;
 				}
+				ntie++;
 			}
 		}
     }

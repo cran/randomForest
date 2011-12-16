@@ -158,6 +158,7 @@ c     check on nodestatus
 
 c     form prediction in terminal nodes
       do kn = 1, ndbigtree
+      
          if (nodestatus(kn) .eq. -1) then
             pp = 0
             ntie = 1
@@ -165,16 +166,17 @@ c     form prediction in terminal nodes
                if (classpop(j,kn) .gt. pp) then
                   nodeclass(kn) = j
                   pp = classpop(j,kn)
+                  ntie = 1
                end if
 c     Break ties at random:
                if (classpop(j,kn) .eq. pp) then
-                  ntie = ntie + 1
                   call rrand(xrand)
                   if (xrand .lt. 1.0 / ntie) then
                      nodeclass(kn)=j
                      pp=classpop(j,kn)
                   end if
-               end if
+                  ntie = ntie + 1
+               end if		               
             end do
          end if
 c         call intpr("node", 4, kn, 1)
@@ -258,17 +260,18 @@ c     If neither nodes is empty, check the split.
                         nbest = nsp
                         critmax = crit
                         msplit = mvar
+                        ntie = 1
                      end if
 c     Break ties at random:
                      if (crit .eq. critmax) then
-                        ntie = ntie + 1
                         call rrand(xrand)
                         if (xrand .lt. 1.0 / ntie) then
                            nbest = nsp
                            critmax = crit
                            msplit = mvar
                         end if
-                     end if
+                        ntie = ntie + 1
+                     end if                     
                   end if
                end if
             end do

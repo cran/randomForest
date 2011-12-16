@@ -17,7 +17,7 @@ response (regression).
       n.pt = min(length(unique(pred.data[, xname])), 51),
       rug = TRUE, xlab=deparse(substitute(x.var)), ylab="",
       main=paste("Partial Dependence on", deparse(substitute(x.var))),
-      ...) 
+      ...)
 }
 
 \arguments{
@@ -79,16 +79,25 @@ boosting machine, \emph{Ann. of Stat.}}
 \author{Andy Liaw \email{andy\_liaw@merck.com}}
 
 \examples{
-data(airquality)
-airquality <- na.omit(airquality)
-set.seed(131)
-ozone.rf <- randomForest(Ozone ~ ., airquality)
-partialPlot(ozone.rf, airquality, Temp)
-
 data(iris)
 set.seed(543)
 iris.rf <- randomForest(Species~., iris)
 partialPlot(iris.rf, iris, Petal.Width, "versicolor")
+
+## Looping over variables ranked by importance:
+data(airquality)
+airquality <- na.omit(airquality)
+set.seed(131)
+ozone.rf <- randomForest(Ozone ~ ., airquality, importance=TRUE)
+imp <- importance(ozone.rf)
+impvar <- rownames(imp)[order(imp[, 1], decreasing=TRUE)]
+op <- par(mfrow=c(2, 3))
+for (i in seq_along(impvar)) {
+    partialPlot(ozone.rf, airquality, impvar[i], xlab=impvar[i],
+                main=paste("Partial Dependence on", impvar[i]),
+                ylim=c(30, 70))
+}
+par(op)
 }
 \keyword{classif}
 \keyword{regression}

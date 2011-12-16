@@ -13,6 +13,15 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-3:
+
+* Fixed bugs in the tie-breaking code in various places.  (Thanks to 
+  Abhishek Jaiantilal and Nathan Longbotham for the report and Abhishek 
+  for the fix.)
+  
+* Throw error if some class has no data after 10 sampling attempts in
+  classification.  (Thanks to Abhishek Jaiantilal for the report.)
+
 Changes in 4.6-2:
 
 * Part of the enhancement in 4.5-37 causes segfault in R-2.12.x.  That part

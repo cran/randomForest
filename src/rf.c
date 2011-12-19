@@ -95,7 +95,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
 	*jtr, *classFreq, *idmove, *jvr,
 	*at, *a, *b, *mind, *nind, *jts, *oobpair;
-    int **strata_idx, *strata_size, last, ktmp, anyEmpty, ntry;
+    int **strata_idx, *strata_size, last, ktmp, nEmpty, ntry;
 
     double av=0.0;
 
@@ -280,7 +280,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					}
 				}
 			} else {  /* unstratified sampling */
-				anyEmpty = 0;
+				nEmpty = 0;
 				ntry = 0;
 				do {
 					zeroInt(jin, nsample);
@@ -308,13 +308,13 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					}
 					/* check if any class is missing in the sample */
 					for (n = 0; n < nclass; ++n) {
-						if (tclasspop[n] == 0) anyEmpty = 1;
+						if (tclasspop[n] == 0) nEmpty++;
 					}
 					ntry++;
-				} while (anyEmpty && ntry <= 10);
+				} while (nclass - nEmpty < 2 && ntry <= 10);
 			}
-			/* If some classes are still empty, throw an error. */
-			if (anyEmpty) error("Some class has no data after 10 sampling attempts.");
+			/* If there are still fewer than two classes in the data, throw an error. */
+			if (nclass - nEmpty < 2) error("Still have fewer than two classes in the in-bag sample after 10 attempts.");
 
             /* If need to keep indices of inbag data, do that here. */
             if (keepInbag) {

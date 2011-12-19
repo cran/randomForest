@@ -13,6 +13,11 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-4:
+
+* Changed the error condition added in 4.6-3 to the case when there are fewer
+  than two classes present in the in-bag sample.
+  
 Changes in 4.6-3:
 
 * Fixed bugs in the tie-breaking code in various places.  (Thanks to 

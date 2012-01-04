@@ -312,9 +312,9 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					}
 					ntry++;
 				} while (nclass - nEmpty < 2 && ntry <= 10);
+				/* If there are still fewer than two classes in the data, throw an error. */
+				if (nclass - nEmpty < 2) error("Still have fewer than two classes in the in-bag sample after 10 attempts.");
 			}
-			/* If there are still fewer than two classes in the data, throw an error. */
-			if (nclass - nEmpty < 2) error("Still have fewer than two classes in the in-bag sample after 10 attempts.");
 
             /* If need to keep indices of inbag data, do that here. */
             if (keepInbag) {

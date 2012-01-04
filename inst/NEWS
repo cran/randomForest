@@ -13,6 +13,11 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Change in 4.6-5:
+
+* Minor bug fix for drawing samples in classification that was introduced 
+  in 4.6-4.  (Thanks to Joran Elias for reporting.)
+
 Changes in 4.6-4:
 
 * Changed the error condition added in 4.6-3 to the case when there are fewer

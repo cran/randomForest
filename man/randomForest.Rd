@@ -225,6 +225,10 @@ set.seed(17)
 iris.urf <- randomForest(iris[, -5])
 MDSplot(iris.urf, iris$Species)
 
+## stratified sampling: draw 20, 30, and 20 of the species to grow each tree.
+(iris.rf2 <- randomForest(iris[1:4], iris$Species, 
+                          sampsize=c(20, 30, 20)))
+
 ## Regression:
 ## data(airquality)
 set.seed(131)

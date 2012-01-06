@@ -1,5 +1,5 @@
 393a5ca445f6965873eca0259a17f833 *COPYING
-d652fe92963025a65c318cd1c580d676 *DESCRIPTION
+e0f4b66284871df0ad1209228ab35032 *DESCRIPTION
 1af1bc3aead1dde855db3123db9ac38c *NAMESPACE
 164fc34443e28a0a0940abd99cd175ca *R/MDSplot.R
 eae0c348160c0e1f5c5140169c7610be *R/classCenter.R
@@ -27,7 +27,7 @@ e695b3cfc07facf54856bf366870e360 *R/tuneRF.R
 a54ba14b0cb6cc15e4b7687ead9a2bf9 *R/zzz.R
 6d430e97b1da9c1b19eabda685c248b3 *data/imports85.rda
 9162881b7d318756c63a28e52b41c2d7 *inst/CITATION
-d69591a6e72b245c68efdaf71bc7c9f7 *inst/NEWS
+2ec40984a2c2c56e1c6b70113fd59c18 *inst/NEWS
 b9b69f61e9ed079e1d9d84df6360d522 *man/MDSplot.Rd
 4fcbc72dd2475ff32f5a348bfa71af41 *man/classCenter.Rd
 bf3608aff76e654e77632a516980f451 *man/combine.Rd
@@ -52,7 +52,7 @@ ef5c9e454eb4478690b4e292f172c94b *man/varImpPlot.Rd
 bbbce11b132256b5d5cf1d2e11ed4c1d *src/classTree.c
 ae595f53f19e393952f9615615891c41 *src/regTree.c
 f8cec3a20bb39ac2dc4810d6874da01c *src/regrf.c
-ab4ec6336888f2adcd66f50c13ec7e1e *src/rf.c
+ea41345896f0d175077f345076d4d6f6 *src/rf.c
 2326f54dbe8953a4da5b83ad40750f0a *src/rf.h
 9c9adf5f9a2ec8ea1db5d688166221f9 *src/rfsub.f
 9550731e4f27944bec22c3b3c34e0704 *src/rfutils.c

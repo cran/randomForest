@@ -280,9 +280,9 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					}
 				}
 			} else {  /* unstratified sampling */
-				nEmpty = 0;
 				ntry = 0;
 				do {
+					nEmpty = 0;
 					zeroInt(jin, nsample);
 					zeroDouble(tclasspop, nclass);
 					zeroDouble(win, nsample);
@@ -308,12 +308,12 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					}
 					/* check if any class is missing in the sample */
 					for (n = 0; n < nclass; ++n) {
-						if (tclasspop[n] == 0) nEmpty++;
+						if (tclasspop[n] == 0.0) nEmpty++;
 					}
 					ntry++;
-				} while (nclass - nEmpty < 2 && ntry <= 10);
+				} while (nclass - nEmpty < 2 && ntry <= 30);
 				/* If there are still fewer than two classes in the data, throw an error. */
-				if (nclass - nEmpty < 2) error("Still have fewer than two classes in the in-bag sample after 10 attempts.");
+				if (nclass - nEmpty < 2) error("Still have fewer than two classes in the in-bag sample after 30 attempts.");
 			}
 
             /* If need to keep indices of inbag data, do that here. */

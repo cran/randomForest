@@ -13,6 +13,10 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Change in 4.6-6:
+
+* Fixed yet another bug in checking for missing classes in the in-bag sample.
+
 Change in 4.6-5:
 
 * Minor bug fix for drawing samples in classification that was introduced 

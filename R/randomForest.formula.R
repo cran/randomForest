@@ -5,7 +5,7 @@
 ###
     if (!inherits(formula, "formula"))
         stop("method is only for formula objects")
-    m <- match.call(expand = FALSE)
+    m <- match.call(expand.dots = FALSE)
     ## Catch xtest and ytest in arguments.
     if (any(c("xtest", "ytest") %in% names(m)))
         stop("xtest/ytest not supported through the formula interface")

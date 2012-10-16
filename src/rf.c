@@ -1,5 +1,5 @@
 /*****************************************************************
-Copyright (C) 2001-9 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+Copyright (C) 2001-2012 Leo Breiman, Adele Cutler and Merck & Co., Inc.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -97,7 +97,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	*at, *a, *b, *mind, *nind, *jts, *oobpair;
     int **strata_idx, *strata_size, last, ktmp, nEmpty, ntry;
 
-    double av=0.0;
+    double av=0.0, delta=0.0;
 
     double *tgini, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
         *tp, *wr;
@@ -465,22 +465,19 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 					}
 					/* Accumulate decrease in proportions of correct
 					   predictions. */
+					/* class-specific measures first: */
 					for (n = 0; n < nclass; ++n) {
 						if (nout[n] > 0) {
-							imprt[m + n*mdim] +=
-								((double) (nright[n] - nrightimp[n])) /
-								nout[n];
-							impsd[m + n*mdim] +=
-								((double) (nright[n] - nrightimp[n]) *
-								 (nright[n] - nrightimp[n])) / nout[n];
+							delta = ((double) (nright[n] - nrightimp[n])) / nout[n];
+							imprt[m + n*mdim] += delta;
+							impsd[m + n*mdim] += delta * delta;
 						}
 					}
+					/* overall measure, across all classes: */
 					if (noutall > 0) {
-						imprt[m + nclass*mdim] +=
-							((double)(nrightall - nrightimpall)) / noutall;
-						impsd[m + nclass*mdim] +=
-							((double) (nrightall - nrightimpall) *
-							 (nrightall - nrightimpall)) / noutall;
+						delta = ((double)(nrightall - nrightimpall)) / noutall;
+						imprt[m + nclass*mdim] += delta;
+						impsd[m + nclass*mdim] += delta * delta;
 					}
 				}
 			}

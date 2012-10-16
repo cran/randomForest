@@ -234,7 +234,7 @@
                  DUP=FALSE,
                  PACKAGE = "randomForest")
         if (out.type > 1) {
-            out.class.votes <- t(matrix(t1$countts, nr = nclass, nc = ntest))
+            out.class.votes <- t(matrix(t1$countts, nrow = nclass, ncol = ntest))
             if (norm.votes)
                 out.class.votes <-
                     sweep(out.class.votes, 1, rowSums(out.class.votes), "/")

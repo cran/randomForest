@@ -22,7 +22,8 @@ rfcv <- function(trainx, trainy, cv.fold=5, scale="log", step=0.5,
     if(classRF) {
         f <- trainy
     } else {
-        f <- cut(trainy, c(-Inf, quantile(trainy, 1:4/5), Inf))
+        ##f <- cut(trainy, c(-Inf, quantile(trainy, 1:4/5), Inf))
+		f <- factor(rep(1:5, length=length(trainy))[order(order(trainy))])
     }
     nlvl <- table(f)
     idx <- numeric(n)

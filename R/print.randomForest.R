@@ -7,12 +7,12 @@ function(x, ...) {
   if(x$type == "classification") {
     if(!is.null(x$confusion)) {
       cat("        OOB estimate of  error rate: ",
-          round(x$err.rate[x$ntree, "OOB"]*100, dig=2), "%\n", sep="")
+          round(x$err.rate[x$ntree, "OOB"]*100, digits=2), "%\n", sep="")
       cat("Confusion matrix:\n")
       print(x$confusion)
       if(!is.null(x$test$err.rate)) {
         cat("                Test set error rate: ",
-            round(x$test$err.rate[x$ntree, "Test"]*100, dig=2), "%\n",
+            round(x$test$err.rate[x$ntree, "Test"]*100, digits=2), "%\n",
             sep="")
         cat("Confusion matrix:\n")
         print(x$test$confusion)
@@ -24,12 +24,12 @@ function(x, ...) {
       cat("          Mean of squared residuals: ", x$mse[length(x$mse)],
           "\n", sep="")
       cat("                    % Var explained: ",
-          round(100*x$rsq[length(x$rsq)], dig=2), "\n", sep="")
+          round(100*x$rsq[length(x$rsq)], digits=2), "\n", sep="")
       if(!is.null(x$test$mse)) {
         cat("                       Test set MSE: ",
-            round(x$test$mse[length(x$test$mse)], dig=2), "\n", sep="")
+            round(x$test$mse[length(x$test$mse)], digits=2), "\n", sep="")
         cat("                    % Var explained: ",
-            round(100*x$test$rsq[length(x$test$rsq)], dig=2), "\n", sep="")
+            round(100*x$test$rsq[length(x$test$rsq)], digits=2), "\n", sep="")
       }      
     }
     if (!is.null(x$coefs)) {

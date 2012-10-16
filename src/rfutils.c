@@ -1,5 +1,5 @@
 /*******************************************************************
-   Copyright (C) 2001-7 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+   Copyright (C) 2001-2012 Leo Breiman, Adele Cutler and Merck & Co., Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@ void createClass(double *x, int realN, int totalN, int mdim) {
     int i, j, k;
     for (i = realN; i < totalN; ++i) {
         for (j = 0; j < mdim; ++j) {
-            k = (int) unif_rand() * realN;
+            k = (int) (unif_rand() * realN);
             x[j + i * mdim] = x[j + k * mdim];
         }
     }
@@ -229,7 +229,7 @@ void computeProximity(double *prox, int oobprox, int *node, int *inbag,
     for (i = 0; i < n; ++i) {
         for (j = i+1; j < n; ++j) {
             if (oobprox) {
-                if ((inbag[i] > 0) ^ (inbag[j] > 0)) {
+                if (! (inbag[i] || inbag[j]) ) {
                     oobpair[j*n + i] ++;
                     oobpair[i*n + j] ++;
                     if (node[i] == node[j]) {

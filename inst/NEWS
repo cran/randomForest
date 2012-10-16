@@ -15,6 +15,25 @@ Wishlist (formerly TODO):
 ========================================================================
 Change in 4.6-6:
 
+* In randomForest(), proximity matrix is not computed correctly if oob.prox=TRUE.
+  (Thanks to Adele Cutler for the report!)
+  
+* In rfcv(), changed the sample-splitting for regression to handle cases
+  when there are many ties in the data.
+  
+* The calculation of importanceSD for classification was missing a divisor.  
+  (Thanks to Abhishek Jaiantilal for the report.)
+  
+× The simulated data in unsupervised randomForest() were not in the right range.
+  (Thanks to Abhishek Jaiantilal for the report.)
+
+* In rfImpute(), padded 1e-8 to the division by sum of proximities to avoid 
+  division by 0.
+  
+* Some R code clean up to keep R CMD check happy (complete argument names).
+       
+Change in 4.6-6:
+
 * Fixed yet another bug in checking for missing classes in the in-bag sample.
 
 Change in 4.6-5:

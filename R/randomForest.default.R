@@ -272,7 +272,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         if (!addclass) {
             ## Turn the predicted class into a factor like y.
             out.class <- factor(rfout$outcl, levels=1:nclass,
-                                label=levels(y))
+                                labels=levels(y))
             names(out.class) <- x.row.names
             con <- table(observed = y,
                          predicted = out.class)[levels(y), levels(y)]
@@ -286,7 +286,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         class(out.votes) <- c(class(out.votes), "votes")
         if (testdat) {
             out.class.ts <- factor(rfout$outclts, levels=1:nclass,
-                                   label=levels(y))
+                                   labels=levels(y))
             names(out.class.ts) <- xts.row.names
             out.votes.ts <- t(matrix(rfout$countts, nclass, ntest))
             dimnames(out.votes.ts) <- list(xts.row.names, levels(y))
@@ -335,13 +335,13 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     forest = if (!keep.forest) NULL else {
                         list(ndbigtree = rfout$ndbigtree,
                              nodestatus = matrix(rfout$nodestatus,
-                             nc = ntree)[1:max.nodes,, drop=FALSE],
-                             bestvar = matrix(rfout$bestvar, nc = ntree)[1:max.nodes,, drop=FALSE],
+                             ncol = ntree)[1:max.nodes,, drop=FALSE],
+                             bestvar = matrix(rfout$bestvar, ncol = ntree)[1:max.nodes,, drop=FALSE],
                              treemap = treemap,
                              nodepred = matrix(rfout$nodepred,
-                             nc = ntree)[1:max.nodes,, drop=FALSE],
+                             ncol = ntree)[1:max.nodes,, drop=FALSE],
                              xbestsplit = matrix(rfout$xbestsplit,
-                             nc = ntree)[1:max.nodes,, drop=FALSE],
+                             ncol = ntree)[1:max.nodes,, drop=FALSE],
                              pid = rfout$classwt, cutoff=cutoff, ncat=ncat,
                              maxcat = maxcat,
                              nrnodes = max.nodes, ntree = ntree,

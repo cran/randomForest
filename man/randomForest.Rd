@@ -251,11 +251,15 @@ y <- gl(2, 50)
 (predict(swiss.rf, swiss))
 ## Test use of 32-level factor as a predictor:
 set.seed(1)
-x <- data.frame(x1=gl(32, 5), x2=runif(160), y=rnorm(160))
+x <- data.frame(x1=gl(53, 10), x2=runif(530), y=rnorm(530))
 (rf1 <- randomForest(x[-3], x[[3]], ntree=10))
 
 ## Grow no more than 4 nodes per tree:
 (treesize(randomForest(Species ~ ., data=iris, maxnodes=4, ntree=30)))
+
+## test proximity in regression
+iris.rrf <- randomForest(iris[-1], iris[[1]], ntree=101, proximity=TRUE, oob.prox=FALSE)
+str(iris.rrf$proximity)
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

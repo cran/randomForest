@@ -14,6 +14,7 @@
 #include <R.h>
 #include "rf.h"
 
+
 void zeroInt(int *x, int length) {
     memset(x, 0, length * sizeof(int));
 }
@@ -247,6 +248,23 @@ void computeProximity(double *prox, int oobprox, int *node, int *inbag,
     }
 }
 
+double pack(const int nBits, const int *bits) {
+    int i = nBits - 1;
+	double pack = bits[i];
+    for (i = nBits - 1; i > 0; --i) pack = 2.0 * pack + bits[i - 1];
+    return(pack);
+}
+
+void unpack(const double pack, const int nBits, int *bits) {
+    int i;
+    double x = pack;
+    for (i = 0; i <= nBits; ++i) {
+    	bits[i] = ((unsigned long) x & 1) ? 1 : 0;
+    	x = x / 2;
+    }
+}
+
+/*
 unsigned int pack(int nBits, int *bits) {
     int i = nBits;
 	unsigned int pack = 0;
@@ -255,44 +273,12 @@ unsigned int pack(int nBits, int *bits) {
 }
 
 void unpack(int nBits, unsigned int pack, int *bits) {
-/* pack is a 4-byte integer.  The sub. returns icat, an integer 
-   array of zeroes and ones corresponding to the coefficients 
-   in the binary expansion of pack. */
     int i;
     for (i = 0; i < nBits; pack >>= 1, ++i) bits[i] = pack & 1;
 }
+*/
 
-void F77_NAME(unpack)(int *nBits, unsigned int *pack, int *bits) {
-	unpack(*nBits, *pack, bits);
+void F77_NAME(unpack)(double *pack, int *nBits, int *bits) {
+	unpack(*pack, *nBits, bits);
 }
 
-#ifdef OLD
-
-double oldpack(int l, int *icat) {
-    /* icat is a binary integer with ones for categories going left
-     * and zeroes for those going right.  The sub returns npack- the integer */
-    int k;
-    double pack = 0.0;
-
-    for (k = 0; k < l; ++k) {
-	if (icat[k]) pack += R_pow_di(2.0, k);
-    }
-    return(pack);
-}
-
-
-void oldunpack(int l, int npack, int *icat) {
-/*
- * npack is a long integer.  The sub. returns icat, an integer of zeroes and
- * ones corresponding to the coefficients in the binary expansion of npack.
- */
-    int i;
-    zeroInt(icat, 32);
-    icat[0] = npack % 2;
-    for (i = 1; i < l; ++i) {
-	npack = (npack - icat[i-1]) / 2;
-	icat[i] = npack % 2;
-    }
-}
-
-#endif /* OLD */

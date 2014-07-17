@@ -1,18 +1,38 @@
 Wishlist (formerly TODO):
 
-* There are still errors in the classification mode with predictors
-  having 32 categories.  Don't use such predictors for now.  I will
-  try my best to fix it in the next version.
-
 * Implement the new scheme of handling classwt in classification.
-
-* Allow categorical predictors with more than 32 categories.
 
 * Use more compact storage of proximity matrix.
 
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-10:
+
+* Fixed bugs introduced in 4.6-8 and 4.6-9. Levels for ordered factors
+  in predictors are no longer checked for consistency between training
+  and test data in predict.randomForest().  In 4.6-9 the response is mean 
+  centered before running the algorithm (for regression), but the mean was 
+  not added back in the $y component of the return object from 
+  randomForest(). 
+
+Changes in 4.6-9:
+
+* Categorical predictors are allowed to have up to 53 categories now.
+
+Changes in 4.6-8:
+
+* There was a bug in the handling of ordered factors in randomForest.formula(). 
+  (Reported by Barry Rawlingson.)
+  
+* Changed randomForest.formula() and predict.randomForest() so that
+  predict() without newdata when na.action=na.exclude pads the output
+  with NAs to match the rows in the original data (suggested by Barry 
+  Rawlingson.). 
+  
+* There was a long standing bug in randomForest(..., proximity=TRUE, oob.prox=FALSE)
+  in regression mode. (Thanks to Stefano Romano for the report.)   
+
 Change in 4.6-6:
 
 * In randomForest(), proximity matrix is not computed correctly if oob.prox=TRUE.

@@ -67,6 +67,10 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		/* skip if the node is not to be split */
 		if (nodestatus[k] != NODE_TOSPLIT) continue;
 
+#ifdef RF_DEBUG
+		Rprintf("regTree: k=%d, av=%f, ss=%f\n", k, av, ss);
+#endif
+
 		/* initialize for next call to findbestsplit */
 		ndstart = nodestart[k];
 		ndend = ndstart + nodepop[k] - 1;
@@ -75,9 +79,19 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		jstat = 0;
 		decsplit = 0.0;
 		
+#ifdef RF_DEBUG
+		Rprintf("before findBestSplit: ndstart=%d, ndend=%d, jstat=%d, decsplit=%f\n",
+				ndstart, ndend, jstat, decsplit);
+#endif
+
 		findBestSplit(x, jdex, y, mdim, nsample, ndstart, ndend, &msplit,
                       &decsplit, &ubest, &ndendl, &jstat, mtry, sumnode,
                       nodecnt, cat);
+#ifdef RF_DEBUG
+		Rprintf(" after findBestSplit: ndstart=%d, ndend=%d, jstat=%d, decsplit=%f, msplit=%d\n",
+				ndstart, ndend, jstat, decsplit, msplit);
+
+#endif
 		if (jstat == 1) {
 			/* Node is terminal: Mark it as such and move on to the next. */
 			nodestatus[k] = NODE_TERMINAL;
@@ -131,6 +145,11 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		rDaughter[k] = ncur + 2 + 1;
 		/* Augment the tree by two nodes. */
 		ncur += 2;
+#ifdef RF_DEBUG
+		Rprintf(" after split: ldaughter=%d, rdaughter=%d, ncur=%d\n",
+				lDaughter[k], rDaughter[k], ncur);
+#endif
+
     }
     *treeSize = nrnodes;
     for (k = nrnodes - 1; k >= 0; --k) {
@@ -149,9 +168,9 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		   int ndstart, int ndend, int *msplit, double *decsplit,
 		   double *ubest, int *ndendl, int *jstat, int mtry,
 		   double sumnode, int nodecnt, int *cat) {
-    int last, ncat[32], icat[32], lc, nl, nr, npopl, npopr;
+    int last, ncat[MAX_CAT], icat[MAX_CAT], lc, nl, nr, npopl, npopr;
     int i, j, kv, l, *mind, *ncase;
-    double *xt, *ut, *v, *yl, sumcat[32], avcat[32], tavcat[32], ubestt;
+    double *xt, *ut, *v, *yl, sumcat[MAX_CAT], avcat[MAX_CAT], tavcat[MAX_CAT], ubestt;
     double crit, critmax, critvar, suml, sumr, d, critParent;
 
     ut = (double *) Calloc(nsample, double);
@@ -160,8 +179,8 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     yl = (double *) Calloc(nsample, double);
     mind  = (int *) Calloc(mdim, int);
     ncase = (int *) Calloc(nsample, int);
-    zeroDouble(avcat, 32);
-    zeroDouble(tavcat, 32);
+    zeroDouble(avcat, MAX_CAT);
+    zeroDouble(tavcat, MAX_CAT);
 
     /* START BIG LOOP */
     *msplit = -1;
@@ -187,8 +206,8 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 			}
 		} else {
 			/* categorical variable */
-            zeroInt(ncat, 32);
-			zeroDouble(sumcat, 32);
+            zeroInt(ncat, MAX_CAT);
+			zeroDouble(sumcat, MAX_CAT);
 			for (j = ndstart; j <= ndend; ++j) {
 				l = (int) x[kv + (jdex[j] - 1) * mdim];
 				sumcat[l - 1] += y[jdex[j] - 1];
@@ -292,7 +311,7 @@ void predictRegTree(double *x, int nsample, int mdim,
                     int *splitVar, int treeSize, int *cat, int maxcat,
                     int *nodex) {
     int i, j, k, m, *cbestsplit;
-	unsigned int npack;
+	double dpack;
 
     /* decode the categorical splits */
     if (maxcat > 1) {
@@ -300,10 +319,13 @@ void predictRegTree(double *x, int nsample, int mdim,
         zeroInt(cbestsplit, maxcat * treeSize);
         for (i = 0; i < treeSize; ++i) {
             if (nodestatus[i] != NODE_TERMINAL && cat[splitVar[i] - 1] > 1) {
-                npack = (unsigned int) split[i];
+                dpack = split[i];
                 /* unpack `npack' into bits */
-                for (j = 0; npack; npack >>= 1, ++j) {
-                    cbestsplit[j + i*maxcat] = npack & 1;
+                /* unpack(dpack, maxcat, cbestsplit + i * maxcat); */
+                for (j = 0; j < cat[splitVar[i] - 1]; ++j) {
+                	cbestsplit[j + i*maxcat] = ((unsigned long) dpack & 1) ? 1 : 0;
+                	dpack = dpack / 2.0 ;
+                    /* cbestsplit[j + i*maxcat] = npack & 1; */
                 }
             }
         }

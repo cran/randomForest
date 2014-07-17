@@ -15,23 +15,30 @@
     if (out.type == 2)
         norm.votes <- TRUE
     if (missing(newdata)) {
-        if (object$type == "regression") return(object$predicted)
+		p <- if (! is.null(object$na.action)) {
+			napredict(object$na.action, object$predicted)
+		} else {
+			object$predicted
+		}
+        if (object$type == "regression") return(p)
         if (proximity & is.null(object$proximity))
             warning("cannot return proximity without new data if random forest object does not already have proximity")
         if (out.type == 1) {
             if (proximity) {
-                return(list(pred = object$predicted,
+                return(list(pred = p,
                             proximity = object$proximity))
-            } else return(object$predicted)
+            } else return(p)
         }
+		v <- object$votes
+		if (!is.null(object$na.action)) v <- napredict(object$na.action, v)
         if (norm.votes) {
-            t1 <- t(apply(object$votes, 1, function(x) { x/sum(x) }))
+            t1 <- t(apply(v, 1, function(x) { x/sum(x) }))
             class(t1) <- c(class(t1), "votes")
             if (proximity) return(list(pred = t1, proximity = object$proximity))
             else return(t1)
         } else {
-            if (proximity) return(list(pred = object$votes, proximity = object$proximity))
-            else return(object$votes)
+            if (proximity) return(list(pred = v, proximity = object$proximity))
+            else return(v)
         }
     }
     if (missing(cutoff)) {
@@ -85,7 +92,8 @@
         x <- x[, vname, drop=FALSE]
     }
     if (is.data.frame(x)) {
-        xfactor <- which(sapply(x, is.factor))
+		isFactor <- function(x) is.factor(x) & ! is.ordered(x)
+        xfactor <- which(sapply(x, isFactor))
         if (length(xfactor) > 0 && "xlevels" %in% names(object$forest)) {
             for (i in xfactor) {
                 if (any(! levels(x[[i]]) %in% object$forest$xlevels[[i]]))

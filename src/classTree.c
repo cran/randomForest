@@ -49,7 +49,7 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
 
 
       double precision tclasspop(nclass),classpop(nclass,numNodes),
-     1     tclasscat(nclass,32),win(nsample),wr(nclass),wc(nclass),
+     1     tclasscat(nclass,MAX_CAT),win(nsample),wr(nclass),wc(nclass),
      1     wl(nclass),tgini(mdim), xrand
  */
     int msplit = 0, i, j;
@@ -189,7 +189,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
 
     integer a(mdim,nsample), cl(nsample), cat(mdim),
      1     ncase(nsample), b(mdim,nsample), jin(nsample), nn, j
-      double precision tclasspop(nclass), tclasscat(nclass,32), dn(32),
+      double precision tclasspop(nclass), tclasscat(nclass,MAX_CAT), dn(MAX_CAT),
      1     win(nsample), wr(nclass), wc(nclass), wl(nclass), xrand
       integer mind(mred), ncmax, ncsplit,nhit
         ncmax = 10;
@@ -258,7 +258,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
             }
         } else {
             /* Split on a categorical predictor. */
-            zeroDouble(classCatTable, nClass * 32);
+            zeroDouble(classCatTable, nClass * MAX_CAT);
             for (j = ndstart; j <= ndend; ++j) {
                 nc = ncase[j-1];
                 l = a[mvar, ncase[j-1]];
@@ -294,7 +294,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
 
 void F77_NAME(catmax)(double *parentDen, double *tclasscat,
                       double *tclasspop, int *nclass, int *lcat,
-                      unsigned int *ncatsp, double *critmax, int *nhit,
+                      double *catsp, double *critmax, int *nhit,
                       int *maxcat, int *ncmax, int *ncsplit) {
 /* This finds the best split of a categorical variable with lcat
    categories and nclass classes, where tclasscat(j, k) is the number
@@ -302,7 +302,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
    exhaustive search over all partitions of the category values if the
    number of categories is 10 or fewer.  Otherwise ncsplit randomly
    selected splits are tested and best used. */
-    int j, k, n, icat[32], nsplit;
+    int j, k, n, icat[MAX_CAT], nsplit;
     double leftNum, leftDen, rightNum, decGini, *leftCatClassCount;
 
     leftCatClassCount = (double *) Calloc(*nclass, double);
@@ -311,14 +311,14 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
         *ncsplit : (int) pow(2.0, (double) *lcat - 1) - 1;
 
     for (n = 0; n < nsplit; ++n) {
-        zeroInt(icat, 32);
+        zeroInt(icat, MAX_CAT);
         if (*lcat > *ncmax) {
             /* Generate random split.
                TODO: consider changing to generating random bits with more
                efficient algorithm */
             for (j = 0; j < *lcat; ++j) icat[j] = unif_rand() > 0.5 ? 1 : 0;
         } else {
-            unpack(*lcat, (unsigned int) n + 1, icat);
+            unpack((double) n + 1, *lcat, icat);
         }
         for (j = 0; j < *nclass; ++j) {
             leftCatClassCount[j] = 0;
@@ -345,7 +345,7 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
         if (decGini > *critmax) {
             *critmax = decGini;
             *nhit = 1;
-            *ncatsp = *lcat > *ncmax ? pack((unsigned int) *lcat, icat) : n + 1;
+            *catsp = *lcat > *ncmax ? pack(*lcat, icat) : n + 1;
         }
     }
     Free(leftCatClassCount);
@@ -355,11 +355,11 @@ void F77_NAME(catmax)(double *parentDen, double *tclasscat,
 
 /* Find best split of with categorical variable when there are two classes */
 void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
-                       int *nclass, int *nCat, unsigned int *nbest, double *critmax,
+                       int *nclass, int *nCat, double *best, double *critmax,
                        int *nhit, double *catCount) {
 
-    double catProportion[32], cp[32], cm[32];
-    int kcat[32];
+    double catProportion[MAX_CAT], cp[MAX_CAT], cm[MAX_CAT];
+    int kcat[MAX_CAT];
     int i, j;
     double bestsplit=0.0, rightDen, leftDen, leftNum, rightNum, crit;
 
@@ -407,7 +407,7 @@ void F77_NAME(catmaxb)(double *totalWt, double *tclasscat, double *classCount,
             kcat[i] = catProportion[i] < bestsplit ? 1 : 0;
 			/* Rprintf("%i ", kcat[i]); */
         }
-        *nbest = pack(*nCat, kcat);
+        *best = pack(*nCat, kcat);
 		/* Rprintf("\nnbest=%u\nnbest=%i\n", *nbest, *nbest); */
     }
 }
@@ -420,7 +420,7 @@ void predictClassTree(double *x, int n, int mdim, int *treemap,
 		      int treeSize, int *cat, int nclass,
 		      int *jts, int *nodex, int maxcat) {
     int m, i, j, k, *cbestsplit;
-	unsigned int npack;
+	double dpack;
 
     /* decode the categorical splits */
     if (maxcat > 1) {
@@ -429,10 +429,12 @@ void predictClassTree(double *x, int n, int mdim, int *treemap,
         for (i = 0; i < treeSize; ++i) {
             if (nodestatus[i] != NODE_TERMINAL) {
                 if (cat[bestvar[i] - 1] > 1) {
-                    npack = (unsigned int) xbestsplit[i];
-                    /* unpack `npack' into bits */
-                    for (j = 0; npack; npack >>= 1, ++j) {
-                        cbestsplit[j + i*maxcat] = npack & 01;
+                    dpack = xbestsplit[i];
+                    /* unpack `dpack' into bits */
+                    /* unpack(dpack, maxcat, cbestsplit + i * maxcat); */
+                    for (j = 0; j < cat[bestvar[i] - 1]; ++j) {
+                    	cbestsplit[j + i*maxcat] = ((unsigned long) dpack & 1) ? 1 : 0;
+                    	dpack = dpack / 2;
                     }
                 }
             }

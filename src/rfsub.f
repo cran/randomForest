@@ -48,7 +48,7 @@ c     main program.
      1     iv(mred), nodeclass(nrnodes), mind(mred)
 
       double precision tclasspop(nclass), classpop(nclass, nrnodes),
-     1     tclasscat(nclass, 32), win(nsample), wr(nclass),
+     1     tclasscat(nclass, 53), win(nsample), wr(nclass),
      1     wl(nclass), tgini(mdim), xrand
       integer msplit, ntie
 
@@ -81,7 +81,7 @@ c     initialize for next call to findbestsplit
 
          call findbestsplit(a,b,cl,mdim,nsample,nclass,cat,maxcat,
      1        ndstart, ndend,tclasspop,tclasscat,msplit, decsplit,
-     1        nbest,ncase, jstat,mtry,win,wr,wl,mred,mind)
+     1        best,ncase, jstat,mtry,win,wr,wl,mred,mind)
 c         call intpr("jstat", 5, jstat, 1)
 c         call intpr("msplit", 6, msplit, 1)
 c     If the node is terminal, move on.  Otherwise, split.
@@ -94,16 +94,16 @@ c     If the node is terminal, move on.  Otherwise, split.
             if (decsplit .lt. 0.0) decsplit = 0.0
             tgini(msplit) = tgini(msplit) + decsplit
             if (cat(msplit) .eq. 1) then
-               bestsplit(kbuild) = a(msplit,nbest)
-               bestsplitnext(kbuild) = a(msplit,nbest+1)
+               bestsplit(kbuild) = dble(a(msplit,int(best)))
+               bestsplitnext(kbuild) = dble(a(msplit,int(best)+1))
             else
-               bestsplit(kbuild) = nbest
-               bestsplitnext(kbuild) = 0
+               bestsplit(kbuild) = best
+               bestsplitnext(kbuild) = 0.0
             endif
          endif
 
          call movedata(a,ta,mdim,nsample,ndstart,ndend,idmove,ncase,
-     1        msplit,cat,nbest,ndendl)
+     1        msplit,cat,best,ndendl)
 c         call intpr("ndend", 5, ndend, 1)
 c         call intpr("ndendl", 6, ndendl, 1)
 c     leftnode no.= ncur+1, rightnode no. = ncur+2.
@@ -196,12 +196,12 @@ c     next larger value of msplit.  If msplit is categorical, then nsplit is
 c     the coding into an integer of the categories going left.
       subroutine findbestsplit(a, b, cl, mdim, nsample, nclass, cat,
      1     maxcat, ndstart, ndend, tclasspop, tclasscat, msplit,
-     2     decsplit, nbest, ncase, jstat, mtry, win, wr, wl,
+     2     decsplit, best, ncase, jstat, mtry, win, wr, wl,
      3     mred, mind)
       implicit double precision(a-h,o-z)
       integer a(mdim,nsample), cl(nsample), cat(mdim),
      1     ncase(nsample), b(mdim,nsample), nn, j
-      double precision tclasspop(nclass), tclasscat(nclass,32), dn(32),
+      double precision tclasspop(nclass), tclasscat(nclass,53), dn(53),
      1     win(nsample), wr(nclass), wl(nclass), xrand
       integer mind(mred), ncmax, ncsplit,nhit, ntie
       ncmax = 10
@@ -257,7 +257,7 @@ c     If neither nodes is empty, check the split.
                   if (dmin1(rrd, rld) .gt. 1.0e-5) then
                      crit = (rln / rld) + (rrn / rrd)
                      if (crit .gt. critmax) then
-                        nbest = nsp
+                        best = dble(nsp)
                         critmax = crit
                         msplit = mvar
                         ntie = 1
@@ -266,7 +266,7 @@ c     Break ties at random:
                      if (crit .eq. critmax) then
                         call rrand(xrand)
                         if (xrand .lt. 1.0 / ntie) then
-                           nbest = nsp
+                           best = dble(nsp)
                            critmax = crit
                            msplit = mvar
                         end if
@@ -277,7 +277,7 @@ c     Break ties at random:
             end do
          else
 c     Split on a categorical predictor.  Compute the decrease in impurity.
-            call zermr(tclasscat, nclass, 32)
+            call zermr(tclasscat, nclass, 53)
             do nsp = ndstart, ndend
                nc = ncase(nsp)
                l = a(mvar, ncase(nsp))
@@ -296,10 +296,10 @@ c     Split on a categorical predictor.  Compute the decrease in impurity.
             if (nnz .gt. 1) then
                if (nclass .eq. 2 .and. lcat .gt. ncmax) then
                   call catmaxb(pdo, tclasscat, tclasspop, nclass,
-     &                 lcat, nbest, critmax, nhit, dn)
+     &                 lcat, best, critmax, nhit, dn)
                else
                   call catmax(pdo, tclasscat, tclasspop, nclass, lcat,
-     &                 nbest, critmax, nhit, maxcat, ncmax, ncsplit)
+     &                 best, critmax, nhit, maxcat, ncmax, ncsplit)
                end if
                if (nhit .eq. 1) msplit = mvar
 c            else
@@ -320,27 +320,27 @@ c     current node is moved to the left if it belongs to the left child and
 c     right if it belongs to the right child.
 
       subroutine movedata(a,ta,mdim,nsample,ndstart,ndend,idmove,
-     1     ncase,msplit,cat,nbest,ndendl)
+     1     ncase,msplit,cat,best,ndendl)
       implicit double precision(a-h,o-z)
       integer a(mdim,nsample),ta(nsample),idmove(nsample),
-     1     ncase(nsample),cat(mdim),icat(32)
+     1     ncase(nsample),cat(mdim),icat(53)
 
 c     compute idmove=indicator of case nos. going left
 
       if (cat(msplit).eq.1) then
-         do nsp=ndstart,nbest
+         do nsp=ndstart,int(best)
             nc=a(msplit,nsp)
             idmove(nc)=1
          end do
-         do nsp=nbest+1, ndend
+         do nsp=int(best)+1, ndend
             nc=a(msplit,nsp)
             idmove(nc)=0
          end do
-         ndendl=nbest
+         ndendl=int(best)
       else
          ndendl=ndstart-1
          l=cat(msplit)
-         call unpack(l,nbest,icat)
+         call unpack(best, l, icat)
          do nsp=ndstart,ndend
             nc=ncase(nsp)
             if (icat(a(msplit,nc)).eq.1) then
@@ -438,7 +438,7 @@ c
 c     npack is a long integer.  The sub. returns icat, an integer of zeroes and
 c     ones corresponding to the coefficients in the binary expansion of npack.
 c
-c      integer icat(32),npack
+c      integer icat(53),npack
 c      do j=1,32
 c         icat(j)=0
 c      end do

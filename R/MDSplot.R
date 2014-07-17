@@ -5,7 +5,7 @@ MDSplot <- function(rf, fac, k=2, palette=NULL, pch=20, ...) {
         stop(deparse(substitute(rf)), " does not contain a proximity matrix")
     op <- par(pty="s")
     on.exit(par(op))
-    rf.mds <- stats:::cmdscale(1 - rf$proximity, eig=TRUE, k=k)
+    rf.mds <- stats::cmdscale(1 - rf$proximity, eig=TRUE, k=k)
     colnames(rf.mds$points) <- paste("Dim", 1:k)
     nlevs <- nlevels(fac)
     if (is.null(palette)) {

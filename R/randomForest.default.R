@@ -83,8 +83,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         xlevels <- as.list(rep(0, p))
     }
     maxcat <- max(ncat)
-    if (maxcat > 32)
-        stop("Can not handle categorical predictors with more than 32 categories.")
+    if (maxcat > 53)
+        stop("Can not handle categorical predictors with more than 53 categories.")
 
     if (classRF) {
         nclass <- length(levels(y))
@@ -360,6 +360,9 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     x.row.names))) else NULL),
                     inbag = if (keep.inbag) rfout$inbag else NULL)
     } else {
+		ymean <- mean(y)
+		y <- y - ymean
+		ytest <- ytest - ymean
         rfout <- .C("regRF",
                     x,
                     as.double(y),
@@ -413,7 +416,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
             rfout$bestvar <-
                 rfout$bestvar[1:max.nodes, , drop=FALSE]
             rfout$nodepred <-
-                rfout$nodepred[1:max.nodes, , drop=FALSE]
+                rfout$nodepred[1:max.nodes, , drop=FALSE] + ymean
             rfout$xbestsplit <-
                 rfout$xbestsplit[1:max.nodes, , drop=FALSE]
             rfout$leftDaughter <-
@@ -430,7 +433,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
         out <- list(call = cl,
                     type = "regression",
-                    predicted = structure(ypred, names=x.row.names),
+                    predicted = structure(ypred + ymean, names=x.row.names),
                     mse = rfout$mse,
                     rsq = 1 - rfout$mse / (var(y) * (n-1) / n),
                     oob.times = rfout$oob.times,
@@ -445,7 +448,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                                                x.row.names)) else NULL,
                     proximity = if (proximity) matrix(rfout$prox, n, n,
                     dimnames = list(x.row.names, x.row.names)) else NULL,
-                    ntree = ntree,
+                   ntree = ntree,
                     mtry = mtry,
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
@@ -454,9 +457,9 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                       list(ncat = ncat), list(nrnodes=max.nodes),
                       list(ntree=ntree), list(xlevels=xlevels)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
-                    y = y,
+                    y = y + ymean,
                     test = if(testdat) {
-                        list(predicted = structure(rfout$ytestpred,
+                        list(predicted = structure(rfout$ytestpred + ymean,
                              names=xts.row.names),
                              mse = if(labelts) rfout$msets else NULL,
                              rsq = if(labelts) 1 - rfout$msets /

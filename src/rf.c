@@ -129,7 +129,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     wl =         (double *) S_alloc(nclass, sizeof(double));
     wr =         (double *) S_alloc(nclass, sizeof(double));
     classpop =   (double *) S_alloc(nclass* *nrnodes, sizeof(double));
-    tclasscat =  (double *) S_alloc(nclass*32, sizeof(double));
+    tclasscat =  (double *) S_alloc(nclass*MAX_CAT, sizeof(double));
     tclasspop =  (double *) S_alloc(nclass, sizeof(double));
     tx =         (double *) S_alloc(nsample, sizeof(double));
     win =        (double *) S_alloc(nsample, sizeof(double));
@@ -160,7 +160,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     nrightimp =     (int *) S_alloc(nclass, sizeof(int));
     nout =          (int *) S_alloc(nclass, sizeof(int));
     if (oobprox) {
-	oobpair = (int *) S_alloc(near*near, sizeof(int));
+    	oobpair = (int *) S_alloc(near*near, sizeof(int));
     }
 
     /* Count number of cases in each class. */

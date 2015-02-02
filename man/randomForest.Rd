@@ -65,8 +65,9 @@
     sampsize is a vector of the length the number of strata, then
     sampling is stratified by strata, and the elements of sampsize
     indicate the numbers to be drawn from the strata.}
-  \item{nodesize}{Minimum size of terminal nodes.  Setting this number
-    larger causes smaller trees to be grown (and thus take less time).
+  \item{nodesize}{Minimum size for splitting a node. If subsequent child node
+    is less than \code{nodesize} the child is a terminal node.  Setting this
+    number larger causes smaller trees to be grown (and thus take less time).
     Note that the default values are different for classification (1)
     and regression (5).}
   \item{maxnodes}{Maximum number of terminal nodes trees in the forest

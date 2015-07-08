@@ -19,6 +19,14 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
+void fake_multinomial (int K, int *coeffs){
+  int k;
+  for (k = 0; k < K; ++k)
+  {
+    coeffs[k] = 1;
+  }
+}
+
 void ran_multinomial (int K, int N, 
                       double p[], int *coeffs){
   int k;
@@ -199,10 +207,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         coeffs[k] = 1;
       }
       */
-
-      
+      fake_multinomial(*sampsize, coeffs)
+      /*
       ran_multinomial(*sampsize, 100, probs, coeffs);
-      
+      */
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;

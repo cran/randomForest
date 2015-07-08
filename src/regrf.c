@@ -32,15 +32,19 @@ void ran_multinomial (const size_t K, const unsigned int N,
    * due to rounding errors. 
    */
 
-   for (k = 0; k < K; ++k){
+   for (k = 0; k < K; ++k) {
     norm += p[k];
    }
 
-   for (k = 0; k < K; ++k){
-    if (p[k] > 0.0){
+   for (k = 0; k < K; ++k) {
+
+    if (p[k] > 0.0) 
+    {
       n[k] = rbinom(N - sum_n, p[k]/ (norm - sum_p));
     }
-    else{
+
+    else
+    {
       n[k] = 0;
     }
 

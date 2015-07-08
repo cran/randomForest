@@ -56,11 +56,17 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
     ss = 0.0;
     ms = 0.0; 
     for (i = 0; i < nsample; ++i) {
+		/*
 		d = y[jdex[i] - 1];
 		g = multcoeffs[jdex[i]-1];
 		ss += ((g * ms) / (ms + g)) * (av - d) * (av - d);
 		av = (av * ms + g * d) / (ms + g);
 		ms += g; 
+		*/
+
+		d = y[jdex[i] - 1];
+		ss += i * (av - d) * (av - d) / (i + 1);
+		av = (i * av + d) / (i + 1);
     }
     avnode[0] = av;
 
@@ -117,11 +123,18 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		av = 0.0;
 		ss = 0.0;
 		for (j = ndstart; j <= ndendl; ++j) {
+			/*
 			d = y[jdex[j]-1];
 			g = multcoeffs[jdex[j]-1];
 			ss += ((g * ms) / (ms + g)) * (av - d) * (av - d);
 			av = (av * ms + g * d) / (ms + g);
 			ms += g; 
+			*/
+
+			d = y[jdex[j]-1];
+			m = j - ndstart;
+			ss += m * (av - d) * (av - d) / (m + 1);
+			av = (m * av + d) / (m+1);
 		}
 
 		avnode[ncur+1] = av;
@@ -134,11 +147,17 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		av = 0.0;
 		ss = 0.0;
 		for (j = ndendl + 1; j <= ndend; ++j) {
+			/*
 			d = y[jdex[j]-1];
 			g = multcoeffs[jdex[j]-1];
 			ss += ((g * ms) / (ms + g)) * (av - d) * (av - d);
 			av = (av * ms + g * d) / (ms + g);
 			ms += g; 
+			*/
+			d = y[jdex[j]-1];
+			m = j - ndstart;
+			ss += m * (av - d) * (av - d) / (m + 1);
+			av = (m * av + d) / (m+1);
 		}
 		avnode[ncur + 2] = av;
 		nodestatus[ncur + 2] = NODE_TOSPLIT;

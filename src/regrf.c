@@ -19,13 +19,13 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-void ran_multinomial (size_t K, unsigned int N, 
-                      double p[], int *coeffs){
-  int k;
+void ran_multinomial (const size_t K, const unsigned int N, 
+                      const double p[], int *coeffs){
+  size_t k;
   double norm  = 0.0;
   double sum_p = 0.0;
 
-  int sum_n = 0;
+  unsigned int sum_n = 0;
 
   /* p[k] may contain non-negative weights that do not sum to 1.0.
    * Even a probability distribution will not exactly sum to 1.0
@@ -194,15 +194,15 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       }
       */
 
-      
+      /*
       for (k = 0; k < *sampsize; ++k) {
         coeffs[k] = 1;
       }
-      
-
-      /*
-      ran_multinomial(*sampsize, 100, probs, coeffs);
       */
+
+      
+      ran_multinomial(*sampsize, 100, probs, coeffs);
+      
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;

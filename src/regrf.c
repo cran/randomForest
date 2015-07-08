@@ -19,8 +19,8 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-void ran_multinomial (int K, int N, 
-                      double p[], int *coeffs){
+void ran_multinomial (size_t K, unsigned int N, 
+                      double p[], unsigned int n[]){
   int k;
   double norm  = 0.0;
   double sum_p = 0.0;
@@ -194,14 +194,15 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       }
       */
 
-      
+      /*
       for (k = 0; k < *sampsize; ++k) {
         coeffs[k] = 1;
       }
-    
-      /*
-      ran_multinomial(*sampsize, 100, probs, coeffs);
       */
+
+      
+      ran_multinomial(*sampsize, 100, probs, coeffs);
+      
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;

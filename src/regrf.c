@@ -187,13 +187,15 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1 / *sampsize;
       }
 
-      int fakecoeffs[*sampsize];
+
+      /*int coeffs[*sampsize]; */
       for (k = 0; k < *sampsize; ++k) {
-        fakecoeffs[k] = 1;
+        coeffs[k] = 1;
       }
 
+      /*
       ran_multinomial(*sampsize, 100, probs, coeffs);
-
+      */
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;

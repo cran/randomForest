@@ -452,7 +452,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 						x[m + n*mdim] = tx[n];
 						if (jin[n] == 0) {
 							if (jvr[n] == cl[n]) {
-+								nrightimp[cl[n] - 1]++;
+								nrightimp[cl[n] - 1]++;
 								nrightimpall++;
 							}
 							if (localImp && jvr[n] != jtr[n]) {

@@ -207,7 +207,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         coeffs[k] = 1;
       }
       */
-      fake_multinomial(*sampsize, coeffs)
+      fake_multinomial(*sampsize, coeffs);
       /*
       ran_multinomial(*sampsize, 100, probs, coeffs);
       */

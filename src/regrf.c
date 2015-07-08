@@ -43,7 +43,7 @@ void ran_multinomial (const size_t K, const unsigned int N,
       coeffs[k] = 1;
       /* 
       coeffs[k] = rbinom(N - sum_n, p[k]/ (norm - sum_p));
-      /*
+      */
     }
 
     else
@@ -190,16 +190,16 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1 / *sampsize;
       }
 
-
-      /*int coeffs[*sampsize]; */
+      /*
+      int coeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {
         coeffs[k] = 2;
       }
-      
-      
-      /* 
-      ran_multinomial(*sampsize, 100, probs, coeffs);
       */
+      
+      
+      ran_multinomial(*sampsize, 100, probs, coeffs);
+      
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;

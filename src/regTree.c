@@ -263,12 +263,20 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		crit = 0.0;
 		/* Search through the "gaps" in the x-variable. */
 		for (j = ndstart; j <= ndend - 1; ++j) {
+			/*
 			d = yl[ncase[j] - 1];
 			g = multcoeffs[ncase[j]-1];
 			suml += d * g;
 			sumr -= d * g;
 			npopl += g;
 			npopr -= g;
+			*/
+			d = yl[ncase[j] - 1];
+			suml += d;
+			sumr -= d;
+			npopl++;
+			npopr--;
+			
 			if (v[j] < v[j+1]) {
 				crit = (suml * suml / npopl) + (sumr * sumr / npopr) -
 					critParent;

@@ -40,7 +40,7 @@ void ran_multinomial (size_t K, unsigned int N,
 
     if (p[k] > 0.0) 
     {   
-      coeffs[k] = 1; /*rbinom(N - sum_n, p[k]/ (norm - sum_p));   */
+      coeffs[k] = 0; /*rbinom(N - sum_n, p[k]/ (norm - sum_p));   */
     }
 
     else

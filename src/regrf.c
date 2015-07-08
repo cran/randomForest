@@ -13,6 +13,7 @@
 *******************************************************************/
 
 #include <R.h>
+#include <Rmath.h>
 #include "rf.h"
 
 void simpleLinReg(int nsample, double *x, double *y, double *coef,

@@ -23,6 +23,7 @@ Modifications to get the forest out Matt Wiener Feb. 26, 2002.
 
 #include <R.h>
 #include <R_ext/Utils.h>
+#include <Rmath.h>
 #include "rf.h"
 
 void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,

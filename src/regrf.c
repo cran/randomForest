@@ -20,7 +20,7 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
 void ran_multinomial (const size_t K, const unsigned int N, 
-                      const double p[], int coeffs){
+                      const double p[], int *coeffs){
   size_t k;
   double norm  = 0.0;
   double sum_p = 0.0;
@@ -190,12 +190,12 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1 / *sampsize;
       }
 
-      /*
-      int coeffs[*sampsize]; 
+      
+      int fakecoeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {
-        coeffs[k] = 2;
+        fakecoeffs[k] = 1;
       }
-      */
+      
       
       
       ran_multinomial(*sampsize, 100, probs, coeffs);
@@ -238,7 +238,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		regTree(xb, yb, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodestatus + idx, *nrnodes,
                 treeSize + j, *nthsize, *mtry, mbest + idx, cat, tgini,
-                varUsed, coeffs);
+                varUsed, fakecoeffs);
         /* predict the OOB data with the current tree */
 		/* ytr is the prediction on OOB data by the current tree */
 		predictRegTree(x, nsample, mdim, lDaughter + idx,

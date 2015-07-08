@@ -19,6 +19,35 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
+void ran_multinomial (const size_t K, const unsigned int N, 
+                      const double p[], unsigned int n[]){
+  size_t k;
+  double norm  = 0.0;
+  double sum_p = 0.0;
+
+  unsigned int sum_n = 0;
+
+  /* p[k] may contain non-negative weights that do not sum to 1.0.
+   * Even a probability distribution will not exactly sum to 1.0
+   * due to rounding errors. 
+   */
+
+   for (k = 0; k < K; ++k){
+    norm += p[k];
+   }
+
+   for (k = 0; k < K; ++k){
+    if (p[k] > 0.0){
+      n[k] = rbinom(N - sum_n, p[k]/ (norm - sum_p));
+    }
+    else{
+      n[k] = 0;
+    }
+
+    sum_p += p[k];
+    sum_n += n[k];
+   }
+}
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
@@ -143,6 +172,21 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
      * Start the loop over trees.
      *************************************/
     for (j = 0; j < *nTree; ++j) {
+
+      /* implement the multinomial 
+          use the vector coeffs to pass into regTree
+      */
+      unsigned int coeffs[nsample];
+      double probs[nsample];
+
+      for (k = 0; k < nsample; ++k) {
+        probs[k] = 1/nsample;
+      }
+
+      ran_multinomial(nsample, 100, probs, coeffs);
+
+    /* be done with the multinomial */
+
 		idx = keepF ? j * *nrnodes : 0;
 		zeroInt(in, nsample);
         zeroInt(varUsed, mdim);
@@ -179,7 +223,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		regTree(xb, yb, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodestatus + idx, *nrnodes,
                 treeSize + j, *nthsize, *mtry, mbest + idx, cat, tgini,
-                varUsed);
+                varUsed, coeffs);
         /* predict the OOB data with the current tree */
 		/* ytr is the prediction on OOB data by the current tree */
 		predictRegTree(x, nsample, mdim, lDaughter + idx,

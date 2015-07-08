@@ -123,6 +123,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		/* compute mean and sum of squares for the left daughter node */
 		av = 0.0;
 		ss = 0.0;
+		ms = 0.0;
 		for (j = ndstart; j <= ndendl; ++j) {
 			
 			d = y[jdex[j]-1];
@@ -148,6 +149,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 		/* compute mean and sum of squares for the right daughter node */
 		av = 0.0;
 		ss = 0.0;
+		ms = 0.0;
 		for (j = ndendl + 1; j <= ndend; ++j) {
 			
 			d = y[jdex[j]-1];

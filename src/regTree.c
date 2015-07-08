@@ -66,7 +66,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 
 		d = y[jdex[i] - 1];
 		ss += i * (av - d) * (av - d) / (i + 1);
-		av = (i * av + d) / (i + 1);
+		av = 10 * (i * av + d) / (i + 1);
     }
     avnode[0] = av;
 
@@ -134,7 +134,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 			d = y[jdex[j]-1];
 			m = j - ndstart;
 			ss += m * (av - d) * (av - d) / (m + 1);
-			av = (m * av + d) / (m+1);
+			av = 10 * (m * av + d) / (m+1);
 		}
 
 		avnode[ncur+1] = av;
@@ -157,7 +157,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 			d = y[jdex[j]-1];
 			m = j - (ndendl + 1);
 			ss += m * (av - d) * (av - d) / (m + 1);
-			av = (m * av + d) / (m+1);
+			av = 10 * (m * av + d) / (m+1);
 		}
 		avnode[ncur + 2] = av;
 		nodestatus[ncur + 2] = NODE_TOSPLIT;
@@ -276,7 +276,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 			sumr -= d;
 			npopl++;
 			npopr--;
-			
+
 			if (v[j] < v[j+1]) {
 				crit = (suml * suml / npopl) + (sumr * sumr / npopr) -
 					critParent;

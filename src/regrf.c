@@ -86,7 +86,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double errts = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
 
-    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
+    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *coeffs, *probs;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
@@ -179,7 +179,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
       /* implement the multinomial 
           use the vector coeffs to pass into regTree
-      */
+          */
       unsigned int coeffs[nsample];
       double probs[nsample];
 

@@ -40,7 +40,7 @@ void ran_multinomial (const size_t K, const unsigned int N,
 
     if (p[k] > 0.0) 
     {
-      n[k] = rbinom(N - sum_n, p[k]/ (norm - sum_p));
+      n[k] = rbinom(10, N - sum_n, p[k]/ (norm - sum_p));
     }
 
     else

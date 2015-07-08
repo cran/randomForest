@@ -20,7 +20,7 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
 void ran_multinomial (size_t K, unsigned int N, 
-                      double p[], unsigned int n[]){
+                      double p[], int *coeffs){
   int k;
   double norm  = 0.0;
   double sum_p = 0.0;

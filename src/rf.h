@@ -36,7 +36,7 @@ void normClassWt(int *cl, const int nsample, const int nclass,
                  const int useWt, double *classwt, int *classFreq);
 
 void ran_multinomial (size_t K, unsigned int N, 
-                      double p[], unsigned int n[]);
+                      double p[], int *coeffs);
 
 void classForest(int *mdim, int *ntest, int *nclass, int *maxcat, 
                  int *nrnodes, int *jbt, double *xts, double *xbestsplit, 

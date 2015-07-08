@@ -30,7 +30,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
              double *upper, double *avnode, int *nodestatus, int nrnodes,
              int *treeSize, int nthsize, int mtry, int *mbest, int *cat,
 	     double *tgini, int *varUsed, int *multcoeffs) {
-    int i, j, k, m, g, ncur, *jdex, *nodestart, *nodepop;
+    int i, j, k, g, ncur, *jdex, *nodestart, *nodepop;
     int ndstart, ndend, ndendl, nodecnt, jstat, msplit;
     double d, ss, av, ms, decsplit, ubest, sumnode;
 

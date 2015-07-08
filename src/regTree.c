@@ -155,7 +155,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 			ms += g; 
 			*/
 			d = y[jdex[j]-1];
-			m = j - ndstart;
+			m = j - (ndendl + 1);
 			ss += m * (av - d) * (av - d) / (m + 1);
 			av = (m * av + d) / (m+1);
 		}

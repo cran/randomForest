@@ -36,7 +36,7 @@ void normClassWt(int *cl, const int nsample, const int nclass,
                  const int useWt, double *classwt, int *classFreq);
 
 void ran_multinomial (const size_t K, const unsigned int N, 
-                      const double p[], unsigned int n[]);
+                      const double p[], int *coeffs);
 
 void classForest(int *mdim, int *ntest, int *nclass, int *maxcat, 
                  int *nrnodes, int *jbt, double *xts, double *xbestsplit, 
@@ -48,7 +48,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
 void regTree(double *x, double *y, int mdim, int nsample, 
 	     int *lDaughter, int *rDaughter, double *upper, double *avnode, 
              int *nodestatus, int nrnodes, int *treeSize, int nthsize, 
-             int mtry, int *mbest, int *cat, double *tgini, int *varUsed, unsigned int multcoeffs[]);
+             int mtry, int *mbest, int *cat, double *tgini, int *varUsed, int *multcoeffs);
 
 void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample, 
 		   int ndstart, int ndend, int *msplit, double *decsplit, 

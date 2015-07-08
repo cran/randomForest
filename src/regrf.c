@@ -20,7 +20,7 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
 void ran_multinomial (const size_t K, const unsigned int N, 
-                      const double p[], unsigned int n[]){
+                      const double p[], int *coeffs){
   size_t k;
   double norm  = 0.0;
   double sum_p = 0.0;
@@ -86,13 +86,13 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double errts = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
 
-    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *coeffs, *probs;
+    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
     int *oobpair, varImp, localImp, *varUsed;
 
-    int *in, *nind, *nodex, *nodexts;
+    int *in, *nind, *nodex, *nodexts, *coeffs;
 
     nsample = xdim[0];
     mdim = xdim[1];
@@ -107,6 +107,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
+    coeffs     = (int *)    S_alloc(*sampsize, sizeof(int));
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
     resOOB     = (double *) S_alloc(nsample, sizeof(double));
@@ -180,14 +181,12 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       /* implement the multinomial 
           use the vector coeffs to pass into regTree
           */
-      unsigned int coeffs[nsample];
-      double probs[nsample];
 
-      for (k = 0; k < nsample; ++k) {
-        probs[k] = 1/nsample;
+      for (k = 0; k < *sampsize; ++k) {
+        probs[k] = 1 / *sampsize;
       }
 
-      ran_multinomial(nsample, 100, probs, coeffs);
+      ran_multinomial(*sampsize, 100, probs, coeffs);
 
     /* be done with the multinomial */
 

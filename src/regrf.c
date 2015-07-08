@@ -19,13 +19,13 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-void ran_multinomial (size_t K, unsigned int N, 
+void ran_multinomial (size_t K, int N, 
                       double p[], int *coeffs){
   size_t k;
   double norm  = 0.0;
   double sum_p = 0.0;
 
-  unsigned int sum_n = 0;
+  int sum_n = 0;
 
   /* p[k] may contain non-negative weights that do not sum to 1.0.
    * Even a probability distribution will not exactly sum to 1.0

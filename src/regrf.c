@@ -190,7 +190,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
       /*int coeffs[*sampsize]; */
       for (k = 0; k < *sampsize; ++k) {
-        coeffs[k] = 1;
+        coeffs[k] = 2;
       }
 
       /*

@@ -40,16 +40,16 @@ void ran_multinomial (const size_t K, const unsigned int N,
 
     if (p[k] > 0.0) 
     {
-      n[k] = rbinom(N - sum_n, p[k]/ (norm - sum_p));
+      coeffs[k] = rbinom(N - sum_n, p[k]/ (norm - sum_p));
     }
 
     else
     {
-      n[k] = 0;
+      coeffs[k] = 0;
     }
 
     sum_p += p[k];
-    sum_n += n[k];
+    sum_n += coeffs[k];
    }
 }
 
@@ -86,7 +86,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double errts = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
 
-    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
+    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, probs;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;

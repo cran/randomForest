@@ -23,7 +23,7 @@ void fake_multinomial (int K, int *coeffs){
   int k;
   for (k = 0; k < K; ++k)
   {
-    coeffs[k] = 2.0; 
+    coeffs[k] = 1.0; 
   }
 }
 
@@ -34,7 +34,7 @@ void ran_multinomial (int K, int N,
   double sum_p = 0.0;
 
   int sum_n = 0;
-  GetRNGstate();
+  /*GetRNGstate();*/
 
   /* p[k] may contain non-negative weights that do not sum to 1.0.
    * Even a probability distribution will not exactly sum to 1.0
@@ -49,9 +49,9 @@ void ran_multinomial (int K, int N,
 
     if (p[k] > 0.0) 
     {   
-      /*
-      coeffs[k] = 1.0; */
-      coeffs[k] = rbinom( 1, 1);
+      
+      coeffs[k] = 1; 
+      /*coeffs[k] = rbinom( 1, 1);*/
     }
 
     else
@@ -62,7 +62,7 @@ void ran_multinomial (int K, int N,
     sum_p += p[k];
     sum_n += coeffs[k];
    }
-   PutRNGstate();
+   /*PutRNGstate();*/
 }
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
@@ -211,13 +211,13 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         coeffs[k] = 1;
       }
       */
-      
-      fake_multinomial(*sampsize, coeffs);
-      
-      
       /*
-      ran_multinomial(*sampsize, 100, probs, coeffs);
+      fake_multinomial(*sampsize, coeffs);
       */
+      
+      
+      ran_multinomial(*sampsize, 100, probs, coeffs);
+      
 
     /* be done with the multinomial */
 

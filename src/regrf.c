@@ -39,11 +39,11 @@ void ran_multinomial (int K, int N,
    * Even a probability distribution will not exactly sum to 1.0
    * due to rounding errors. 
    */
-   /*
+   
    for (k = 0; k < K; ++k) {
-    norm += probs[k];
+    norm = probs[k];
    }
-  */
+  
    for (k = 0; k < K; ++k) {
 
     if (probs[k] > 0.0) 

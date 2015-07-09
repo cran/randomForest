@@ -30,7 +30,7 @@ void fake_multinomial (int K, int *coeffs, double *probs){
 void ran_multinomial (int K, int N, 
                       double *probs, int *coeffs){
   int k;
-  double norm  = 1.0;
+  double norm  = 0.0;
   double sum_p = 0.0;
   int sum_n = 0;
   /*GetRNGstate();*/
@@ -40,8 +40,9 @@ void ran_multinomial (int K, int N,
    * due to rounding errors. 
    */
    
-   for (k = 0; k < K; ++k) {
-    norm = probs[k];
+   for (k = 0; k < K; ++k) 
+   {
+    norm += probs[k];
    }
   
    for (k = 0; k < K; ++k) {

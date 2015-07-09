@@ -121,6 +121,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
     coeffs     = (int *)    S_alloc(*sampsize, sizeof(int));
+    probs      = (double *) S_alloc(*sampsize, sizeof(double));
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
     resOOB     = (double *) S_alloc(nsample, sizeof(double));
@@ -194,8 +195,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       /* implement the multinomial 
           use the vector coeffs to pass into regTree
           */
-      double probs[*sampsize];
 
+          /*
+      double probs[*sampsize];
+          */
       for (k = 0; k < *sampsize; ++k) {
         probs[k] = 1.0 / *sampsize;
       }

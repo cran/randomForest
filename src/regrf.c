@@ -19,7 +19,7 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-void fake_multinomial (int K, int *coeffs){
+void fake_multinomial (int K, int *coeffs[]){
   int k;
   for (k = 0; k < K; ++k)
   {

@@ -19,11 +19,11 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-void fake_multinomial (int K, int *coeffs){
+void fake_multinomial (int K, int *coeffs, double *probs){
   int k;
   for (k = 0; k < K; ++k)
   {
-    coeffs[k] = 1.0; 
+    coeffs[k] = rbinom(1.0, probs[k]); 
   }
 }
 
@@ -32,7 +32,6 @@ void ran_multinomial (int K, int N,
   int k;
   double norm  = 0.0;
   double sum_p = 0.0;
-
   int sum_n = 0;
   /*GetRNGstate();*/
 
@@ -50,7 +49,7 @@ void ran_multinomial (int K, int N,
     if (p[k] > 0.0) 
     {   
       /*coeffs[k] = 1; */
-      coeffs[k] = rbinom(N - sum_n , p[k]);
+      coeffs[k] = rbinom(N - sum_n , b[k]);
       /*coeffs[k] = rbinom(N - sum_n , p[k] / (norm - sum_p));*/
       /*coeffs[k] = rbinom( 1.0, 1.0);*/
     }
@@ -216,13 +215,14 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         coeffs[k] = 1;
       }
       */
+      
+
+      fake_multinomial(*sampsize, coeffs, probs);
+      
+      
       /*
-      fake_multinomial(*sampsize, coeffs);
-      */
-      
-      
       ran_multinomial(*sampsize, 100, probs, coeffs);
-      
+      */
 
     /* be done with the multinomial */
 

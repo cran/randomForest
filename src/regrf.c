@@ -24,7 +24,7 @@ void fake_multinomial (int K, int *coeffs){
   for (k = 0; k < K; ++k)
   {
     GetRNGstate();
-    coeffs[k] = (int) rbinom(10.0, 0.5);
+    coeffs[k] = 1;
     PutRNGstate();
   }
 }
@@ -208,19 +208,19 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       }
       */
 
-      
+      /*
       for (k = 0; k < *sampsize; ++k) {
         coeffs[k] = 1;
       }
-      
-      /*
-      fake_multinomial(*sampsize, coeffs);
       */
+      
+      fake_multinomial(*sampsize, coeffs);
+      
       
       /*
       ran_multinomial(*sampsize, 100, probs, coeffs);
       */
-      
+
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;

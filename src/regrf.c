@@ -23,9 +23,7 @@ void fake_multinomial (int K, int *coeffs){
   int k;
   for (k = 0; k < K; ++k)
   {
-    
-    coeffs[k] = 1;
-    
+    coeffs[k] = 1.0; 
   }
 }
 

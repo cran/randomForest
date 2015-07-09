@@ -24,7 +24,7 @@ void fake_multinomial (int K, int *coeffs){
   for (k = 0; k < K; ++k)
   {
     GetRNGstate();
-    coeffs[k] = rbinom(10.0, 0.5);
+    coeffs[k] = (int) rbinom(10.0, 0.5);
     PutRNGstate();
   }
 }

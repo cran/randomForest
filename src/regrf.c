@@ -31,7 +31,7 @@ void ran_multinomial (int K, int N,
                       double *probs, int *coeffs){
   int k;
   double norm  = 0.0;
-  double sum_p = 0.0;
+  double sum_p = 1.0;
   int sum_n = 0;
   /*GetRNGstate();*/
 

@@ -42,7 +42,7 @@ void ran_multinomial (int K, int N,
    
    for (k = 0; k < K; ++k) 
    {
-    norm = probs[k];
+    norm += probs[k];
    }
   
    for (k = 0; k < K; ++k) {
@@ -222,7 +222,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 100, probs, coeffs);
+      ran_multinomial(nsample, 100, probs, coeffs);
     
 
     /* be done with the multinomial */

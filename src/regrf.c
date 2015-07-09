@@ -50,7 +50,7 @@ void ran_multinomial (int K, int N,
     if (probs[k] > 0.0) 
     {   
       /*coeffs[k] = 1; */
-      coeffs[k] = rbinom(1.0 , probs[k] / (norm - sum_p));
+      coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));
       /*coeffs[k] = rbinom(N - sum_n , p[k] / (norm - sum_p));*/
       /*coeffs[k] = rbinom( 1.0, 1.0);*/
     }
@@ -61,7 +61,7 @@ void ran_multinomial (int K, int N,
     }
 
     sum_p += probs[k];
-    sum_n = coeffs[k];
+    sum_n += coeffs[k];
    }
    /*PutRNGstate();*/
 }

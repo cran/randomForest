@@ -21,12 +21,12 @@ void simpleLinReg(int nsample, double *x, double *y, double *coef,
 
 void fake_multinomial (int K, int *coeffs){
   int k;
-  GetRNGstate();
   for (k = 0; k < K; ++k)
   {
+    GetRNGstate();
     coeffs[k] = rbinom(10.0, 0.5);
+    PutRNGstate();
   }
-  PutRNGstate();
 }
 
 void ran_multinomial (int K, int N, 

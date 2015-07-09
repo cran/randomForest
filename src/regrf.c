@@ -34,7 +34,7 @@ void ran_multinomial (int K, int N,
   double sum_p = 0.0;
 
   int sum_n = 0;
-  /*GetRNGstate();*/
+  GetRNGstate();
 
   /* p[k] may contain non-negative weights that do not sum to 1.0.
    * Even a probability distribution will not exactly sum to 1.0
@@ -62,7 +62,7 @@ void ran_multinomial (int K, int N,
     sum_p += p[k];
     sum_n += coeffs[k];
    }
-   /*PutRNGstate();*/
+   PutRNGstate();
 }
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,

@@ -51,7 +51,7 @@ void ran_multinomial (int K, int N,
     {   
       
       /*coeffs[k] = 1; */
-      coeffs[k] = rbinom( 1, 1);
+      coeffs[k] = rbinom( 1.0, 1.0);
     }
 
     else

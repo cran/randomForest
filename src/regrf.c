@@ -28,7 +28,7 @@ void fake_multinomial (int K, int *coeffs, double *probs){
 }
 
 void ran_multinomial (int K, int N, 
-                      double *p, int *coeffs){
+                      double *probs, int *coeffs){
   int k;
   double norm  = 0.0;
   double sum_p = 0.0;
@@ -41,15 +41,15 @@ void ran_multinomial (int K, int N,
    */
 
    for (k = 0; k < K; ++k) {
-    norm += p[k];
+    norm += probs[k];
    }
 
    for (k = 0; k < K; ++k) {
 
-    if (p[k] > 0.0) 
+    if (probs[k] > 0.0) 
     {   
       /*coeffs[k] = 1; */
-      coeffs[k] = rbinom(N - sum_n , p[k]);
+      coeffs[k] = rbinom(N - sum_n , probs[k]);
       /*coeffs[k] = rbinom(N - sum_n , p[k] / (norm - sum_p));*/
       /*coeffs[k] = rbinom( 1.0, 1.0);*/
     }
@@ -59,7 +59,7 @@ void ran_multinomial (int K, int N,
       coeffs[k] = 0;
     }
 
-    sum_p += p[k];
+    sum_p += probs[k];
     sum_n += coeffs[k];
    }
    /*PutRNGstate();*/
@@ -215,14 +215,14 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         coeffs[k] = 1;
       }
       */
-      
+      /*
 
       fake_multinomial(*sampsize, coeffs, probs);
-      
-      
-      /*
-      ran_multinomial(*sampsize, 100, probs, coeffs);
       */
+      
+      
+      ran_multinomial(*sampsize, 100, probs, coeffs);
+    
 
     /* be done with the multinomial */
 

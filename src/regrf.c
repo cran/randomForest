@@ -31,6 +31,7 @@ void ran_multinomial (int K, int N,
                       double *probs, int *coeffs){
   int k;
   double norm  = 0.0;
+  double try   = 0.0;
   double sum_p = 0.0;
   int sum_n = 0;
   /*GetRNGstate();*/
@@ -40,7 +41,7 @@ void ran_multinomial (int K, int N,
    * due to rounding errors. 
    */
   for (k = 0; k < K; ++k) {
-    norm = probs[k];
+    try += probs[k];
   }
   
   for (k = 0; k < K; ++k) {
@@ -48,7 +49,7 @@ void ran_multinomial (int K, int N,
     if (probs[k] > 0.0) 
     {   
       /*coeffs[k] = 1; */
-      coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));
+      coeffs[k] = rbinom(N - sum_n, probs[k] / (try - sum_p));
       /*coeffs[k] = rbinom(N - sum_n , p[k] / (norm - sum_p));*/
       /*coeffs[k] = rbinom( 1.0, 1.0);*/
     }

@@ -197,11 +197,12 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
           /*
       double probs[*sampsize];
           */
+      /*
       for (k = 0; k < *sampsize; ++k) {
-        /*probs[k] = 1.0 / *sampsize;*/
+        
         probs[k] = 1.0 / *sampsize;
       }
-
+      */
       
       /*
       int fakecoeffs[*sampsize]; 
@@ -210,18 +211,19 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       }
       */
 
-      /*
+      
       for (k = 0; k < *sampsize; ++k) {
-        coeffs[k] = 1;
+        treecoeffs[k] = 1;
       }
-      */
+      
       /*
 
       fake_multinomial(*sampsize, coeffs, probs);
       */
       
-      
+      /*
       ran_multinomial(*sampsize, 100, probs, treecoeffs);
+      */
       coeffs[j] = treecoeffs;
 
     /* be done with the multinomial */

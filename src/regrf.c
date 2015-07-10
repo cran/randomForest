@@ -28,9 +28,9 @@ void fake_multinomial (int K, int *coeffs, double *probs){
 }
 
 void ran_multinomial (int K, int N, 
-                      double *probs, int *coeffs){
+                      double *probs, double norm, int *coeffs){
   int k;
-  double norm  = 0.0;
+  /*double norm  = 0.0;*/
   double sum_p = 0.0;
   int sum_n = 0;
   /*GetRNGstate();*/
@@ -39,12 +39,12 @@ void ran_multinomial (int K, int N,
    * Even a probability distribution will not exactly sum to 1.0
    * due to rounding errors. 
    */
-   
+   /*
    for (k = 0; k < K; ++k) 
    {
     norm += probs[k];
    }
-  
+  */
    for (k = 0; k < K; ++k) {
 
     if (probs[k] > 0.0) 
@@ -96,10 +96,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
   *************************************************************************/
 
-    double errts = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
+    double errts = 0.0, norm = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
 
-    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *probs, norm;
+    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *probs;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
@@ -204,7 +204,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1.0 / *sampsize;
       }
 
-      
+      for (k = 0; k < K; ++k) 
+      {
+        norm += probs[k];
+      }
       /*
       int fakecoeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {
@@ -223,7 +226,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 100, probs, coeffs);
+      ran_multinomial(*sampsize, 100, probs, norm, coeffs);
     
 
     /* be done with the multinomial */

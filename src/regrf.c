@@ -204,7 +204,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1.0 / *sampsize;
       }
 
-      for (k = 0; k < K; ++k) 
+      for (k = 0; k < *sampsize; ++k) 
       {
         norm += probs[k];
       }

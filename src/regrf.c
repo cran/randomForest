@@ -42,7 +42,7 @@ void ran_multinomial (int K, int N,
    
    for (k = 0; k < K; ++k) 
    {
-    norm = probs[k];
+    norm += probs[k];
    }
   
    for (k = 0; k < K; ++k) {
@@ -99,7 +99,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double errts = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
 
-    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *probs;
+    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *probs, norm;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
@@ -204,6 +204,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1.0 / *sampsize;
       }
 
+      
       /*
       int fakecoeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {
@@ -222,7 +223,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 100, probs, coeffs);
+      ran_multinomial(*sampsize, 100, probs, norm, coeffs);
     
 
     /* be done with the multinomial */

@@ -224,13 +224,14 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       /*
       ran_multinomial(*sampsize, 100, probs, treecoeffs);
       */
-      coeffs[j] = treecoeffs;
-
+      
+      coeffs = treecoeffs[j];
+      
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;
 		zeroInt(in, nsample);
-        zeroInt(varUsed, mdim);
+        zeroInt(varUsed, mdim);0
         /* Draw a random sample for growing a tree. */
 		if (*replace) { /* sampling with replacement */
 			for (n = 0; n < *sampsize; ++n) {

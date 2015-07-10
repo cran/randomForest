@@ -28,11 +28,12 @@ void fake_multinomial (int K, int *coeffs, double *probs){
 }
 
 void ran_multinomial (int K, int N, 
-                      double *probs, int *coeffs){
+                      double *probs, int *coeffs)
+{
   int k;
   double norm  = 0.0;
-  double try   = 0.0;
   double sum_p = 0.0;
+
   int sum_n = 0;
   /*GetRNGstate();*/
 
@@ -40,28 +41,28 @@ void ran_multinomial (int K, int N,
    * Even a probability distribution will not exactly sum to 1.0
    * due to rounding errors. 
    */
-  for (k = 0; k < K; ++k) {
-    try = probs[k];
-  }
+  for (k = 0; k < K; ++k) 
+    {
+      try = probs[k];
+    }
   
-  for (k = 0; k < K; ++k) {
-
-    if (probs[k] > 0.0) 
-    {   
+  for (k = 0; k < K; ++k) 
+    {
+      if (probs[k] > 0.0) 
+        {   
       /*coeffs[k] = 1; */
-      coeffs[k] = rbinom(N - sum_n, probs[k] / (try - sum_p));
+          coeffs[k] = rbinom(N - sum_n, probs[k] / (try - sum_p));
       /*coeffs[k] = rbinom(N - sum_n , p[k] / (norm - sum_p));*/
       /*coeffs[k] = rbinom( 1.0, 1.0);*/
-    }
+        }
+      else
+        {
+          coeffs[k] = 0;
+        }
 
-    else
-    {
-      coeffs[k] = 0;
+      sum_p += probs[k];
+      sum_n += coeffs[k];
     }
-
-    sum_p += probs[k];
-    sum_n += coeffs[k];
-  }
    /*PutRNGstate();*/
 }
 

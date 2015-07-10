@@ -391,7 +391,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     nodepred = matrix(double(nrnodes * nt), ncol=nt),
                     bestvar = matrix(integer(nrnodes * nt), ncol=nt),
                     xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
-                    mse = double(ntree),
+                    mse = double(ntree), #this specifies the length of the 
                     keep = as.integer(c(keep.forest, keep.inbag)),
                     replace = as.integer(replace),
                     testdat = as.integer(testdat),
@@ -407,6 +407,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
                     DUP=FALSE,
+                    coeffs = integer(ntree),
                     PACKAGE="randomForest")[c(16:28, 36:41)]
         ## Format the forest component, if present.
         if (keep.forest) {
@@ -472,7 +473,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     } else NULL,
                     inbag = if (keep.inbag)
                     matrix(rfout$inbag, nrow(rfout$inbag),
-                           dimnames=list(x.row.names, NULL)) else NULL )
+                           dimnames=list(x.row.names, NULL)) else NULL,
+                    coeffs = rfout$coeffs )
     }
     class(out) <- "randomForest"
     return(out)

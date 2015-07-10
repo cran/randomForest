@@ -449,7 +449,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                                                x.row.names)) else NULL,
                     proximity = if (proximity) matrix(rfout$prox, n, n,
                     dimnames = list(x.row.names, x.row.names)) else NULL,
-                   ntree = ntree,
+                    ntree = ntree,
                     mtry = mtry,
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",

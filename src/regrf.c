@@ -43,7 +43,7 @@ void ran_multinomial (int K, int N,
    */
   for (k = 0; k < K; ++k) 
     {
-      norm = probs[k];
+      norm += probs[k];
     }
   
   for (k = 0; k < K; ++k) 

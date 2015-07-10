@@ -73,7 +73,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *nout, int *inbag, int **coeffs) {
+           int *nout, int *inbag, int *coeffs) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -103,7 +103,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         nsample, mdim, keepF, keepInbag;
     int *oobpair, varImp, localImp, *varUsed;
 
-    int *in, *nind, *nodex, *nodexts, *treecoeffs;
+    int *in, *nind, *nodex, *nodexts;
 
     nsample = xdim[0];
     mdim = xdim[1];
@@ -118,7 +118,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
-    treecoeffs = (int *)    S_alloc(*sampsize, sizeof(int));
+    /*coeffs = (int *)    S_alloc(*sampsize, sizeof(int));*/
     probs      = (double *) S_alloc(*sampsize, sizeof(double));
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
@@ -213,7 +213,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
       
       for (k = 0; k < *sampsize; ++k) {
-        treecoeffs[k] = 1;
+        coeffs[k] = 1;
       }
       
       /*
@@ -224,9 +224,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       /*
       ran_multinomial(*sampsize, 100, probs, treecoeffs);
       */
-      
+      /*
       coeffs[j] = treecoeffs;
-      
+      */
     /* be done with the multinomial */
 
 		idx = keepF ? j * *nrnodes : 0;
@@ -265,7 +265,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		regTree(xb, yb, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodestatus + idx, *nrnodes,
                 treeSize + j, *nthsize, *mtry, mbest + idx, cat, tgini,
-                varUsed, treecoeffs);
+                varUsed, coeffs);
         /* predict the OOB data with the current tree */
 		/* ytr is the prediction on OOB data by the current tree */
 		predictRegTree(x, nsample, mdim, lDaughter + idx,

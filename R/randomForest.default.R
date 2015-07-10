@@ -473,7 +473,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     inbag = if (keep.inbag)
                     matrix(rfout$inbag, nrow(rfout$inbag),
                            dimnames=list(x.row.names, NULL)) else NULL,
-                    coeffs = rfout$coeffs)
+                    coeffs = coeffs)
     }
     class(out) <- "randomForest"
     return(out)

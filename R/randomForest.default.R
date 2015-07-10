@@ -384,6 +384,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     impmat = impmat,
                     impSD = impSD,
                     prox = prox,
+                    yenny = yenny,
                     ndbigtree = integer(ntree),
                     nodestatus = matrix(integer(nrnodes * nt), ncol=nt),
                     leftDaughter = matrix(integer(nrnodes * nt), ncol=nt),
@@ -451,6 +452,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     dimnames = list(x.row.names, x.row.names)) else NULL,
                     ntree = ntree,
                     mtry = mtry,
+                    yenny = rfout$yenny, 
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
                               "rightDaughter", "nodepred", "bestvar",

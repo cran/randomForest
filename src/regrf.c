@@ -68,7 +68,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,
-           double *impSD, double *prox, int *treeSize, int *nodestatus,
+           double *impSD, double *prox, int *yenny, int *treeSize, int *nodestatus,
            int *lDaughter, int *rDaughter, double *avnode, int *mbest,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
@@ -113,6 +113,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     nPerm = imp[2];
     keepF = keepf[0];
     keepInbag = keepf[1];
+
+    yenny = 9;
 
     if (*jprint == 0) *jprint = *nTree + 1;
 
@@ -222,7 +224,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       /*
-      ran_multinomial(*sampsize, 100, probs, treecoeffs);
+      ran_multinomial(*sampsize, 100, probs, treecoe,ffs);
       */
       /*
       coeffs[j] = treecoeffs;
@@ -331,7 +333,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		/*  DO PROXIMITIES */
 		if (*doProx) {
 			computeProximity(prox, *oobprox, nodex, in, oobpair, nsample);
-			/* proximity for test data */
+			/* inimity for test data */
 			if (*testdat) {
                 /* In the next call, in and oobpair are not used. */
                 computeProximity(proxts, 0, nodexts, in, oobpair, ntest);

@@ -221,13 +221,13 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       }
       */
       
-
-      fake_multinomial(*sampsize, coeffs, probs);
-      
-      
       /*
-      ran_multinomial(*sampsize, 100, probs, treecoe,ffs);
+      fake_multinomial(*sampsize, coeffs, probs);
       */
+      
+      
+      ran_multinomial(*sampsize, 100, probs, coeffs);
+      
       /*
       coeffs[j] = treecoeffs;
       */

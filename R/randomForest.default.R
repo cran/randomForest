@@ -363,9 +363,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
 		ymean <- mean(y)
 		y <- y - ymean
 		ytest <- ytest - ymean
-        fake  <- .C("fake_multinomial",
-                    as.integer(sampsize),
-                    coeffs = integer(sampsize))
         rfout <- .C("regRF",
                     x,
                     as.double(y),

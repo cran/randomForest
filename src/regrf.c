@@ -19,11 +19,11 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-void fake_multinomial (int K, int *coeffs, double *probs){
+void fake_multinomial (int K, int *coeffs){
   int k;
   for (k = 0; k < K; ++k)
   {
-    coeffs[k] = rbinom(1.0, probs[k]); 
+    coeffs[k] = 1; 
   }
 }
 

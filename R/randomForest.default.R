@@ -407,6 +407,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
+                    multcoeffs = integer(sampsize),
                     DUP=FALSE,
                     PACKAGE="randomForest")[c(16:28, 36:41)]
         ## Format the forest component, if present.
@@ -474,7 +475,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     } else NULL,
                     inbag = if (keep.inbag)
                     matrix(rfout$inbag, nrow(rfout$inbag),
-                           dimnames=list(x.row.names, NULL)) else NULL)
+                           dimnames=list(x.row.names, NULL)) else NULL,
+                    mult = rfout$multcoeffs)
     }
     class(out) <- "randomForest"
     return(out)

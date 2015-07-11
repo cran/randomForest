@@ -32,7 +32,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	int *outclts, int *labelts, double *proxts, double *errts);
 */
 
-void fake_multinomial (int K, int *coeffs);
+void fake_multinomial (int K, int *coeffs, double *probs);
 
 void normClassWt(int *cl, const int nsample, const int nclass, 
                  const int useWt, double *classwt, int *classFreq);

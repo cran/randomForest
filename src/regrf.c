@@ -217,7 +217,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
 
       
-      for (k = 0; k < *sampsize; ++k) {
+      for (k = 0; k < nsample; k++) {
         coeffs[k] = 1;
       }
       

@@ -73,7 +73,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *yny,
+           int *coeffs,
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -119,7 +119,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
-    coeffs = (int *)    S_alloc(*sampsize, sizeof(int));
+   /* coeffs = (int *)    S_alloc(*sampsize, sizeof(int)); */
     probs      = (double *) S_alloc(*sampsize, sizeof(double));
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
@@ -147,7 +147,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     zeroDouble(yptr, nsample);
     zeroInt(nout, nsample);
-    zeroInt(yny, nsample);
+    zeroInt(coeffs, nsample);
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -214,13 +214,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       }
       */
 
-      
-      for (k = 0; k < *sampsize; k++) {
-        coeffs[k] = 1;
-      }
+    
 
       for (k = 0; k < *sampsize; k++) {
-        yny[k] = 1;
+        coeffs[k] = 1;
       }
       
       /*

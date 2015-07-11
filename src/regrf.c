@@ -76,6 +76,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
            int *coeffs,
+           double *probs,
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -100,7 +101,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double errts = 0.0, averrb, meanY, meanYts, varY, varYts, r, xrand,
 	errb = 0.0, resid=0.0, ooberr, ooberrperm, delta, *resOOB;
 
-    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini, *probs;
+    double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
@@ -122,7 +123,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
    /* coeffs = (int *)    S_alloc(*sampsize, sizeof(int)); */
-    probs      = (double *) S_alloc(*sampsize, sizeof(double));
+    /*probs      = (double *) S_alloc(*sampsize, sizeof(double));*/
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
     resOOB     = (double *) S_alloc(nsample, sizeof(double));
@@ -148,6 +149,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     varY = 0.0;
 
     zeroDouble(yptr, nsample);
+    zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
 
@@ -205,7 +207,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       for (k = 0; k < *sampsize; ++k) {
         
-        probs[k] = 1.0 / nsample;
+        probs[k] = 1.0 / *sampsize;
       }
       
       

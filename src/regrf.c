@@ -28,7 +28,7 @@ void fake_multinomial (int K, int *coeffs, double *probs){
 }
 
 void ran_multinomial (int K, int N, 
-                      double *probs, int *coeffs)
+                      double probs[], int *coeffs)
 {
   int k;
   int norm  = 0;

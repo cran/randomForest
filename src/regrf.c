@@ -68,12 +68,12 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,
-           double *impSD, double *prox, int *yenny, int *treeSize, int *nodestatus,
+           double *impSD, double *prox, int *treeSize, int *nodestatus,
            int *lDaughter, int *rDaughter, double *avnode, int *mbest,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *nout, int *inbag, int *coeffs) {
+           int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -101,7 +101,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
-    int *oobpair, varImp, localImp, *varUsed;
+    int *oobpair, varImp, localImp, *varUsed, *coeffs;
 
     int *in, *nind, *nodex, *nodexts;
 
@@ -114,13 +114,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     keepF = keepf[0];
     keepInbag = keepf[1];
 
-    yenny = 9;
-
     if (*jprint == 0) *jprint = *nTree + 1;
 
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
-    /*coeffs = (int *)    S_alloc(*sampsize, sizeof(int));*/
+    coeffs = (int *)    S_alloc(*sampsize, sizeof(int));
     probs      = (double *) S_alloc(*sampsize, sizeof(double));
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));

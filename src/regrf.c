@@ -218,12 +218,12 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
 
       
-      for (k = 0; k < nsample; k++) {
+      for (k = 0; k < *sampsize; k++) {
         coeffs[k] = 1;
       }
 
-      for (k = 0; k < nsample; k++) {
-        rcoeffs[k] = 1;
+      for (k = 0; k < *sampsize; k++) {
+        yny[k] = 1;
       }
       
       /*

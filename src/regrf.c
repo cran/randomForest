@@ -102,7 +102,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
-    int *oobpair, varImp, localImp, *varUsed, *coeffs;
+    int *oobpair, varImp, localImp, *varUsed;
 
     int *in, *nind, *nodex, *nodexts;
 

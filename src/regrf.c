@@ -73,6 +73,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
+           int *yny,
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -146,6 +147,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     zeroDouble(yptr, nsample);
     zeroInt(nout, nsample);
+    zeroInt(yny, nsample);
+
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
 	meanY = (n * meanY + y[n]) / (n + 1);

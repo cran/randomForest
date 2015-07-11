@@ -102,7 +102,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
-    int *oobpair, varImp, localImp, *varUsed;
+    int *oobpair, varImp, localImp, *varUsed, *coeffs;
 
     int *in, *nind, *nodex, *nodexts;
 
@@ -119,7 +119,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
-    /*coeffs = (int *)    S_alloc(*sampsize, sizeof(int));*/
+    coeffs = (int *)    S_alloc(*sampsize, sizeof(int));
     probs      = (double *) S_alloc(*sampsize, sizeof(double));
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
@@ -148,7 +148,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(yptr, nsample);
     zeroInt(nout, nsample);
     zeroInt(yny, nsample);
-    zeroInt(rcoeffs, nsample);
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);

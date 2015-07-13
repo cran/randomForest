@@ -243,7 +243,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		if (*replace) { /* sampling with replacement */
 			for (n = 0; n < *sampsize; ++n) {
 				xrand = unif_rand();
-				k = xrand * nsample; Ω
+				k = xrand * nsample; 
 				in[k] = 1;
 				yb[n] = y[k];
 				for(m = 0; m < mdim; ++m) {

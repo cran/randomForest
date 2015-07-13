@@ -269,9 +269,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		}
 
     for (n = 0; n < *sampsize; n++) {
-      inbagY[n] = in[n];
+      inbagY[n] = 0;
     }
-    
+
 		if (keepInbag) {
 			for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
 		}

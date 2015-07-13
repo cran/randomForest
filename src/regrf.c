@@ -248,7 +248,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				k = xrand * nsample; 
 				in[k] = 1;
 				yb[n] = y[k];
-        inbagY[n] = y[k];
+        inbagY[n] = yb[n];
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];
 				}

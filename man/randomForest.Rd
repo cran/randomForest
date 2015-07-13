@@ -19,7 +19,6 @@
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
-             bigN = 100000,
              maxnodes = NULL,
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity, oob.prox=proximity,

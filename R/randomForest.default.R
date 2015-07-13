@@ -406,7 +406,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
                     mCoeffs  = integer(n), 
-                    n8   = double(n),
+                    prob   = double(n),
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
@@ -463,7 +463,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                       list(ntree=ntree), list(xlevels=xlevels)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
                     mcoeffs   = rfout$mCoeffs,
-                    n8s  = rfout$n8, 
+                    probs  = rfout$prob, 
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

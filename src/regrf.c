@@ -51,7 +51,7 @@ void ran_multinomial (int K, int N,
       if (probs[k] > 0.0) 
         {   
           /*coeffs[k] = 1;*/
-          coeffs[k] = rbinom(N - sum_n,1);
+          coeffs[k] = rbinom(N - sum_n, probs[k]);
           /*coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));*/
 
         }
@@ -205,7 +205,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       double probs[*sampsize];
           */
       
-      for (k = 0; k < *sampsize; ++k) {
+      for (k = 0; k < *sampsize; k++) {
         
         probs[k] = 1.0 / *sampsize;
       }

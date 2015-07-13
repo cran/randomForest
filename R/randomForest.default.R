@@ -407,7 +407,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coef = double(2),
                     mCoeffs  = integer(n), 
                     prob   = double(n), 
-                    inbagy = double(n),
+                    inbagy = integer(n),
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
@@ -434,7 +434,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         ## Make sure those obs. that have not been OOB get NA as prediction.
         ypred <- rfout$ypred
         if (any(rfout$oob.times < 1)) {
-            ypred[rfout$oob.times == 0] <- 6
+            ypred[rfout$oob.times == 0] <- NA
         }
         out <- list(call = cl,
                     type = "regression",

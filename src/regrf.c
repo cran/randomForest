@@ -76,7 +76,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *yTestPred, double *proxts, double *msets, double *coef,
            int *coeffs,
            double *probs,
-           double *inbagY,
+           int *inbagY,
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -150,7 +150,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     zeroDouble(yptr, nsample);
     zeroDouble(probs, nsample);
-    zeroDouble(inbagY, nsample);
+    zeroInt(inbagY, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
 
@@ -248,7 +248,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				k = xrand * nsample; 
 				in[k] = 1;
 				yb[n] = y[k];
-        inbagY[n] = yb[n];
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];
 				}
@@ -268,6 +267,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				}
 			}
 		}
+
+    for (n = 0; n < *sampsize; n++) {
+      inbagY[n] = in[n];
+    }
+    
 		if (keepInbag) {
 			for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
 		}

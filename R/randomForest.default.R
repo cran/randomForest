@@ -8,6 +8,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
+             bigN = (nrow(x))^2,
              maxnodes=NULL,
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity, oob.prox=proximity,
@@ -372,6 +373,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     as.integer(nrnodes),
                     as.integer(ntree),
                     as.integer(mtry),
+                    as.integer(bigN),
                     as.integer(c(importance, localImp, nPerm)),
                     as.integer(ncat),
                     as.integer(maxcat),
@@ -452,6 +454,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     dimnames = list(x.row.names, x.row.names)) else NULL,
                     ntree = ntree,
                     mtry = mtry,
+                    bigN = bigN, 
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
                               "rightDaughter", "nodepred", "bestvar",

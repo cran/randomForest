@@ -64,7 +64,9 @@ void ran_multinomial (int K, int N,
 }
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
-	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
+	   int *nthsize, int *nrnodes, int *nTree, int *mtry, 
+     int *bigN,
+     int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,
            double *impSD, double *prox, int *treeSize, int *nodestatus,
@@ -227,10 +229,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 100000, probs, coeffs);
+      ran_multinomial(*sampsize, bigN, probs, coeffs);
       
       /*
-      coeffs[j] = treecoeffs;
+      coeffs[j] = coeffs;
       */
     /* be done with the multinomial */
 
@@ -241,7 +243,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		if (*replace) { /* sampling with replacement */
 			for (n = 0; n < *sampsize; ++n) {
 				xrand = unif_rand();
-				k = xrand * nsample;
+				k = xrand * nsample; Ω
 				in[k] = 1;
 				yb[n] = y[k];
 				for(m = 0; m < mdim; ++m) {

@@ -209,6 +209,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       for (k = 0; k < *sampsize; k++) {
         
         probs[k] = 1.0 / *sampsize;
+        inbagY[k] = 1;
       }
       
       
@@ -231,7 +232,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 800, probs, coeffs);
+      ran_multinomial(*sampsize, 50000, probs, coeffs);
       
       /*
       coeffs[j] = coeffs;
@@ -267,10 +268,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				}
 			}
 		}
-
-    for (n = 0; n < *sampsize; n++) {
-      inbagY[n] = 0;
-    }
 
 		if (keepInbag) {
 			for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];

@@ -229,7 +229,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 2940, probs, coeffs);
+      ran_multinomial(*sampsize, 2945, probs, coeffs);
       
       /*
       coeffs[j] = coeffs;

@@ -434,7 +434,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         ## Make sure those obs. that have not been OOB get NA as prediction.
         ypred <- rfout$ypred
         if (any(rfout$oob.times < 1)) {
-            ypred[rfout$oob.times == 0] <- NA
+            ypred[rfout$oob.times == 0] <- 6
         }
         out <- list(call = cl,
                     type = "regression",

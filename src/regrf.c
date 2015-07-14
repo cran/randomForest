@@ -66,9 +66,6 @@ void ran_multinomial (int K, int N,
       sum_p += probs[k];
       sum_n += coeffs[k];
     }
-
-    N = substitute;
-
    /*PutRNGstate();*/
 }
 

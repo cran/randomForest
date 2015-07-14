@@ -27,7 +27,7 @@ void fake_multinomial (int K, int *coeffs, double *probs){
   }
 }
 */
-void ran_multinomial (int K, int N, 
+void ran_multinomial (int K, int *N, 
                       double *probs, int *coeffs)
 {
   int k;
@@ -226,7 +226,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, *bigN, *probs, coeffs);
+      ran_multinomial(*sampsize, *bigN, probs, coeffs);
 
       
       /*

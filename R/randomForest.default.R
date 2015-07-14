@@ -405,7 +405,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coef = double(2),
                     mCoeffs = integer(n), 
                     prob = double(n), 
-                    biggN = integer(1),
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
@@ -452,7 +451,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proximity = if (proximity) matrix(rfout$prox, n, n,
                     dimnames = list(x.row.names, x.row.names)) else NULL,
                     ntree = ntree,
-                    bign = bign,
                     mtry = mtry,
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",

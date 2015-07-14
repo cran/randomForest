@@ -35,6 +35,7 @@ void ran_multinomial (int K, int N,
   double sum_p = 0.0;
 
   int sum_n = 0;
+  int substitute = N;
   /*GetRNGstate();*/
 
   /* p[k] may contain non-negative weights that do not sum to 1.0.
@@ -60,6 +61,8 @@ void ran_multinomial (int K, int N,
       sum_p += probs[k];
       sum_n += coeffs[k];
     }
+
+    N = substitute;
    /*PutRNGstate();*/
 }
 

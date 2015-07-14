@@ -31,17 +31,22 @@ void ran_multinomial (int K, int N,
                       double *probs, int *coeffs)
 {
   int k;
+  int n;
+  int bigN = 0;
   double norm  = 0.0;
   double sum_p = 0.0;
-
   int sum_n = 0;
-  int substitute = N;
   /*GetRNGstate();*/
 
   /* p[k] may contain non-negative weights that do not sum to 1.0.
    * Even a probability distribution will not exactly sum to 1.0
    * due to rounding errors. 
    */
+
+  for (n = 0; n < N; n++)
+  {
+    bigN++;
+  }
   for (k = 0; k < K; k++) 
     {
       norm += probs[k];
@@ -51,7 +56,7 @@ void ran_multinomial (int K, int N,
     {
       if (probs[k] > 0.0) 
         {   
-          coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));
+          coeffs[k] = rbinom(bigN - sum_n, probs[k] / (norm - sum_p));
         }
       else
         {
@@ -103,7 +108,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
-        nsample, mdim, keepF, keepInbag, largeN;
+        nsample, mdim, keepF, keepInbag;
     int *oobpair, varImp, localImp, *varUsed;
 
     int *in, *nind, *nodex, *nodexts;
@@ -149,8 +154,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-
-    largeN = *bigN;
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -229,7 +232,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, largeN, probs, coeffs);
+      ran_multinomial(*sampsize, *bigN, probs, coeffs);
 
       
       /*

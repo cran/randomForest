@@ -5,10 +5,10 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
+             #bign = 100000,
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
-             #bigN = 100000,
              maxnodes=NULL,
              importance=FALSE, localImp=FALSE, nPerm=1,
              proximity, oob.prox=proximity,
@@ -373,7 +373,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     as.integer(nrnodes),
                     as.integer(ntree),
                     as.integer(mtry),
-                    #as.integer(bigN),
                     as.integer(c(importance, localImp, nPerm)),
                     as.integer(ncat),
                     as.integer(maxcat),
@@ -407,7 +406,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coef = double(2),
                     mCoeffs  = integer(n), 
                     prob   = double(n), 
-                    insampl  = integer(n), 
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
@@ -455,7 +453,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     dimnames = list(x.row.names, x.row.names)) else NULL,
                     ntree = ntree,
                     mtry = mtry,
-                    #bigN = bigN, 
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
                               "rightDaughter", "nodepred", "bestvar",
@@ -465,7 +462,6 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coefs = if (corr.bias) rfout$coef else NULL,
                     mcoeffs   = rfout$mCoeffs,
                     probs  = rfout$prob,
-                    insample   = rfout$insampl, 
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

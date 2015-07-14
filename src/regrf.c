@@ -74,10 +74,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *coeffs,
-           double *probs,
-           int *insample, 
-           int *nout, int *inbag) {
+           int *coeffs, double *probs, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -122,8 +119,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     yb         = (double *) S_alloc(*sampsize, sizeof(double));
     xb         = (double *) S_alloc(mdim * *sampsize, sizeof(double));
-   /* coeffs = (int *)    S_alloc(*sampsize, sizeof(int)); */
-    /*probs      = (double *) S_alloc(*sampsize, sizeof(double));*/
     ytr        = (double *) S_alloc(nsample, sizeof(double));
     xtmp       = (double *) S_alloc(nsample, sizeof(double));
     resOOB     = (double *) S_alloc(nsample, sizeof(double));
@@ -152,7 +147,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-    zeroInt(insample, nsample);
 
 
     for (n = 0; n < nsample; ++n) {
@@ -207,8 +201,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       double probs[*sampsize];
           */
       
-      for (k = 0; k < *sampsize; k++) {
-        
+      for (k = 0; k < *sampsize; k++) 
+    {
         probs[k] = 1.0 / *sampsize;
       }
       
@@ -232,7 +226,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 50000, probs, coeffs);
+      ran_multinomial(*sampsize, 100000, probs, coeffs);
 
       
       /*

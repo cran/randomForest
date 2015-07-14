@@ -226,7 +226,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, yenny, probs, coeffs);
+      ran_multinomial(*sampsize, 100000, probs, coeffs);
 
       
       /*

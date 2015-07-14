@@ -5,7 +5,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
-             bigN = 100000,
+             #bigN = 100000,
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
@@ -373,7 +373,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     as.integer(nrnodes),
                     as.integer(ntree),
                     as.integer(mtry),
-                    as.integer(bigN),
+                    #as.integer(bigN),
                     as.integer(c(importance, localImp, nPerm)),
                     as.integer(ncat),
                     as.integer(maxcat),
@@ -454,7 +454,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     dimnames = list(x.row.names, x.row.names)) else NULL,
                     ntree = ntree,
                     mtry = mtry,
-                    bigN = bigN,
+                    #bigN = bigN,
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
                               "rightDaughter", "nodepred", "bestvar",

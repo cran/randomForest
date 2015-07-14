@@ -65,7 +65,7 @@ void ran_multinomial (int K, int N,
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *nTree, int *mtry, 
-     int *bigN, 
+     /*int *bigN, */
      int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,

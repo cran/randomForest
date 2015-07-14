@@ -98,7 +98,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
-        nsample, mdim, keepF, keepInbag, yenny;
+        nsample, mdim, keepF, keepInbag;
     int *oobpair, varImp, localImp, *varUsed;
 
     int *in, *nind, *nodex, *nodexts;
@@ -139,7 +139,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     averrb = 0.0;
     meanY = 0.0;
     varY = 0.0;
-    yenny = 0;
 
     zeroDouble(yptr, nsample);
     zeroDouble(probs, nsample);
@@ -203,10 +202,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1.0 / *sampsize;
       }
       
-      for (k = 0; k < *bigN; k++)
-      {
-        yenny++;
-      }
       /*
       int fakecoeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {

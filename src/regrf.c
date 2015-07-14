@@ -63,6 +63,7 @@ void ran_multinomial (int K, int N,
     }
 
     N = substitute;
+
    /*PutRNGstate();*/
 }
 
@@ -148,7 +149,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-
+    bigN = 100000;
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);

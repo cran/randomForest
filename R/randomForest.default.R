@@ -372,7 +372,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     as.integer(nodesize),
                     as.integer(nrnodes),
                     as.integer(ntree),
-                    as.integer(10),
+                    #as.integer(10),
                     as.integer(mtry),
                     as.integer(c(importance, localImp, nPerm)),
                     as.integer(ncat),
@@ -465,7 +465,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coefs = if (corr.bias) rfout$coef else NULL,
                     mcoeffs   = rfout$mCoeffs,
                     probs  = rfout$prob,
-                    bigN = rfout$biggN,
+                    #bigN = rfout$biggN,
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

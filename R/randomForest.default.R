@@ -2,7 +2,8 @@
 mylevels <- function(x) if (is.factor(x)) levels(x) else 0
 
 "randomForest.default" <-
-    function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=100000,
+    function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
+             yenny = 10000, 
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
              replace=TRUE, classwt=NULL, cutoff, strata,
@@ -405,7 +406,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coef = double(2),
                     mCoeffs = integer(n), 
                     prob = double(n), 
-                    bign = as.integer(ntree),
+                    bign = yenny,
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),

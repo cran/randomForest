@@ -140,6 +140,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     averrb = 0.0;
     meanY = 0.0;
     varY = 0.0;
+    yenny = 0;
 
     zeroDouble(yptr, nsample);
     zeroDouble(probs, nsample);

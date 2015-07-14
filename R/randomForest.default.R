@@ -463,7 +463,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coefs = if (corr.bias) rfout$coef else NULL,
                     mcoeffs   = rfout$mCoeffs,
                     probs  = rfout$prob,
-                    bigN = rfout$bign, 
+                    bigN = yenny, 
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

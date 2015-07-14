@@ -64,9 +64,7 @@ void ran_multinomial (int K, int N,
 }
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
-	   int *nthsize, int *nrnodes, int *nTree, int *mtry, 
-     /*int *bigN, */
-     int *imp,
+	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,
            double *impSD, double *prox, int *treeSize, int *nodestatus,
@@ -74,7 +72,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *coeffs, double *probs, int *nout, int *inbag) {
+           int *coeffs, double *probs, int bigN, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -101,7 +99,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
-        nsample, mdim, keepF, keepInbag;
+        nsample, mdim, keepF, keepInbag, bigN;
     int *oobpair, varImp, localImp, *varUsed;
 
     int *in, *nind, *nodex, *nodexts;
@@ -226,7 +224,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 100000, probs, coeffs);
+      ran_multinomial(*sampsize, bigN, probs, coeffs);
 
       
       /*

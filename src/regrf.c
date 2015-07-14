@@ -76,7 +76,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *yTestPred, double *proxts, double *msets, double *coef,
            int *coeffs,
            double *probs,
-           int *inbagY,
+           int *insample, 
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -150,9 +150,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     zeroDouble(yptr, nsample);
     zeroDouble(probs, nsample);
-    zeroInt(inbagY, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
+    zeroInt(insample, nsample);
+
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -209,7 +210,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       for (k = 0; k < *sampsize; k++) {
         
         probs[k] = 1.0 / *sampsize;
-        inbagY[k] = 1;
       }
       
       
@@ -233,6 +233,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       
       ran_multinomial(*sampsize, 50000, probs, coeffs);
+      ran_multinomial(*sampsize, 50000, probs, insample);
       
       /*
       coeffs[j] = coeffs;

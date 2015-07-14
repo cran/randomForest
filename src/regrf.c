@@ -28,7 +28,7 @@ void fake_multinomial (int K, int *coeffs, double *probs){
 }
 */
 void ran_multinomial (int K, int N, 
-                      double *probs, int *coeff)
+                      double *probs, int *coeffs)
 {
   int k;
   double norm  = 0.0;
@@ -50,15 +50,15 @@ void ran_multinomial (int K, int N,
     {
       if (probs[k] > 0.0) 
         {   
-          coeff[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));
+          coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));
         }
       else
         {
-          coeff[k] = 0;
+          coeffs[k] = 0;
         }
 
       sum_p += probs[k];
-      sum_n += coeff[k];
+      sum_n += coeffs[k];
     }
    /*PutRNGstate();*/
 }
@@ -76,7 +76,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *yTestPred, double *proxts, double *msets, double *coef,
            int *coeffs,
            double *probs,
-           int *coeff, 
+           int *insample, 
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -152,7 +152,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-    zeroInt(coeff, nsample);
+    zeroInt(insample, nsample);
 
 
     for (n = 0; n < nsample; ++n) {
@@ -232,8 +232,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, 50000, probs, coeffs);
-      ran_multinomial(*sampsize, 50000, probs, coeff);
+      ran_multinomial(*sampsize, 50000, probs, insample);
+
       
       /*
       coeffs[j] = coeffs;
@@ -277,7 +277,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		regTree(xb, yb, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodestatus + idx, *nrnodes,
                 treeSize + j, *nthsize, *mtry, mbest + idx, cat, tgini,
-                varUsed, coeffs);
+                varUsed, insample);
         /* predict the OOB data with the current tree */
 		/* ytr is the prediction on OOB data by the current tree */
 		predictRegTree(x, nsample, mdim, lDaughter + idx,

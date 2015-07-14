@@ -5,7 +5,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
-             bign = 50000,
+             bign = if (!is.null(y) && !is.factor(y))
+             100000 else 100001,
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,

@@ -31,7 +31,6 @@ void ran_multinomial (int K, int N,
                       double *probs, int *coeffs)
 {
   int k;
-  int n;
   int bigN = 0;
   double norm  = 0.0;
   double sum_p = 0.0;
@@ -41,12 +40,7 @@ void ran_multinomial (int K, int N,
   /* p[k] may contain non-negative weights that do not sum to 1.0.
    * Even a probability distribution will not exactly sum to 1.0
    * due to rounding errors. 
-   */
-
-  for (n = 0; n < N; n++)
-  {
-    bigN++;
-  }
+*/
   for (k = 0; k < K; k++) 
     {
       norm += probs[k];
@@ -105,7 +99,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
-        nsample, mdim, keepF, keepInbag;
+        nsample, mdim, keepF, keepInbag, yenny;
     int *oobpair, varImp, localImp, *varUsed;
 
     int *in, *nind, *nodex, *nodexts;
@@ -209,7 +203,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         probs[k] = 1.0 / *sampsize;
       }
       
-      
+      for (k = 0; k < *bigN; k++)
+      {
+        yenny++;
+      }
       /*
       int fakecoeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {
@@ -229,7 +226,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, *bigN, probs, coeffs);
+      ran_multinomial(*sampsize, yenny, probs, coeffs);
 
       
       /*

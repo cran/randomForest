@@ -68,7 +68,7 @@ void ran_multinomial (int K, int N,
 }
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
-	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
+	   int *nthsize, int *nrnodes, int *nTree, int *bigN, int *mtry, int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,
            double *impSD, double *prox, int *treeSize, int *nodestatus,
@@ -103,7 +103,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
     int k, m, mr, n, nOOB, j, jout, idx, ntest, last, ktmp, nPerm,
-        nsample, mdim, keepF, keepInbag;
+        nsample, mdim, keepF, keepInbag, largeN;
     int *oobpair, varImp, localImp, *varUsed;
 
     int *in, *nind, *nodex, *nodexts;
@@ -149,7 +149,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-    bigN = 100000;
+
+    largeN = *bigN;
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -228,7 +229,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, bigN, probs, coeffs);
+      ran_multinomial(*sampsize, largeN, probs, coeffs);
 
       
       /*

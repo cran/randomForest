@@ -407,6 +407,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     mCoeffs = integer(n), 
                     prob = double(n), 
                     yenny = as.integer(bigN),
+                    nate = as.integer(0),
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
@@ -464,6 +465,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     mcoeffs   = rfout$mCoeffs,
                     probs  = rfout$prob,
                     bigN = bigN, 
+                    jout = rfout$nate, 
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

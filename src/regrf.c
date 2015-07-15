@@ -98,7 +98,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     double *yb, *xtmp, *xb, *ytr, *ytree, *tgini;
 
-    int k, m, mr, n, nOOB, j,/* jout,*/ idx, ntest, last, ktmp, nPerm,
+    int k, m, mr, n, nOOB, j, /*jout,*/ idx, ntest, last, ktmp, nPerm,
         nsample, mdim, keepF, keepInbag;
     int *oobpair, varImp, localImp, *varUsed;
 
@@ -277,7 +277,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		/* yptr is the aggregated prediction by all trees grown so far */
 		errb = 0.0;
 		ooberr = 0.0;
-		/*jout = 0;*/ /* jout is the number of cases that has been OOB so far */
+		/*jout = 0; /* jout is the number of cases that has been OOB so far */
 		nOOB = 0; /* nOOB is the number of OOB samples for this tree */
 		for (n = 0; n < nsample; ++n) {
 			if (in[n] == 0) {

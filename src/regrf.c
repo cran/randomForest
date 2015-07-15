@@ -201,8 +201,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       for (k = 0; k < *sampsize; k++) 
       {
-        /*probs[k] = 1.0 / *sampsize;*/
+        dummy[k] = 1.0 / *sampsize;
         probs[k] = 1;
+
       }
       
       /*
@@ -224,7 +225,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, *bigN, probs, coeffs);
+      ran_multinomial(*sampsize, *bigN, dummy, coeffs);
 
       
       /*

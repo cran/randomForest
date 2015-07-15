@@ -407,7 +407,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     mCoeffs = integer(n), 
                     prob = double(n), 
                     yenny = as.integer(bigN),
-                    nate = as.integer(0),
+                    nate = 0,
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),

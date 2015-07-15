@@ -72,7 +72,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *coeffs, double *probs, int *bigN, int *nout, int *inbag) {
+           int *coeffs, double *probs, int *bigN, int *dummy, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -145,6 +145,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
+    zeroInt(dummy, nsample);
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -289,6 +290,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 			}
             if (nout[n]) {
 				jout++;
+        dummy[n] = 1;
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}
 		}

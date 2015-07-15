@@ -202,6 +202,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       for (k = 0; k < *sampsize; k++) 
       {
         probs[k] = 1.0 / *sampsize;
+        dummy[k] = 1;
       }
       
       /*
@@ -290,7 +291,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 			}
             if (nout[n]) {
 				jout++;
-        dummy[n] = 1;
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}
 		}

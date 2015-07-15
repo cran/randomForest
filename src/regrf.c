@@ -72,7 +72,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *coeffs, double *probs, int *bigN, double *dummy, int *nout, int *inbag) {
+           int *coeffs, double *probs, int *bigN, 
+           int *rainbow, 
+           int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -145,7 +147,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-    zeroDouble(dummy, nsample);
+    zeroInt(rainbow, nsample);
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -201,11 +203,13 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       for (k = 0; k < *sampsize; k++) 
       {
-        dummy[k] = 1.0 / *sampsize;
-        probs[k] = 1;
-
+        probs[k] = 1.0 / *sampsize;
       }
       
+      for (k = 0; k < *sampsize; k++)
+      {
+        rainbow[k] = 1;
+      }
       /*
       int fakecoeffs[*sampsize]; 
       for (k = 0; k < *sampsize; ++k) {
@@ -225,7 +229,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       */
       
       
-      ran_multinomial(*sampsize, *bigN, dummy, coeffs);
+      ran_multinomial(*sampsize, *bigN, probs, coeffs);
 
       
       /*

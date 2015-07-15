@@ -72,8 +72,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
+           int *rainbow,
            int *coeffs, double *probs, int *bigN, 
-           int *rainbow, 
            int *nout, int *inbag) {
     /*************************************************************************
    Input:

@@ -404,10 +404,10 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proxts = proxts,
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
+                    rainbow = integer(n),
                     mCoeffs = integer(n), 
                     prob = double(n), 
-                    yenny = as.integer(bigN),
-                    rainbow = integer(n), 
+                    yenny = as.integer(bigN), 
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),

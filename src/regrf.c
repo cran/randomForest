@@ -72,7 +72,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *coeffs, double *probs, int *bigN, int *dummy, int *nout, int *inbag) {
+           int *coeffs, double *probs, int *bigN, double *dummy, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set

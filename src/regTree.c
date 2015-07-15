@@ -373,22 +373,27 @@ void predictRegTree(double *x, int nsample, int mdim,
         }
     }
 
-    for (i = 0; i < nsample; ++i) {
-	k = 0;
-	while (nodestatus[k] != NODE_TERMINAL) { /* go down the tree */
-	    m = splitVar[k] - 1;
-	    if (cat[m] == 1) {
-		k = (x[m + i*mdim] <= split[k]) ?
-		    lDaughter[k] - 1 : rDaughter[k] - 1;
-	    } else {
+    for (i = 0; i < nsample; ++i) 
+    {
+		k = 0;
+		while (nodestatus[k] != NODE_TERMINAL) 
+		{ /* go down the tree */
+	    	m = splitVar[k] - 1;
+	    	if (cat[m] == 1) 
+	    	{
+				k = (x[m + i*mdim] <= split[k]) ?
+		    	lDaughter[k] - 1 : rDaughter[k] - 1;
+	    	} 
+	    	else 
+	    	{
 	        /* Split by a categorical predictor */
-	        k = cbestsplit[(int) x[m + i * mdim] - 1 + k * maxcat] ?
+	        	k = cbestsplit[(int) x[m + i * mdim] - 1 + k * maxcat] ?
                     lDaughter[k] - 1 : rDaughter[k] - 1;
-	    }
-	}
-	/* terminal node: assign prediction and move on to next */
-	ypred[i] = nodepred[k];
-	nodex[i] = k + 1;
+	    	}
+		}
+		/* terminal node: assign prediction and move on to next */
+		ypred[i] = nodepred[k];
+		nodex[i] = k + 1;
     }
     if (maxcat > 1) Free(cbestsplit);
 }

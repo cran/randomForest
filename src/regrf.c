@@ -72,7 +72,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef,
-           int *coeffs, double *probs, int *bigN, int *jout, int *nout, int *inbag) {
+           int *coeffs, double *probs, int *bigN, int jout, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -288,11 +288,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
                 ooberr += resOOB[n] * resOOB[n];
 			}
             if (nout[n]) {
-				*jout++;
+				jout++;
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}
 		}
-		errb /= *jout;
+		errb /= jout;
 		/* Do simple linear regression of y on yhat for bias correction. */
 		if (*biasCorr) simpleLinReg(nsample, yptr, y, coef, &errb, nout);
 

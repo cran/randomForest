@@ -439,7 +439,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     type = "regression",
                     predicted = structure(ypred + ymean, names=x.row.names),
                     mse = rfout$mse,
-                    rsq = 1 - rfout$mse / (var(y) * (n-1) / n),
+                    rsq = 1 - rfout$mse / (var(y) * (bigN-1) / bigN),
                     oob.times = rfout$oob.times,
                     importance = if (importance) matrix(rfout$impout, p, 2,
                     dimnames=list(x.col.names,

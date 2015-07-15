@@ -277,7 +277,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		/* yptr is the aggregated prediction by all trees grown so far */
 		errb = 0.0;
 		ooberr = 0.0;
-		jout = 0; /* jout is the number of cases that has been OOB so far */
+		/*jout = 0;*/ /* jout is the number of cases that has been OOB so far */
 		nOOB = 0; /* nOOB is the number of OOB samples for this tree */
 		for (n = 0; n < nsample; ++n) {
 			if (in[n] == 0) {
@@ -292,7 +292,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}
 		}
-		errb /= jout;
+		errb /= *jout;
 		/* Do simple linear regression of y on yhat for bias correction. */
 		if (*biasCorr) simpleLinReg(nsample, yptr, y, coef, &errb, nout);
 

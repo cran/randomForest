@@ -49,7 +49,7 @@ void ran_multinomial (int K, int N,
     {
       if (probs[k] > 0.0) 
         {   
-          coeffs[k] = 2;
+          coeffs[k] = 10;
           /*coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));*/
         }
       else

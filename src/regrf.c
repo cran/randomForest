@@ -70,11 +70,10 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *impSD, double *prox, int *treeSize, int *nodestatus,
            int *lDaughter, int *rDaughter, double *avnode, int *mbest,
            double *probs,
-           int *rainbow,
-           int *coeffs, int *bigN,
+           int *rainbow, int *bigN,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
-           double *yTestPred, double *proxts, double *msets, double *coef, 
+           double *yTestPred, double *proxts, double *msets, int *coeffs, double *coef, 
            int *nout, int *inbag) {
     /*************************************************************************
    Input:

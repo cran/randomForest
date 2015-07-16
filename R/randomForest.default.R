@@ -392,11 +392,10 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     nodepred = matrix(double(nrnodes * nt), ncol=nt),
                     bestvar = matrix(integer(nrnodes * nt), ncol=nt),
                     prob = double(n), 
-                    rainbow = integer(n),
-                    mCoeffs = integer(n), 
+                    rainbow = integer(n), 
                     yenny = as.integer(bigN),
                     xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
-                    mse = double(ntree), #this specifies the length of the 
+                    mse = double(ntree), 
                     keep = as.integer(c(keep.forest, keep.inbag)),
                     replace = as.integer(replace),
                     testdat = as.integer(testdat),
@@ -407,6 +406,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     ytestpred = double(ntest),
                     proxts = proxts,
                     msets = double(if (labelts) ntree else 1),
+                    mCoeffs = integer(n),
                     coef = double(2), 
                     oob.times = integer(n),
                     inbag = if (keep.inbag)

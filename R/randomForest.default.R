@@ -393,6 +393,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     bestvar = matrix(integer(nrnodes * nt), ncol=nt),
                     xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
                     mse = double(ntree), #this specifies the length of the 
+
                     keep = as.integer(c(keep.forest, keep.inbag)),
                     replace = as.integer(replace),
                     testdat = as.integer(testdat),
@@ -406,13 +407,14 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coef = double(2),
                     mCoeffs = integer(n), 
                     prob = double(n), 
+                    
                     rainbow = integer(n),
                     yenny = as.integer(bigN), 
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
                     DUP=FALSE,
-                    PACKAGE="randomForest")[c(16:28, 36:41)]
+                    PACKAGE="randomForest")#[c(16:28, 36:41)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)

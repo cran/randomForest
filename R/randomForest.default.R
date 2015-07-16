@@ -408,6 +408,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     mCoeffs = integer(n),
                     prob = double(n), 
                     
+                    unicorn = integer(n),
                     rainbow = integer(n),
                     yenny = as.integer(bigN), 
                     oob.times = integer(n),
@@ -468,6 +469,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     probs  = rfout$prob,
                     bigN = bigN, 
                     rainbow = rfout$rainbow, 
+                    unicorn = rfout$unicorn, 
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

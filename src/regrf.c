@@ -72,7 +72,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef, 
-           int *coeffs, double *probs, int *rainbow, int *bigN, int *nout, int *inbag) {
+           int *coeffs, double *probs, int *unicorn, int *rainbow, int *bigN, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -146,6 +146,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
     zeroInt(rainbow, nsample);
+    zeroInt(unicorn, nsample);
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -224,7 +225,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       ran_multinomial(*sampsize, *bigN, probs, coeffs);
 
-      
+      3 2 3 4 1 4 6 3 2 2 7 1 4 2 1 6 2 2 5 6 4 2 3 0 5 6 3 1 2 2 1 1 3 1 0
       /*
       coeffs[j] = coeffs;
       */
@@ -239,6 +240,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				xrand = unif_rand();
 				k = xrand * nsample; 
 				in[k] = 1;
+        unicorn[k] = 1;
 				yb[n] = y[k];
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];

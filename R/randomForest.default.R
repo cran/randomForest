@@ -408,6 +408,11 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     mCoeffs = integer(n),
                     prob = double(n), 
                     
+                    noutfake = integer(n),
+                    yptrfake = integer(n),
+                    resOOBfake = integer(n),
+                    errbfake = integer(n),
+
                     unicorn = integer(n),
                     rainbow = integer(n),
                     yenny = as.integer(bigN), 
@@ -470,6 +475,10 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     bigN = bigN, 
                     rainbow = rfout$rainbow, 
                     unicorn = rfout$unicorn, 
+                    resoob = rfout$resOOBfake,
+                    poop = rfout$noutfake,
+                    errrrb = rfout$errbfake,
+                    ypredtr = rfout$yptrfake,
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

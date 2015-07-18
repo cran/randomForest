@@ -72,7 +72,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef, 
-           int *coeffs, double *probs, int *unicorn, int *rainbow, int *bigN, int *nout, int *inbag) {
+           int *coeffs, double *probs, 
+
+           int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
+
+           int *unicorn, int *rainbow, int *bigN, int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -147,6 +151,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroInt(coeffs, nsample);
     zeroInt(rainbow, nsample);
     zeroInt(unicorn, nsample);
+    zeroInt(noutfake, nsample);
+    zeroInt(yptrfake, nsample);
+    zeroInt(resOOBfake, nsample);
+    zeroInt(errbfake, nsample);
+
 
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
@@ -280,17 +289,23 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		jout = 0; /* jout is the number of cases that has been OOB so far */
 		nOOB = 0; /* nOOB is the number of OOB samples for this tree */
 		for (n = 0; n < nsample; ++n) {
+
 			if (in[n] == 0) {
 				nout[n]++;
+        noutfake[n] = nout[n];
                 nOOB++;
 				yptr[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
+        yptrfake[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
+
 				resOOB[n] = ytr[n] - y[n];
-                ooberr += resOOB[n] * resOOB[n];
+        resOOBfake[n] = ytr[n] - y[n];
+        ooberr += resOOB[n] * resOOB[n];
 			}
             if (nout[n]) {
 				jout++;
         rainbow[n] = 1;
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
+        errbfake[n] = (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}
 		}
 		errb /= jout;

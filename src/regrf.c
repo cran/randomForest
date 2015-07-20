@@ -75,7 +75,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            int *coeffs, double *probs, 
 
            int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
-           double *ytrfake, 
+           double *ytrfake, double *yfake,
 
            int *unicorn, int *rainbow, int *bigN, int *nout, int *inbag) {
     /*************************************************************************
@@ -148,6 +148,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     zeroDouble(yptr, nsample);
     zeroDouble(ytrfake, nsample);
+    zeroDouble(yfake, nsample);
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
@@ -292,7 +293,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		jout = 0; /* jout is the number of cases that has been OOB so far */
 		nOOB = 0; /* nOOB is the number of OOB samples for this tree */
 		for (n = 0; n < nsample; ++n) {
-
+      yfake[n] = y[n];
 			if (in[n] == 0) {
 				nout[n]++;
         noutfake[n] = nout[n];
@@ -300,7 +301,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         ytrfake[n] = ytr[n];
 				yptr[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
         yptrfake[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
-        yfake[n] = y[n];
 				resOOB[n] = ytr[n] - y[n];
         resOOBfake[n] = ytr[n] - y[n];
         ooberr += resOOB[n] * resOOB[n];

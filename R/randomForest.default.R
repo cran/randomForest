@@ -480,7 +480,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     poop = rfout$noutfake,
                     errrrb = rfout$errbfake,
                     ypredtr = rfout$yptrfake,
-                    ytrfake = rfout$ytrfake,
+                    ytr = rfout$ytrfake,
                     y = y + ymean,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,

@@ -75,6 +75,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            int *coeffs, double *probs, 
 
            int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
+           double *ytrfake, 
 
            int *unicorn, int *rainbow, int *bigN, int *nout, int *inbag) {
     /*************************************************************************
@@ -146,6 +147,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     varY = 0.0;
 
     zeroDouble(yptr, nsample);
+    zeroDouble(ytrfake, nsample);
     zeroDouble(probs, nsample);
     zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
@@ -283,6 +285,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
                        rDaughter + idx, nodestatus + idx, ytr, upper + idx,
                        avnode + idx, mbest + idx, treeSize[j], cat, *maxcat,
                        nodex);
+
+    for (n = 0; n < nsample; ++n)
+    {
+      ytrfake[n] = ytr[n];
+    }
 		/* yptr is the aggregated prediction by all trees grown so far */
 		errb = 0.0;
 		ooberr = 0.0;
@@ -293,7 +300,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 			if (in[n] == 0) {
 				nout[n]++;
         noutfake[n] = nout[n];
-                nOOB++;
+        nOOB++;
 				yptr[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
         yptrfake[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
 

@@ -413,7 +413,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     resOOBfake = integer(n),
                     errbfake = integer(n),
                     ytrfake = double(n),
-
+                    yfake = double(n),
                     unicorn = integer(n),
                     rainbow = integer(n),
                     yenny = as.integer(bigN), 
@@ -482,6 +482,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     ypredtr = rfout$yptrfake,
                     ytr = rfout$ytrfake,
                     y = y + ymean,
+                    yfake = rfout$yfake,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,
                              names=xts.row.names),

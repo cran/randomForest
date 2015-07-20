@@ -300,7 +300,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
         ytrfake[n] = ytr[n];
 				yptr[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
         yptrfake[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
-
+        yfake[n] = y[n];
 				resOOB[n] = ytr[n] - y[n];
         resOOBfake[n] = ytr[n] - y[n];
         ooberr += resOOB[n] * resOOB[n];

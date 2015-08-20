@@ -27,6 +27,8 @@ void fake_multinomial (int K, int *coeffs, double *probs){
   }
 }
 */
+
+/* ~~~~~~~*~*~~~ NEW CODE / MULTINOMIAL IMPLEMENTATION BEGINS HERE ~*~*~*~~~~~~~~ */
 void ran_multinomial (int K, int N, 
                       double *probs, int *coeffs)
 {
@@ -63,6 +65,9 @@ void ran_multinomial (int K, int N,
    /*PutRNGstate();*/
 }
 
+/* ~~~~~~~*~*~~~ NEW CODE / MULTINOMIAL IMPLEMENTATION ENDS HERE ~*~*~*~~~~~~~~ */
+
+
 void regRF(double *x, double *y, int *xdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
@@ -72,12 +77,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef, 
-           int *coeffs, double *probs, 
-
-           int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
-           double *ytrfake, double *yfake,
-
-           int *unicorn, int *rainbow, int *bigN, int *nout, int *inbag) {
+           /* NEW PARAMETERS */
+           int *coeffs, double *probs, int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
+           double *ytrfake, double *yfake, int *infake, int *bigN, 
+           /* END NEW PARAMETERS */ 
+           int *nout, int *inbag) {
     /*************************************************************************
    Input:
    mdim=number of variables in data set
@@ -147,13 +151,14 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     varY = 0.0;
 
     zeroDouble(yptr, nsample);
+    zeroInt(nout, nsample);
+
+    /* set size of the new parameters */
     zeroDouble(ytrfake, nsample);
     zeroDouble(yfake, nsample);
     zeroDouble(probs, nsample);
-    zeroInt(nout, nsample);
     zeroInt(coeffs, nsample);
-    zeroInt(rainbow, nsample);
-    zeroInt(unicorn, nsample);
+    zeroInt(infake, nsample);
     zeroInt(noutfake, nsample);
     zeroInt(yptrfake, nsample);
     zeroInt(resOOBfake, nsample);
@@ -212,6 +217,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       double probs[*sampsize];
           */
       
+      /* set array of probabilities */
       for (k = 0; k < *sampsize; k++) 
       {
         probs[k] = 1.0 / nsample;
@@ -234,7 +240,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       fake_multinomial(*sampsize, coeffs, probs);
       */
       
-      
+      /* USE MULTINOMIAL FUNCTION TO GET NEW COEFFICIENTS */
       ran_multinomial(*sampsize, *bigN, probs, coeffs);
       /*
       coeffs[j] = coeffs;
@@ -243,15 +249,16 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
 		idx = keepF ? j * *nrnodes : 0;
 		zeroInt(in, nsample);
-        zeroInt(varUsed, mdim);
+    zeroInt(varUsed, mdim);
         /* Draw a random sample for growing a tree. */
 		if (*replace) { /* sampling with replacement */
 			for (n = 0; n < *sampsize; ++n) {
 				xrand = unif_rand();
 				k = xrand * nsample; 
 				in[k] = 1;
-        unicorn[k] = 1;
+        infake[k] = 1;
 				yb[n] = y[k];
+
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];
 				}
@@ -307,7 +314,6 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 			}
             if (nout[n]) {
 				jout++;
-        rainbow[n] = 1;
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
         errbfake[n] = (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}

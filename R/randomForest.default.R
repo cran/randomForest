@@ -405,18 +405,18 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proxts = proxts,
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
+
                     mCoeffs = integer(n),
                     prob = double(n), 
-                    
                     noutfake = integer(n),
                     yptrfake = integer(n),
                     resOOBfake = integer(n),
                     errbfake = integer(n),
                     ytrfake = double(n),
                     yfake = double(n),
-                    unicorn = integer(n),
-                    rainbow = integer(n),
-                    yenny = as.integer(bigN), 
+                    infake = integer(n),
+                    biigN = as.integer(bigN), 
+
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
@@ -474,8 +474,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     mcoeffs   = rfout$mCoeffs,
                     probs  = rfout$prob,
                     bigN = bigN, 
-                    rainbow = rfout$rainbow, 
-                    unicorn = rfout$unicorn, 
+                    infake = rfout$infake, 
                     resoob = rfout$resOOBfake,
                     poop = rfout$noutfake,
                     errrrb = rfout$errbfake,

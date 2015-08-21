@@ -476,7 +476,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     bigN = bigN, 
                     infake = rfout$infake, 
                     resoob = rfout$resOOBfake,
-                    poop = rfout$noutfake,
+                    noutfake = rfout$noutfake,
                     errrrb = rfout$errbfake,
                     ypredtr = rfout$yptrfake,
                     ytr = rfout$ytrfake,

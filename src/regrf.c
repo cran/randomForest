@@ -78,7 +78,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
            double *yTestPred, double *proxts, double *msets, double *coef, 
            /* NEW PARAMETERS */
-           int *coeffs, double *probs, int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
+           int *coeffs, int *coefmatrix, double *probs, int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
            double *ytrfake, double *yfake, int *infake, int *bigN, 
            /* END NEW PARAMETERS */ 
            int *nout, int *inbag) {
@@ -157,6 +157,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(ytrfake, nsample);
     zeroDouble(yfake, nsample);
     zeroDouble(probs, nsample);
+    /* we need to make a super long array to prepare to put in*/
     zeroInt(coeffs, nsample);
     zeroInt(infake, nsample);
     zeroInt(noutfake, nsample);
@@ -242,6 +243,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       /* USE MULTINOMIAL FUNCTION TO GET NEW COEFFICIENTS */
       ran_multinomial(*sampsize, *bigN, probs, coeffs);
+      
+      /* add the coeffs into the matrix*/
+      for( n = 0; n < nsample; ++n){
+        coefmatrix[n + j*nsample] = coeffs[n]
+      }
       /*
       coeffs[j] = coeffs;
       */

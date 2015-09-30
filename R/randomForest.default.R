@@ -407,6 +407,9 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     coef = double(2),
 
                     mCoeffs = integer(n),
+
+                    coefmatrix = matrix(integer(n * ntree), n),
+
                     prob = double(n), 
                     noutfake = integer(n),
                     yptrfake = integer(n),

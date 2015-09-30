@@ -244,10 +244,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       /* USE MULTINOMIAL FUNCTION TO GET NEW COEFFICIENTS */
       ran_multinomial(*sampsize, *bigN, probs, coeffs);
       
-      /* add the coeffs into the matrix*/
-      for( n = 0; n < nsample; ++n){
-        coefmatrix[n + j*nsample] = coeffs[n];
-      }
+
       /*
       coeffs[j] = coeffs;
       */
@@ -285,6 +282,8 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 			}
 		}
 
+    for (n = 0; n < nsample; ++n) coefmatrix[n + j * nsample] = 1;
+    }
 		if (keepInbag) {
 			for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
 		}

@@ -262,7 +262,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     errts = error.test,
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(n),
-                    DUP=FALSE,
+                    DUP=FALSE,#
                     PACKAGE="randomForest")[-1]
         if (keep.forest) {
             ## deal with the random forest outputs
@@ -405,11 +405,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proxts = proxts,
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
-
                     mCoeffs = integer(n),
-
                     coefmatrix = matrix(integer(n * ntree), n),
-
                     prob = double(n), 
                     noutfake = integer(n),
                     yptrfake = integer(n),
@@ -475,7 +472,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                       list(ntree=ntree), list(xlevels=xlevels)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
                     mcoeffs   = rfout$mCoeffs,
-                    mcoefmatrix = rfout$coefmatrix,
+                    mcoefmatrix = matrix(rfout$coefmatrix, nrow(rfout$matrix)),
                     probs  = rfout$prob,
                     bigN = bigN, 
                     infake = rfout$infake, 

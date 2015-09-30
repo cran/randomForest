@@ -475,6 +475,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                       list(ntree=ntree), list(xlevels=xlevels)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
                     mcoeffs   = rfout$mCoeffs,
+                    mcoefmatrix = rfout$coefmatrix,
                     probs  = rfout$prob,
                     bigN = bigN, 
                     infake = rfout$infake, 

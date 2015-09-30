@@ -246,7 +246,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
       
       /* add the coeffs into the matrix*/
       for( n = 0; n < nsample; ++n){
-        coefmatrix[n + j*nsample] = coeffs[n]
+        coefmatrix[n + j*nsample] = coeffs[n];
       }
       /*
       coeffs[j] = coeffs;

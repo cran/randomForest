@@ -479,7 +479,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     infake = rfout$infake, 
                     resoob = rfout$resOOBfake,
                     noutfake = rfout$noutfake,
-                    errrrb = rfout$errbfake,
+                   # errrrb = rfout$errbfake,
                     ypredtr = rfout$yptrfake,
                     ytr = rfout$ytrfake,
                     y = y + ymean,

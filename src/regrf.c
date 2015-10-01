@@ -159,6 +159,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     zeroDouble(probs, nsample);
     /* we need to make a super long array to prepare to put in*/
     zeroInt(coeffs, nsample);
+    zeroInt(coefmatrix, nsample*nTree)
     zeroInt(infake, nsample);
     zeroInt(noutfake, nsample);
     zeroInt(yptrfake, nsample);

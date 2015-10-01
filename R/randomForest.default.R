@@ -480,7 +480,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     ypredtr = rfout$yptrfake,
                     ytr = rfout$ytrfake,
                     y = y + ymean,
-                    yfake = rfout$yfake,
+                    yfake = rfout$mcoefmatrix,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,
                              names=xts.row.names),

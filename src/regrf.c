@@ -1,5 +1,5 @@
 /*******************************************************************
-   Copyright (C) 2001-2012 Leo Breiman, Adele Cutler and Merck & Co., Inc.
+   Copyright (C) 2001-2015 Leo Breiman, Adele Cutler and Merck & Co., Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -150,7 +150,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 			for (n = 0; n < *sampsize; ++n) {
 				xrand = unif_rand();
 				k = xrand * nsample;
-				in[k] = 1;
+				in[k] += 1;
 				yb[n] = y[k];
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];
@@ -164,7 +164,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
                 k = nind[ktmp];
                 swapInt(nind[ktmp], nind[last]);
 				last--;
-				in[k] = 1;
+				in[k] += 1;
 				yb[n] = y[k];
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];

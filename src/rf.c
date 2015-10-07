@@ -25,7 +25,7 @@ Modifications to get the forest out Matt Wiener Feb. 26, 2002.
 #include <R_ext/Utils.h>
 #include "rf.h"
 
-void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
+void oob(int nsample, int nclass, int *cl, int *jtr,int *jerr,
          int *counttr, int *out, double *errtr, int *jest, double *cutoff);
 
 void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
@@ -255,7 +255,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 							k = strata_idx[n][ktmp];
 							tclasspop[cl[k] - 1] += classwt[cl[k] - 1];
 							win[k] += classwt[cl[k] - 1];
-							jin[k] = 1;
+							jin[k] += 1;
 						}
 					}
 				} else { /* stratified sampling w/o replacement */
@@ -275,7 +275,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 							last--;
 							tclasspop[cl[k] - 1] += classwt[cl[k]-1];
 							win[k] += classwt[cl[k]-1];
-							jin[k] = 1;
+							jin[k] += 1;
 						}
 					}
 				}
@@ -291,7 +291,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 							k = unif_rand() * nsample;
 							tclasspop[cl[k] - 1] += classwt[cl[k]-1];
 							win[k] += classwt[cl[k]-1];
-							jin[k] = 1;
+							jin[k] += 1;
 						}
 					} else {
 						for (n = 0; n < nsample; ++n) nind[n] = n;
@@ -303,7 +303,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 							last--;
 							tclasspop[cl[k] - 1] += classwt[cl[k]-1];
 							win[k] += classwt[cl[k]-1];
-							jin[k] = 1;
+							jin[k] += 1;
 						}
 					}
 					/* check if any class is missing in the sample */
@@ -379,7 +379,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 		}
 
         /* Compute out-of-bag error rate. */
-		oob(nsample, nclass, jin, cl, jtr, jerr, counttr, out,
+		oob(nsample, nclass, cl, jtr, jerr, counttr, out,
 			errtr + jb*(nclass+1), outcl, cut);
 
 		if ((jb+1) % trace == 0) {
@@ -611,7 +611,7 @@ void classForest(int *mdim, int *ntest, int *nclass, int *maxcat,
   Modified by A. Liaw 1/10/2003 (Deal with cutoff)
   Re-written in C by A. Liaw 3/08/2004
 */
-void oob(int nsample, int nclass, int *jin, int *cl, int *jtr,int *jerr,
+void oob(int nsample, int nclass, int *cl, int *jtr,int *jerr,
 	 int *counttr, int *out, double *errtr, int *jest,
 	 double *cutoff) {
     int j, n, noob, *noobcl, ntie;

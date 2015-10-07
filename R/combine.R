@@ -145,24 +145,27 @@ combine <- function(...) {
    ## If proximity is in all of them, compute the average
    ## (weighted by the number of trees in each forest)
    have.prox <- !any(sapply(rflist, function(x) is.null(x$proximity)))
-   if(have.prox) {
+   if (have.prox) {
        rf$proximity <- 0
        for(i in 1:nforest)
            rf$proximity <- rf$proximity + rflist[[i]]$proximity * rflist[[i]]$ntree
        rf$proximity <- rf$proximity / ntree
    }
-   
-   ## Set confusion matrix and error rates to NULL
-   if(classRF) {
-       rf$confusion <- NULL
-       rf$err.rate <- NULL
-       if(haveTest) {
-           rf$test$confusion <- NULL
-           rf$err.rate <- NULL
-       }
-   } else {
-       rf$mse <- rf$rsq <- NULL
-       if(haveTest) rf$test$mse <- rf$test$rsq <- NULL
-   }   
-   rf
+   	
+	## if there are inbag matrices, combine them as well.
+	hasInBag <- all(sapply(rflist, function(x) !is.null(x$inbag)))
+   	if (hasInBag) rf$inbag <- do.call(cbind, lapply(rflist, "[[", "inbag"))
+   	## Set confusion matrix and error rates to NULL
+   	if (classRF) {
+       	rf$confusion <- NULL
+       	rf$err.rate <- NULL
+       	if (haveTest) {
+           	rf$test$confusion <- NULL
+           	rf$err.rate <- NULL
+       	}
+   	} else {
+    	rf$mse <- rf$rsq <- NULL
+       	if (haveTest) rf$test$mse <- rf$test$rsq <- NULL
+   	}   
+   	rf
 }

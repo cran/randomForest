@@ -46,7 +46,7 @@
 \references{
   Leo Breiman (2003).  Manual for Setting Up, Using, and Understanding
   Random Forest V4.0.
-  \url{http://oz.berkeley.edu/users/breiman/Using_random_forests_v4.0.pdf}
+  \url{https://www.stat.berkeley.edu/~breiman/Using_random_forests_v4.0.pdf}
 }
 \seealso{
   \code{\link{na.roughfix}}.

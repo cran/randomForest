@@ -230,7 +230,7 @@ void computeProximity(double *prox, int oobprox, int *node, int *inbag,
     for (i = 0; i < n; ++i) {
         for (j = i+1; j < n; ++j) {
             if (oobprox) {
-                if (! (inbag[i] || inbag[j]) ) {
+                if (! (inbag[i] > 0 || inbag[j] > 0) ) {
                     oobpair[j*n + i] ++;
                     oobpair[i*n + j] ++;
                     if (node[i] == node[j]) {

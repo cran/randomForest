@@ -80,6 +80,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         }
     } else {
         ncat <- rep(1, p)
+		names(ncat) <- colnames(x)
         xlevels <- as.list(rep(0, p))
     }
     maxcat <- max(ncat)
@@ -358,7 +359,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proximity = if(proximity) matrix(rfout$proxts, nrow=ntest,
                     dimnames = list(xts.row.names, c(xts.row.names,
                     x.row.names))) else NULL),
-                    inbag = if (keep.inbag) rfout$inbag else NULL)
+                    inbag = if (keep.inbag) matrix(rfout$inbag, nrow=nrow(rfout$inbag), 
+										dimnames=list(x.row.names, NULL)) else NULL)
     } else {
 		ymean <- mean(y)
 		y <- y - ymean

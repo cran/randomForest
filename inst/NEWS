@@ -7,6 +7,19 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-12:
+
+* The "inbag" component of the randomForest object now records the number of 
+  times an observation is included in the bootstrap sample, instead of just
+  indicating whether it is included or not.
+ 
+ * The "ncat" component of the "forest" component of the randomForest object
+   now always has names that are the column names of x.
+    
+ * The "inbag" component is combined properly now in the combine() function.
+ 
+ * Housekeeping: Cleaned up the DESCRIPTION, NAMESPACE, and URLs in help files. 
+
 Changes in 4.6-10:
 
 * Fixed bugs introduced in 4.6-8 and 4.6-9. Levels for ordered factors

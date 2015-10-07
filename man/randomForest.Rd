@@ -194,7 +194,7 @@
   5-32.
 
   Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
-  Random Forests V3.1'', \url{http://oz.berkeley.edu/users/breiman/Using_random_forests_V3.1.pdf}.
+  Random Forests V3.1'', \url{https://www.stat.berkeley.edu/~breiman/Using_random_forests_V3.1.pdf}.
 }
 \author{Andy Liaw \email{andy\_liaw@merck.com} and Matthew Wiener
   \email{matthew\_wiener@merck.com}, based on original Fortran code by

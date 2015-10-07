@@ -9,8 +9,8 @@ MDSplot <- function(rf, fac, k=2, palette=NULL, pch=20, ...) {
     colnames(rf.mds$points) <- paste("Dim", 1:k)
     nlevs <- nlevels(fac)
     if (is.null(palette)) {
-        palette <- if (require(RColorBrewer) && nlevs < 12)
-            brewer.pal(nlevs, "Set1") else rainbow(nlevs)
+        palette <- if (requireNamespace("RColorBrewer", quietly = TRUE) && nlevs < 12)
+            RColorBrewer::brewer.pal(nlevs, "Set1") else rainbow(nlevs)
     }
     if (k <= 2) {
         plot(rf.mds$points, col=palette[as.numeric(fac)], pch=pch, ...)

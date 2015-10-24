@@ -3,6 +3,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
 
 "randomForest.default" <-
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
+             bigN = 1000,
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
              replace=TRUE, classwt=NULL, cutoff, strata,
@@ -261,7 +262,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     errts = error.test,
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(n),
-                    DUP=FALSE,
+                    DUP=FALSE,#
                     PACKAGE="randomForest")[-1]
         if (keep.forest) {
             ## deal with the random forest outputs
@@ -391,7 +392,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     nodepred = matrix(double(nrnodes * nt), ncol=nt),
                     bestvar = matrix(integer(nrnodes * nt), ncol=nt),
                     xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
-                    mse = double(ntree),
+                    mse = double(ntree), #this specifies the length of the 
                     keep = as.integer(c(keep.forest, keep.inbag)),
                     replace = as.integer(replace),
                     testdat = as.integer(testdat),
@@ -403,11 +404,22 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proxts = proxts,
                     msets = double(if (labelts) ntree else 1),
                     coef = double(2),
+                    mCoeffs = integer(n),
+                    coefmatrix = integer(n*ntree),
+                    prob = double(n), 
+                    noutfake = integer(n),
+                    yptrfake = integer(n),
+                    resOOBfake = integer(n),
+                    errbfake = integer(n),
+                    ytrfake = double(n),
+                    yfake = double(n),
+                    infake = integer(n),
+                    biigN = as.integer(bigN), 
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
                     DUP=FALSE,
-                    PACKAGE="randomForest")[c(16:28, 36:41)]
+                    PACKAGE="randomForest")#[c(16:28, 36:41)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)
@@ -448,7 +460,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                                                x.row.names)) else NULL,
                     proximity = if (proximity) matrix(rfout$prox, n, n,
                     dimnames = list(x.row.names, x.row.names)) else NULL,
-                   ntree = ntree,
+                    ntree = ntree,
                     mtry = mtry,
                     forest = if (keep.forest)
                     c(rfout[c("ndbigtree", "nodestatus", "leftDaughter",
@@ -457,7 +469,18 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                       list(ncat = ncat), list(nrnodes=max.nodes),
                       list(ntree=ntree), list(xlevels=xlevels)) else NULL,
                     coefs = if (corr.bias) rfout$coef else NULL,
+                    mcoeffs   = rfout$mCoeffs,
+                    mcoefmatrix = rfout$mcoefmatrix,
+                    probs  = rfout$prob,
+                    bigN = bigN, 
+                    infake = rfout$infake, 
+                    resoob = rfout$resOOBfake,
+                    noutfake = rfout$noutfake,
+                   # errrrb = rfout$errbfake,
+                    ypredtr = rfout$yptrfake,
+                    ytr = rfout$ytrfake,
                     y = y + ymean,
+                    yfake = rfout$mcoefmatrix,
                     test = if(testdat) {
                         list(predicted = structure(rfout$ytestpred + ymean,
                              names=xts.row.names),

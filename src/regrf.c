@@ -13,10 +13,59 @@
 *******************************************************************/
 
 #include <R.h>
+#include <Rmath.h>
 #include "rf.h"
 
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
+/*
+void fake_multinomial (int K, int *coeffs, double *probs){
+  int k;
+  for (k = 0; k < K; ++k)
+  {
+    coeffs[k] = 2; 
+  }
+}
+*/
+
+/* ~~~~~~~*~*~~~ NEW CODE / MULTINOMIAL IMPLEMENTATION BEGINS HERE ~*~*~*~~~~~~~~ */
+void ran_multinomial (int K, int N, 
+                      double *probs, int *coeffs)
+{
+  int k;
+  double norm  = 0.0;
+  double sum_p = 0.0;
+  int sum_n = 0;
+  /*GetRNGstate();*/
+
+  /* p[k] may contain non-negative weights that do not sum to 1.0.
+   * Even a probability distribution will not exactly sum to 1.0
+   * due to rounding errors. 
+*/
+  for (k = 0; k < K; k++) 
+    {
+      norm += probs[k];
+    }
+  
+  for (k = 0; k < K; k++) 
+    {
+      if (probs[k] > 0.0) 
+        {   
+          /*coeffs[k] = 10;*/
+          coeffs[k] = rbinom(N - sum_n, probs[k] / (norm - sum_p));
+        }
+      else
+        {
+          coeffs[k] = 0;
+        }
+
+      sum_p += probs[k];
+      sum_n += coeffs[k];
+    }
+   /*PutRNGstate();*/
+}
+
+/* ~~~~~~~*~*~~~ NEW CODE / MULTINOMIAL IMPLEMENTATION ENDS HERE ~*~*~*~~~~~~~~ */
 
 
 void regRF(double *x, double *y, int *xdim, int *sampsize,
@@ -27,7 +76,11 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
            int *lDaughter, int *rDaughter, double *avnode, int *mbest,
            double *upper, double *mse, int *keepf, int *replace,
            int *testdat, double *xts, int *nts, double *yts, int *labelts,
-           double *yTestPred, double *proxts, double *msets, double *coef,
+           double *yTestPred, double *proxts, double *msets, double *coef, 
+           /* NEW PARAMETERS */
+           int *coeffs, int *coefmatrix, double *probs, int *noutfake, int *yptrfake, int *resOOBfake, int *errbfake, 
+           double *ytrfake, double *yfake, int *infake, int *bigN, 
+           /* END NEW PARAMETERS */ 
            int *nout, int *inbag) {
     /*************************************************************************
    Input:
@@ -99,6 +152,21 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 
     zeroDouble(yptr, nsample);
     zeroInt(nout, nsample);
+
+    /* set size of the new parameters */
+    zeroDouble(ytrfake, nsample);
+    zeroDouble(yfake, nsample);
+    zeroDouble(probs, nsample);
+    /* we need to make a super long array to prepare to put in*/
+    zeroInt(coeffs, nsample);
+    zeroInt(coefmatrix, nsample*nTree)
+    zeroInt(infake, nsample);
+    zeroInt(noutfake, nsample);
+    zeroInt(yptrfake, nsample);
+    zeroInt(resOOBfake, nsample);
+    zeroInt(errbfake, nsample);
+
+
     for (n = 0; n < nsample; ++n) {
 	varY += n * (y[n] - meanY)*(y[n] - meanY) / (n + 1);
 	meanY = (n * meanY + y[n]) / (n + 1);
@@ -142,16 +210,59 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
      * Start the loop over trees.
      *************************************/
     for (j = 0; j < *nTree; ++j) {
+
+      /* implement the multinomial 
+          use the vector coeffs to pass into regTree
+          */
+
+          /*
+      double probs[*sampsize];
+          */
+      
+      /* set array of probabilities */
+      for (k = 0; k < *sampsize; k++) 
+      {
+        probs[k] = 1.0 / nsample;
+      }
+      /*
+      int fakecoeffs[*sampsize]; 
+      for (k = 0; k < *sampsize; ++k) {
+        fakecoeffs[k] = 1;
+      }
+      */
+
+    
+      /*
+      for (k = 0; k < *sampsize; k++) {
+        coeffs[k] = 1;
+      }
+      */
+      
+      /*
+      fake_multinomial(*sampsize, coeffs, probs);
+      */
+      
+      /* USE MULTINOMIAL FUNCTION TO GET NEW COEFFICIENTS */
+      ran_multinomial(*sampsize, *bigN, probs, coeffs);
+      
+
+      /*
+      coeffs[j] = coeffs;
+      */
+    /* be done with the multinomial */
+
 		idx = keepF ? j * *nrnodes : 0;
 		zeroInt(in, nsample);
-        zeroInt(varUsed, mdim);
+    zeroInt(varUsed, mdim);
         /* Draw a random sample for growing a tree. */
 		if (*replace) { /* sampling with replacement */
 			for (n = 0; n < *sampsize; ++n) {
 				xrand = unif_rand();
-				k = xrand * nsample;
+				k = xrand * nsample; 
 				in[k] = 1;
+        infake[k] = 1;
 				yb[n] = y[k];
+
 				for(m = 0; m < mdim; ++m) {
 					xb[m + n * mdim] = x[m + k * mdim];
 				}
@@ -171,6 +282,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 				}
 			}
 		}
+
+    for (n = 0; n < nsample; ++n) coefmatrix[n + j * nsample] = 1;
+    }
 		if (keepInbag) {
 			for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
 		}
@@ -178,29 +292,36 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		regTree(xb, yb, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodestatus + idx, *nrnodes,
                 treeSize + j, *nthsize, *mtry, mbest + idx, cat, tgini,
-                varUsed);
+                varUsed, coeffs);
         /* predict the OOB data with the current tree */
 		/* ytr is the prediction on OOB data by the current tree */
 		predictRegTree(x, nsample, mdim, lDaughter + idx,
                        rDaughter + idx, nodestatus + idx, ytr, upper + idx,
                        avnode + idx, mbest + idx, treeSize[j], cat, *maxcat,
                        nodex);
+
 		/* yptr is the aggregated prediction by all trees grown so far */
 		errb = 0.0;
 		ooberr = 0.0;
 		jout = 0; /* jout is the number of cases that has been OOB so far */
 		nOOB = 0; /* nOOB is the number of OOB samples for this tree */
 		for (n = 0; n < nsample; ++n) {
+      yfake[n] = y[n];
 			if (in[n] == 0) {
 				nout[n]++;
-                nOOB++;
+        noutfake[n] = nout[n];
+        nOOB++;
+        ytrfake[n] = ytr[n];
 				yptr[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
+        yptrfake[n] = ((nout[n]-1) * yptr[n] + ytr[n]) / nout[n];
 				resOOB[n] = ytr[n] - y[n];
-                ooberr += resOOB[n] * resOOB[n];
+        resOOBfake[n] = ytr[n] - y[n];
+        ooberr += resOOB[n] * resOOB[n];
 			}
             if (nout[n]) {
 				jout++;
 				errb += (y[n] - yptr[n]) * (y[n] - yptr[n]);
+        errbfake[n] = (y[n] - yptr[n]) * (y[n] - yptr[n]);
 			}
 		}
 		errb /= jout;
@@ -244,7 +365,7 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
 		/*  DO PROXIMITIES */
 		if (*doProx) {
 			computeProximity(prox, *oobprox, nodex, in, oobpair, nsample);
-			/* proximity for test data */
+			/* inimity for test data */
 			if (*testdat) {
                 /* In the next call, in and oobpair are not used. */
                 computeProximity(proxts, 0, nodexts, in, oobpair, ntest);

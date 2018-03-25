@@ -1,4 +1,4 @@
-useDynLib(randomForest)
+useDynLib(randomForest, .registration=TRUE)
 
 export(combine, getTree, grow, importance, margin, MDSplot, na.roughfix,
        partialPlot, randomForest, rfImpute, treesize, tuneRF,

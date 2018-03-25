@@ -22,7 +22,6 @@ rfcv <- function(trainx, trainy, cv.fold=5, scale="log", step=0.5,
     if(classRF) {
         f <- trainy
     } else {
-        ##f <- cut(trainy, c(-Inf, quantile(trainy, 1:4/5), Inf))
 		f <- factor(rep(1:5, length=length(trainy))[order(order(trainy))])
     }
     nlvl <- table(f)
@@ -39,7 +38,7 @@ rfcv <- function(trainx, trainy, cv.fold=5, scale="log", step=0.5,
                                trainy[idx == i],
                                mtry=mtry(p), importance=TRUE, ...)
         cv.pred[[1]][idx == i] <- all.rf$test$predicted
-        impvar <- (1:p)[order(all.rf$importance[,1], decreasing=TRUE)]
+        impvar <- (1:p)[order(importance(all.rf, type=1), decreasing=TRUE)]
         for (j in 2:k) {
             imp.idx <- impvar[1:n.var[j]]
             sub.rf <-
@@ -52,7 +51,7 @@ rfcv <- function(trainx, trainy, cv.fold=5, scale="log", step=0.5,
             ## For recursive selection, use importance measures from the sub-model.
             if (recursive) {
                 impvar <-
-                    (1:length(imp.idx))[order(sub.rf$importance[,1], decreasing=TRUE)]
+                    (1:length(imp.idx))[order(importance(sub.rf, type=1), decreasing=TRUE)]
       }
       NULL
     }

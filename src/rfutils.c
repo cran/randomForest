@@ -149,7 +149,7 @@ void modA(int *a, int *nuse, const int nsample, const int mdim,
 }
 
 void Xtranslate(double *x, int mdim, int nrnodes, int nsample,
-		int *bestvar, int *bestsplit, int *bestsplitnext,
+		int *bestvar, double *bestsplit, double *bestsplitnext,
 		double *xbestsplit, int *nodestatus, int *cat, int treeSize) {
 /*
  this subroutine takes the splits on numerical variables and translates them
@@ -164,10 +164,10 @@ void Xtranslate(double *x, int mdim, int nrnodes, int nsample,
 	if (nodestatus[i] == 1) {
 	    m = bestvar[i] - 1;
 	    if (cat[m] == 1) {
-		xbestsplit[i] = 0.5 * (x[m + (bestsplit[i] - 1) * mdim] +
-				       x[m + (bestsplitnext[i] - 1) * mdim]);
+		    xbestsplit[i] = 0.5 * (x[m + ((int) bestsplit[i] - 1) * mdim] +
+				       x[m + ((int) bestsplitnext[i] - 1) * mdim]);
 	    } else {
-		xbestsplit[i] = (double) bestsplit[i];
+		    xbestsplit[i] = bestsplit[i];
 	    }
 	}
     }

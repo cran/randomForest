@@ -41,15 +41,16 @@ c     main program.
       implicit double precision(a-h,o-z)
       integer a(mdim, nsample), cl(nsample), cat(mdim),
      1     treemap(2,nrnodes), bestvar(nrnodes),
-     1     bestsplit(nrnodes), nodestatus(nrnodes), ta(nsample),
+     1     nodestatus(nrnodes), ta(nsample),
      1     nodepop(nrnodes), nodestart(nrnodes),
-     1     bestsplitnext(nrnodes), idmove(nsample),
+     1     idmove(nsample),
      1     ncase(nsample), b(mdim,nsample),
      1     iv(mred), nodeclass(nrnodes), mind(mred)
 
       double precision tclasspop(nclass), classpop(nclass, nrnodes),
      1     tclasscat(nclass, 53), win(nsample), wr(nclass),
-     1     wl(nclass), tgini(mdim), xrand
+     1     wl(nclass), tgini(mdim),
+     1     bestsplit(nrnodes), bestsplitnext(nrnodes), xrand
       integer msplit, ntie
 
       msplit = 0
@@ -158,7 +159,7 @@ c     check on nodestatus
 
 c     form prediction in terminal nodes
       do kn = 1, ndbigtree
-      
+
          if (nodestatus(kn) .eq. -1) then
             pp = 0
             ntie = 1
@@ -170,13 +171,13 @@ c     form prediction in terminal nodes
                end if
 c     Break ties at random:
                if (classpop(j,kn) .eq. pp) then
+                  ntie = ntie + 1
                   call rrand(xrand)
                   if (xrand .lt. 1.0 / ntie) then
                      nodeclass(kn)=j
                      pp=classpop(j,kn)
                   end if
-                  ntie = ntie + 1
-               end if		               
+               end if
             end do
          end if
 c         call intpr("node", 4, kn, 1)
@@ -264,14 +265,14 @@ c     If neither nodes is empty, check the split.
                      end if
 c     Break ties at random:
                      if (crit .eq. critmax) then
+                        ntie = ntie + 1
                         call rrand(xrand)
                         if (xrand .lt. 1.0 / ntie) then
                            best = dble(nsp)
                            critmax = crit
                            msplit = mvar
                         end if
-                        ntie = ntie + 1
-                     end if                     
+                     end if
                   end if
                end if
             end do

@@ -178,10 +178,10 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         } else {
             nsum <- sampsize
         }
-        nrnodes <- 2 * trunc(nsum / nodesize) + 1
+        nrnodes <- 2 * nsum + 1
     } else {
         ## For regression trees, need to do this to get maximal trees.
-        nrnodes <- 2 * trunc(sampsize/max(1, nodesize - 4)) + 1
+        nrnodes <- 2 * sampsize + 1
     }
     if (!is.null(maxnodes)) {
         ## convert # of terminal nodes to total # of nodes
@@ -262,7 +262,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     errts = error.test,
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(n),
-                    DUP=FALSE,
+                    #DUP=FALSE,
                     PACKAGE="randomForest")[-1]
         if (keep.forest) {
             ## deal with the random forest outputs
@@ -359,7 +359,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     proximity = if(proximity) matrix(rfout$proxts, nrow=ntest,
                     dimnames = list(xts.row.names, c(xts.row.names,
                     x.row.names))) else NULL),
-                    inbag = if (keep.inbag) matrix(rfout$inbag, nrow=nrow(rfout$inbag), 
+                    inbag = if (keep.inbag) matrix(rfout$inbag, nrow=nrow(rfout$inbag),
 										dimnames=list(x.row.names, NULL)) else NULL)
     } else {
 		ymean <- mean(y)
@@ -408,7 +408,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     oob.times = integer(n),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
-                    DUP=FALSE,
+                    #DUP=FALSE,
                     PACKAGE="randomForest")[c(16:28, 36:41)]
         ## Format the forest component, if present.
         if (keep.forest) {

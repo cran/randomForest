@@ -153,11 +153,11 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
                 }
                 /* Break ties at random: */
                 if (classPop[j + k * nclass] == pp) {
-                	if (unif_rand() < 1.0 / ntie) {
+                  ntie++;
+                  if (unif_rand() < 1.0 / ntie) {
                 		nodeClass[k] = j;
                 		pp = classPop[j + k * nclass];
                 	}
-                	ntie++;
                 }
             }
         }
@@ -246,12 +246,12 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
                         }
                         /* Break ties at random: */
                         if (crit == critmax) {
-                        	if (unif_rand() < 1.0 / ntie) {
+                          ntie++;
+                          if (unif_rand() < 1.0 / ntie) {
                         		*bestSplit = j;
                         		critmax = crit;
                         		*splitVar = mvar;
                         	}
-                        	ntie++;
                         }
                     }
                 }

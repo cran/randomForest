@@ -7,27 +7,52 @@ Wishlist (formerly TODO):
 * Allow case weights by using the weights in sampling?
 
 ========================================================================
+Changes in 4.6-14:
+
+* Native routines are now reigstered.
+
+Changes in 4.6-13:
+
+* The tie-breaking mechanisms in various places were not implemented correctly.
+  (Thanks to Adele Cutler and Susan Durham for reporting!)
+
+* In unsupervised mode, the synthetic data were generated without updating the
+  index matrix that trees actually operate on.
+
+* In rfcv(), the importance measures were taken from the first column of the
+  $importance component of the randomForest object.  Now corrected to use
+  importance(..., type=1).
+
+* Maximum tree size was computed incorrectly, leading to possibly smaller than
+  maxinum possible sized trees grown.
+
+* In classification code, splits on categorical variables with >=32 levels were
+  not encoded correctly.
+
+* Memory usage increase due to .C(..., DUP=FALSE) no longer being supported.
+  Work is underway to transition to .Call() to reduce memory usage.
+
 Changes in 4.6-12:
 
-* The "inbag" component of the randomForest object now records the number of 
+* The "inbag" component of the randomForest object now records the number of
   times an observation is included in the bootstrap sample, instead of just
   indicating whether it is included or not.
- 
+
  * The "ncat" component of the "forest" component of the randomForest object
    now always has names that are the column names of x.
-    
+
  * The "inbag" component is combined properly now in the combine() function.
- 
- * Housekeeping: Cleaned up the DESCRIPTION, NAMESPACE, and URLs in help files. 
+
+ * Housekeeping: Cleaned up the DESCRIPTION, NAMESPACE, and URLs in help files.
 
 Changes in 4.6-10:
 
 * Fixed bugs introduced in 4.6-8 and 4.6-9. Levels for ordered factors
   in predictors are no longer checked for consistency between training
-  and test data in predict.randomForest().  In 4.6-9 the response is mean 
-  centered before running the algorithm (for regression), but the mean was 
-  not added back in the $y component of the return object from 
-  randomForest(). 
+  and test data in predict.randomForest().  In 4.6-9 the response is mean
+  centered before running the algorithm (for regression), but the mean was
+  not added back in the $y component of the return object from
+  randomForest().
 
 Changes in 4.6-9:
 
@@ -35,56 +60,56 @@ Changes in 4.6-9:
 
 Changes in 4.6-8:
 
-* There was a bug in the handling of ordered factors in randomForest.formula(). 
+* There was a bug in the handling of ordered factors in randomForest.formula().
   (Reported by Barry Rawlingson.)
-  
+
 * Changed randomForest.formula() and predict.randomForest() so that
   predict() without newdata when na.action=na.exclude pads the output
-  with NAs to match the rows in the original data (suggested by Barry 
-  Rawlingson.). 
-  
+  with NAs to match the rows in the original data (suggested by Barry
+  Rawlingson.).
+
 * There was a long standing bug in randomForest(..., proximity=TRUE, oob.prox=FALSE)
-  in regression mode. (Thanks to Stefano Romano for the report.)   
+  in regression mode. (Thanks to Stefano Romano for the report.)
 
 Change in 4.6-6:
 
 * In randomForest(), proximity matrix is not computed correctly if oob.prox=TRUE.
   (Thanks to Adele Cutler for the report!)
-  
+
 * In rfcv(), changed the sample-splitting for regression to handle cases
   when there are many ties in the data.
-  
-* The calculation of importanceSD for classification was missing a divisor.  
-  (Thanks to Abhishek Jaiantilal for the report.)
-  
-× The simulated data in unsupervised randomForest() were not in the right range.
+
+* The calculation of importanceSD for classification was missing a divisor.
   (Thanks to Abhishek Jaiantilal for the report.)
 
-* In rfImpute(), padded 1e-8 to the division by sum of proximities to avoid 
+? The simulated data in unsupervised randomForest() were not in the right range.
+  (Thanks to Abhishek Jaiantilal for the report.)
+
+* In rfImpute(), padded 1e-8 to the division by sum of proximities to avoid
   division by 0.
-  
+
 * Some R code clean up to keep R CMD check happy (complete argument names).
-       
+
 Change in 4.6-6:
 
 * Fixed yet another bug in checking for missing classes in the in-bag sample.
 
 Change in 4.6-5:
 
-* Minor bug fix for drawing samples in classification that was introduced 
+* Minor bug fix for drawing samples in classification that was introduced
   in 4.6-4.  (Thanks to Joran Elias for reporting.)
 
 Changes in 4.6-4:
 
 * Changed the error condition added in 4.6-3 to the case when there are fewer
   than two classes present in the in-bag sample.
-  
+
 Changes in 4.6-3:
 
-* Fixed bugs in the tie-breaking code in various places.  (Thanks to 
-  Abhishek Jaiantilal and Nathan Longbotham for the report and Abhishek 
+* Fixed bugs in the tie-breaking code in various places.  (Thanks to
+  Abhishek Jaiantilal and Nathan Longbotham for the report and Abhishek
   for the fix.)
-  
+
 * Throw error if some class has no data after 10 sampling attempts in
   classification.  (Thanks to Abhishek Jaiantilal for the report.)
 

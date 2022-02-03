@@ -82,7 +82,15 @@ void Xtranslate(double *x, int mdim, int nrnodes, int nsample,
 void permuteOOB(int m, double *x, int *in, int nsample, int mdim);
 void computeProximity(double *prox, int oobprox, int *node, int *inbag,
                       int *oobpair, int n);
-
+void sampleDataRows(int populationSize, int sampleSize, int useWeights, 
+                    int withReplacement, double *weights, int *sampledIndices);
+void sampleWithReplacement(int sampleSize, int populationSize, int *sampledIndices);
+void sampleWithReplacementWithWeights(int sampleSize, int populationSize, double *weights, int *sampledIndices);
+void sampleWithoutReplacement(int sampleSize, int populationSize, int *sampledIndices);
+void sampleWithoutReplacementWithWeights(int sampleSize, int populationSize, double *weights, int *sampledIndices);
+void removeWeightAndNormalize(double *weights, int indexToRemove, int populationSize);
+void calculateBoundaries(double *weights, double *boundaries, int populationSize, int numBoundaries);
+void normalizeWeights(double *weights, int numWeights);
 /* Template of Fortran subroutines to be called from the C wrapper */
 extern void F77_NAME(buildtree)(int *a, int *b, int *cl, int *cat,
 				int *maxcat, int *mdim, int *nsample,

@@ -25,47 +25,53 @@
 #include <R.h>
 #include "rf.h"
 
+/*build one tree, call this multiple times to create a forest in regrf*/
 void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
              int *rDaughter,
-             double *upper, double *avnode, int *nodestatus, int nrnodes,
-             int *treeSize, int nthsize, int mtry, int *mbest, int *cat,
-             double *tgini, int *varUsed) {
-  int i, j, k, m, ncur, *jdex, *nodestart, *nodepop;
-  int ndstart, ndend, ndendl, nodecnt, jstat, msplit;
-  double d, ss, av, decsplit, ubest, sumnode;
+             double *splitCutoff, double *nodeMeans, int *nodestatus, int numNodes,
+             int *treeSize, int nthsize, int mtry, int *bestSplitVarInNode, int *cat,
+             double *nodeImpurityDecrease, int *varUsed) {
+  int i, j, k, m, currentNode, *rowIndices, *nodestart, *numPointsInEachNode;
+  int ndstart, ndend, leftChildLastDataPoint, currentNodeCount, splitResult, msplit;
+  double label, sumOfSquares, nodeMean, decsplit, ubest, sumOfNodeData;
 
-  nodestart = (int *) Calloc(nrnodes, int);
-  nodepop   = (int *) Calloc(nrnodes, int);
+  nodestart = (int *) Calloc(numNodes, int);
+  numPointsInEachNode   = (int *) Calloc(numNodes, int);
 
   /* initialize some arrays for the tree */
-  zeroInt(nodestatus, nrnodes);
-  zeroInt(nodestart, nrnodes);
-  zeroInt(nodepop, nrnodes);
-  zeroDouble(avnode, nrnodes);
+  zeroInt(nodestatus, numNodes);
+  zeroInt(nodestart, numNodes);
+  zeroInt(numPointsInEachNode, numNodes);
+  zeroDouble(nodeMeans, numNodes);
 
-  jdex = (int *) Calloc(nsample, int);
-  for (i = 1; i <= nsample; ++i) jdex[i-1] = i;
-
-  ncur = 0;
+  rowIndices = (int *) Calloc(nsample, int);
+  for (i = 1; i <= nsample; ++i){
+    rowIndices[i-1] = i;
+  }
+  currentNode = 0;
   nodestart[0] = 0;
-  nodepop[0] = nsample;
+  numPointsInEachNode[0] = nsample;
   nodestatus[0] = NODE_TOSPLIT;
 
   /* compute mean and sum of squares for Y */
-  av = 0.0;
-  ss = 0.0;
+  nodeMean = 0.0;
+  sumOfSquares = 0.0;
   for (i = 0; i < nsample; ++i) {
-    d = y[jdex[i] - 1];
-    ss += i * (av - d) * (av - d) / (i + 1);
-    av = (i * av + d) / (i + 1);
+    label = y[rowIndices[i] - 1];
+    sumOfSquares += i * (nodeMean - label) * (nodeMean - label) / (i + 1);
+    nodeMean = (i * nodeMean + label) / (i + 1);
   }
-  avnode[0] = av;
+  nodeMeans[0] = nodeMean;
 
   /* start main loop */
-  for (k = 0; k < nrnodes - 2; ++k) {
-    if (k > ncur || ncur >= nrnodes - 2) break;
+  for (k = 0; k < numNodes - 2; ++k) {
+    if (k > currentNode || currentNode >= numNodes - 2) {
+      break;
+    }
     /* skip if the node is not to be split */
-    if (nodestatus[k] != NODE_TOSPLIT) continue;
+    if (nodestatus[k] != NODE_TOSPLIT) {
+      continue;
+    }
 
 #ifdef RF_DEBUG
     Rprintf("regTree: k=%d, av=%f, ss=%f\n", k, av, ss);
@@ -73,10 +79,10 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
 
     /* initialize for next call to findbestsplit */
     ndstart = nodestart[k];
-    ndend = ndstart + nodepop[k] - 1;
-    nodecnt = nodepop[k];
-    sumnode = nodecnt * avnode[k];
-    jstat = 0;
+    ndend = ndstart + numPointsInEachNode[k] - 1;
+    currentNodeCount = numPointsInEachNode[k];
+    sumOfNodeData = currentNodeCount * nodeMeans[k];
+    splitResult = 0;
     decsplit = 0.0;
 
 #ifdef RF_DEBUG
@@ -84,139 +90,149 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
             ndstart, ndend, jstat, decsplit);
 #endif
 
-    findBestSplit(x, jdex, y, mdim, nsample, ndstart, ndend, &msplit,
-                  &decsplit, &ubest, &ndendl, &jstat, mtry, sumnode,
-                  nodecnt, cat);
+    findBestSplit(x, rowIndices, y, mdim, nsample, ndstart, ndend, &msplit,
+                  &decsplit, &ubest, &leftChildLastDataPoint, &splitResult, mtry, sumOfNodeData,
+                  currentNodeCount, cat);
 #ifdef RF_DEBUG
     Rprintf(" after findBestSplit: ndstart=%d, ndend=%d, jstat=%d, decsplit=%f, msplit=%d\n",
             ndstart, ndend, jstat, decsplit, msplit);
 
 #endif
-    if (jstat == 1) {
+    if (splitResult == NODE_TERMINAL) {
       /* Node is terminal: Mark it as such and move on to the next. */
-      nodestatus[k] = NODE_TERMINAL;
+      nodestatus[k] = splitResult;
       continue;
     }
     /* Found the best split. */
-    mbest[k] = msplit;
+    bestSplitVarInNode[k] = msplit;
     varUsed[msplit - 1] = 1;
-    upper[k] = ubest;
-    tgini[msplit - 1] += decsplit;
+    splitCutoff[k] = ubest;
+    nodeImpurityDecrease[msplit - 1] += decsplit;
     nodestatus[k] = NODE_INTERIOR;
 
-    /* leftnode no.= ncur+1, rightnode no. = ncur+2. */
-    nodepop[ncur + 1] = ndendl - ndstart + 1;
-    nodepop[ncur + 2] = ndend - ndendl;
-    nodestart[ncur + 1] = ndstart;
-    nodestart[ncur + 2] = ndendl + 1;
+    /* left node is the node after current, right node is 2 after */
+    numPointsInEachNode[currentNode + 1] = leftChildLastDataPoint - ndstart + 1;
+    numPointsInEachNode[currentNode + 2] = ndend - leftChildLastDataPoint;
+    nodestart[currentNode + 1] = ndstart;
+    nodestart[currentNode + 2] = leftChildLastDataPoint + 1;
 
     /* compute mean and sum of squares for the left daughter node */
-    av = 0.0;
-    ss = 0.0;
-    for (j = ndstart; j <= ndendl; ++j) {
-      d = y[jdex[j]-1];
+    nodeMean = 0.0;
+    sumOfSquares = 0.0;
+    for (j = ndstart; j <= leftChildLastDataPoint; ++j) {
+      label = y[rowIndices[j]-1];
       m = j - ndstart;
-      ss += m * (av - d) * (av - d) / (m + 1);
-      av = (m * av + d) / (m+1);
+      sumOfSquares += m * (nodeMean - label) * (nodeMean - label) / (m + 1);
+      nodeMean = (m * nodeMean + label) / (m+1);
     }
-    avnode[ncur+1] = av;
-    nodestatus[ncur+1] = NODE_TOSPLIT;
-    if (nodepop[ncur + 1] <= nthsize) {
-      nodestatus[ncur + 1] = NODE_TERMINAL;
+    nodeMeans[currentNode+1] = nodeMean;
+    nodestatus[currentNode+1] = NODE_TOSPLIT;
+    if (numPointsInEachNode[currentNode + 1] <= nthsize) {
+      nodestatus[currentNode + 1] = NODE_TERMINAL;
     }
 
     /* compute mean and sum of squares for the right daughter node */
-    av = 0.0;
-    ss = 0.0;
-    for (j = ndendl + 1; j <= ndend; ++j) {
-      d = y[jdex[j]-1];
-      m = j - (ndendl + 1);
-      ss += m * (av - d) * (av - d) / (m + 1);
-      av = (m * av + d) / (m + 1);
+    nodeMean = 0.0;
+    sumOfSquares = 0.0;
+    for (j = leftChildLastDataPoint + 1; j <= ndend; ++j) {
+      label = y[rowIndices[j]-1];
+      m = j - (leftChildLastDataPoint + 1);
+      sumOfSquares += m * (nodeMean - label) * (nodeMean - label) / (m + 1);
+      nodeMean = (m * nodeMean + label) / (m + 1);
     }
-    avnode[ncur + 2] = av;
-    nodestatus[ncur + 2] = NODE_TOSPLIT;
-    if (nodepop[ncur + 2] <= nthsize) {
-      nodestatus[ncur + 2] = NODE_TERMINAL;
+    nodeMeans[currentNode + 2] = nodeMean;
+    nodestatus[currentNode + 2] = NODE_TOSPLIT;
+    if (numPointsInEachNode[currentNode + 2] <= nthsize) {
+      nodestatus[currentNode + 2] = NODE_TERMINAL;
     }
 
     /* map the daughter nodes */
-    lDaughter[k] = ncur + 1 + 1;
-    rDaughter[k] = ncur + 2 + 1;
+    lDaughter[k] = currentNode + 1 + 1;
+    rDaughter[k] = currentNode + 2 + 1;
     /* Augment the tree by two nodes. */
-    ncur += 2;
+    currentNode += 2;
 #ifdef RF_DEBUG
     Rprintf(" after split: ldaughter=%d, rdaughter=%d, ncur=%d\n",
             lDaughter[k], rDaughter[k], ncur);
 #endif
 
   }
-  *treeSize = nrnodes;
-  for (k = nrnodes - 1; k >= 0; --k) {
+  *treeSize = numNodes;
+  for (k = numNodes - 1; k >= 0; --k) {
     if (nodestatus[k] == 0) (*treeSize)--;
     if (nodestatus[k] == NODE_TOSPLIT) {
       nodestatus[k] = NODE_TERMINAL;
     }
   }
   Free(nodestart);
-  Free(jdex);
-  Free(nodepop);
+  Free(rowIndices);
+  Free(numPointsInEachNode);
 }
 
-/*--------------------------------------------------------------*/
+/*
+call on every node in a tree. randomly choose some features and 
+find which one has best split
+*/
 void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
-                   int ndstart, int ndend, int *msplit, double *decsplit,
-                   double *ubest, int *ndendl, int *jstat, int mtry,
-                   double sumnode, int nodecnt, int *cat) {
-  int last, ncat[MAX_CAT], icat[MAX_CAT], lc, nl, nr, npopl, npopr, tieVar, tieVal;
-  int i, j, kv, l, *mind, *ncase;
-  double *xt, *ut, *v, *yl, sumcat[MAX_CAT], avcat[MAX_CAT], tavcat[MAX_CAT], ubestt;
-  double crit, critmax, critvar, suml, sumr, d, critParent;
-
+                   int ndstart, int ndend, int *bestVarToReturn, double *decsplit,
+                   double *bestSplitToReturn, int *ndendl, int *jstat, int mtry,
+                   double sumnode, int nodeCount, int *cat) {
+  int last, numCategoriesAllVars[MAX_CAT], icat[MAX_CAT], numCategoriesForVar, nl, nr, npopl, npopr, tieVar, tieVal;
+  int i, j, kv, l, *varIndices, *ncase;
+  double *xt, *ut, *v, *yl, sumcat[MAX_CAT], avcat[MAX_CAT], tavcat[MAX_CAT], valueAtBestSplit;
+  double crit, bestSplitForAllVariables, bestSplitWithinVariable, suml, sumr, d, critParent;
+  /*Calloc is different from calloc, r handles memory allocation instead of os*/
   ut = (double *) Calloc(nsample, double);
   xt = (double *) Calloc(nsample, double);
   v  = (double *) Calloc(nsample, double);
   yl = (double *) Calloc(nsample, double);
-  mind  = (int *) Calloc(mdim, int);
+  varIndices  = (int *) Calloc(mdim, int);
   ncase = (int *) Calloc(nsample, int);
   zeroDouble(avcat, MAX_CAT);
   zeroDouble(tavcat, MAX_CAT);
 
   /* START BIG LOOP */
-  *msplit = -1;
+  *bestVarToReturn = -1;
   *decsplit = 0.0;
-  critmax = 0.0;
-  ubestt = 0.0;
-  for (i=0; i < mdim; ++i) mind[i] = i;
+  bestSplitForAllVariables = 0.0;
+  valueAtBestSplit = 0.0;
+  for (i=0; i < mdim; ++i)
+  {
+    varIndices[i] = i;
+  }
 
   last = mdim - 1;
   tieVar = 1;
-  for (i = 0; i < mtry; ++i) {
-    critvar = 0.0;
+  /*choose mtry number of variables, choose the one with best split*/
+  for (i = 0; i < mtry; ++i) 
+  {
+    /*sample without replacement: choose random, move to end, 
+    do next random choice in range 1 to len - n*/
+    bestSplitWithinVariable = 0.0;
     j = (int) (unif_rand() * (last+1));
-    kv = mind[j];
-    swapInt(mind[j], mind[last]);
+    kv = varIndices[j];
+    swapInt(varIndices[j], varIndices[last]);
     last--;
 
-    lc = cat[kv];
-    if (lc == 1) {
+    numCategoriesForVar = cat[kv];
+    if (numCategoriesForVar == 1) {
       /* numeric variable */
       for (j = ndstart; j <= ndend; ++j) {
-        xt[j] = x[kv + (jdex[j] - 1) * mdim];
+        xt[j] = x[kv + (jdex[j] - 1) * mdim]; /*indexing to represent 2d in a 1d vector */
         yl[j] = y[jdex[j] - 1];
       }
     } else {
       /* categorical variable */
-      zeroInt(ncat, MAX_CAT);
+      zeroInt(numCategoriesAllVars, MAX_CAT);
       zeroDouble(sumcat, MAX_CAT);
       for (j = ndstart; j <= ndend; ++j) {
         l = (int) x[kv + (jdex[j] - 1) * mdim];
         sumcat[l - 1] += y[jdex[j] - 1];
-        ncat[l - 1] ++;
+        numCategoriesAllVars[l - 1] ++;
       }
       /* Compute means of Y by category. */
-      for (j = 0; j < lc; ++j) {
-        avcat[j] = ncat[j] ? sumcat[j] / ncat[j] : 0.0;
+      for (j = 0; j < numCategoriesForVar; ++j) {
+        avcat[j] = numCategoriesAllVars[j] ? sumcat[j] / numCategoriesAllVars[j] : 0.0;
       }
       /* Make the category mean the `pseudo' X data. */
       for (j = 0; j < nsample; ++j) {
@@ -225,17 +241,26 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
       }
     }
     /* copy the x data in this node. */
-    for (j = ndstart; j <= ndend; ++j) v[j] = xt[j];
-    for (j = 1; j <= nsample; ++j) ncase[j - 1] = j;
+    for (j = ndstart; j <= ndend; ++j) {
+      v[j] = xt[j];
+    }
+
+    for (j = 1; j <= nsample; ++j) {
+      ncase[j - 1] = j;
+    }
+
     R_qsort_I(v, ncase, ndstart + 1, ndend + 1);
-    if (v[ndstart] >= v[ndend]) continue;
+    
+    if (v[ndstart] >= v[ndend]) {
+      continue;
+    }
     /* ncase(n)=case number of v nth from bottom */
     /* Start from the right and search to the left. */
-    critParent = sumnode * sumnode / nodecnt;
+    critParent = sumnode * sumnode / nodeCount;
     suml = 0.0;
     sumr = sumnode;
     npopl = 0;
-    npopr = nodecnt;
+    npopr = nodeCount;
     crit = 0.0;
     tieVal = 1;
     /* Search through the "gaps" in the x-variable. */
@@ -247,24 +272,24 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
       npopr--;
       if (v[j] < v[j+1]) {
         crit = (suml * suml / npopl) + (sumr * sumr / npopr) - critParent;
-        if (crit > critvar) {
-          ubestt = (v[j] + v[j+1]) / 2.0;
-          critvar = crit;
+        if (crit > bestSplitWithinVariable) {
+          valueAtBestSplit = (v[j] + v[j+1]) / 2.0;
+          bestSplitWithinVariable = crit;
           tieVal = 1;
         }
-        if (crit == critvar) {
+        if (crit == bestSplitWithinVariable) {
           tieVal++;
           if (unif_rand() < 1.0 / tieVal) {
-            ubestt = (v[j] + v[j+1]) / 2.0;
-            critvar = crit;
+            valueAtBestSplit = (v[j] + v[j+1]) / 2.0;
+            bestSplitWithinVariable = crit;
           }
         }
       }
     }
-    if (critvar > critmax) {
-      *ubest = ubestt;
-      *msplit = kv + 1;
-      critmax = critvar;
+    if (bestSplitWithinVariable > bestSplitForAllVariables) {
+      *bestSplitToReturn = valueAtBestSplit;
+      *bestVarToReturn = kv + 1;
+      bestSplitForAllVariables = bestSplitWithinVariable;
       for (j = ndstart; j <= ndend; ++j) {
         ut[j] = xt[j];
       }
@@ -273,12 +298,12 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
       }
       tieVar = 1;
     }
-    if (critvar == critmax) {
+    if (bestSplitWithinVariable == bestSplitForAllVariables) {
       tieVar++;
       if (unif_rand() < 1.0 / tieVar) {
-        *ubest = ubestt;
-        *msplit = kv + 1;
-        critmax = critvar;
+        *bestSplitToReturn = valueAtBestSplit;
+        *bestVarToReturn = kv + 1;
+        bestSplitForAllVariables = bestSplitWithinVariable;
         for (j = ndstart; j <= ndend; ++j) {
           ut[j] = xt[j];
         }
@@ -289,13 +314,13 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     }
 
   }
-  *decsplit = critmax;
+  *decsplit = bestSplitForAllVariables;
 
   /* If best split can not be found, set to terminal node and return. */
-  if (*msplit != -1) {
+  if (*bestVarToReturn != -1) {
     nl = ndstart;
     for (j = ndstart; j <= ndend; ++j) {
-      if (ut[j] <= *ubest) {
+      if (ut[j] <= *bestSplitToReturn) {
         nl++;
         ncase[nl-1] = jdex[j];
       }
@@ -303,7 +328,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     *ndendl = imax2(nl - 1, ndstart);
     nr = *ndendl + 1;
     for (j = ndstart; j <= ndend; ++j) {
-      if (ut[j] > *ubest) {
+      if (ut[j] > *bestSplitToReturn) {
         if (nr >= nsample) break;
         nr++;
         ncase[nr - 1] = jdex[j];
@@ -312,17 +337,17 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     if (*ndendl >= ndend) *ndendl = ndend - 1;
     for (j = ndstart; j <= ndend; ++j) jdex[j] = ncase[j];
 
-    lc = cat[*msplit - 1];
-    if (lc > 1) {
-      for (j = 0; j < lc; ++j) {
-        icat[j] = (tavcat[j] < *ubest) ? 1 : 0;
+    numCategoriesForVar = cat[*bestVarToReturn - 1];
+    if (numCategoriesForVar > 1) {
+      for (j = 0; j < numCategoriesForVar; ++j) {
+        icat[j] = (tavcat[j] < *bestSplitToReturn) ? 1 : 0;
       }
-      *ubest = pack(lc, icat);
+      *bestSplitToReturn = pack(numCategoriesForVar, icat);
     }
-  } else *jstat = 1;
+  } else *jstat = NODE_TERMINAL;
 
   Free(ncase);
-  Free(mind);
+  Free(varIndices);
   Free(v);
   Free(yl);
   Free(xt);

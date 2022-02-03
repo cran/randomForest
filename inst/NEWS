@@ -4,9 +4,13 @@ Wishlist (formerly TODO):
 
 * Use more compact storage of proximity matrix.
 
-* Allow case weights by using the weights in sampling?
-
 ========================================================================
+Changes in 4.7-1:
+
+* The long-standing wishlist item of case weights (used only in sampling) 
+  is now available (thanks to urging from Robert Tishirani and implementation 
+  by Ethan Liaw).
+
 Changes in 4.6-14:
 
 * Native routines are now reigstered.

@@ -34,7 +34,7 @@ data(iris)
 iris.na <- iris
 set.seed(111)
 ## artificially drop some data values.
-for (i in 1:4) iris.na[sample(150, sample(20)), i] <- NA
+for (i in 1:4) iris.na[sample(150, sample(20, 1)), i] <- NA
 iris.roughfix <- na.roughfix(iris.na)
 iris.narf <- randomForest(Species ~ ., iris.na, na.action=na.roughfix)
 print(iris.narf)

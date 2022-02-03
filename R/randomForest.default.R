@@ -5,6 +5,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     function(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
+             weights=NULL,
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
@@ -207,7 +208,21 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         labelts <- FALSE
     }
     nt <- if (keep.forest) ntree else 1
-
+    
+    useweights <- 0
+    if (!is.null(weights)) {
+        if (length(weights) != n) {
+            stop("length of weights must match number of data points")
+        }
+        if (any(weights <= 0)) {
+            stop("All weights must be positive")
+        }
+        weights <- weights/sum(weights)
+        useweights <- 1
+    } else {
+        weights <- rep(1.0, n)
+    }
+    
     if (classRF) {
         cwt <- classwt
         threshold <- cutoff
@@ -221,6 +236,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     maxcat = as.integer(maxcat),
                     sampsize = as.integer(sampsize),
                     strata = if (Stratify) as.integer(strata) else integer(1),
+                    useweights = as.integer(useweights),
+                    weights = as.double(weights),
                     Options = as.integer(c(addclass,
                     importance,
                     localImp,
@@ -368,6 +385,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         rfout <- .C("regRF",
                     x,
                     as.double(y),
+                    as.integer(useweights),
+                    as.double(weights),
                     as.integer(c(n, p)),
                     as.integer(sampsize),
                     as.integer(nodesize),
@@ -409,7 +428,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
                     #DUP=FALSE,
-                    PACKAGE="randomForest")[c(16:28, 36:41)]
+                    PACKAGE="randomForest")[c(18:30, 38:43)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)

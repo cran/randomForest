@@ -36,7 +36,7 @@ void TestSetError(double *countts, int *jts, int *clts, int *jet, int ntest,
 void F77_SUB(rrand)(double *r) { *r = unif_rand(); }
 
 void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
-             int *sampsize, int *strata, int *Options, int *ntree, int *nvar,
+             int *sampsize, int *strata, int *useweights, double *weights, int *Options, int *ntree, int *nvar,
              int *ipi, double *classwt, double *cut, int *nodesize,
              int *outcl, int *counttr, double *prox,
              double *imprt, double *impsd, double *impmat, int *nrnodes,
@@ -94,9 +94,9 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
   int *out, *nodepop, *jin, *nodex,
   *nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
   *jtr, *classFreq, *idmove, *jvr,
-  *at, *a, *b, *mind, *nind, *jts, *oobpair;
+  *at, *a, *b, *mind, *nind, *jts, *oobpair, *sampledIndices;
   int **strata_idx, *strata_size, last, ktmp, nEmpty, ntry;
-
+  double **stratified_weight_subsets;
   double av=0.0, delta=0.0;
 
   double *tgini, *tx, *wl, *classpop, *tclasscat, *tclasspop, *win,
@@ -159,6 +159,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
   nright =        (int *) S_alloc(nclass, sizeof(int));
   nrightimp =     (int *) S_alloc(nclass, sizeof(int));
   nout =          (int *) S_alloc(nclass, sizeof(int));
+  sampledIndices = (int *) S_alloc(nsample, sizeof(int));
   if (oobprox) {
     oobpair = (int *) S_alloc(near*near, sizeof(int));
   }
@@ -181,13 +182,16 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
         strata_size[strata[n] - 1] ++;
       }
       strata_idx =  (int **) S_alloc(nstrata, sizeof(int *));
+      stratified_weight_subsets = (double **) S_alloc(nstrata, sizeof(double *));
       for (n = 0; n < nstrata; ++n) {
         strata_idx[n] = (int *) S_alloc(strata_size[n], sizeof(int));
+        stratified_weight_subsets[n] = (double *) S_alloc(strata_size[n], sizeof(double));
       }
       zeroInt(strata_size, nstrata);
       for (n = 0; n < nsample0; ++n) {
         strata_size[strata[n] - 1] ++;
         strata_idx[strata[n] - 1][strata_size[strata[n] - 1] - 1] = n;
+        stratified_weight_subsets[strata[n] - 1][strata_size[strata[n] - 1] - 1] = weights[n];
       }
   } else {
     nind = replace ? NULL : (int *) S_alloc(nsample, sizeof(int));
@@ -251,66 +255,45 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
       /* TODO: Put all sampling code into a function. */
       /* drawSample(sampsize, nsample, ); */
       if (stratify) {  /* stratified sampling */
-      zeroInt(jin, nsample);
+        zeroInt(jin, nsample);
         zeroDouble(tclasspop, nclass);
         zeroDouble(win, nsample);
-        if (replace) {  /* with replacement */
-      for (n = 0; n < nstrata; ++n) {
-        for (j = 0; j < sampsize[n]; ++j) {
-          ktmp = (int) (unif_rand() * strata_size[n]);
-          k = strata_idx[n][ktmp];
-          tclasspop[cl[k] - 1] += classwt[cl[k] - 1];
-          win[k] += classwt[cl[k] - 1];
-          jin[k] += 1;
-        }
-      }
-        } else { /* stratified sampling w/o replacement */
-      /* re-initialize the index array */
-      zeroInt(strata_size, nstrata);
-          for (j = 0; j < nsample; ++j) {
-            strata_size[strata[j] - 1] ++;
-            strata_idx[strata[j] - 1][strata_size[strata[j] - 1] - 1] = j;
-          }
-          /* sampling without replacement */
-          for (n = 0; n < nstrata; ++n) {
-            last = strata_size[n] - 1;
-            for (j = 0; j < sampsize[n]; ++j) {
-              ktmp = (int) (unif_rand() * (last+1));
-              k = strata_idx[n][ktmp];
-              swapInt(strata_idx[n][last], strata_idx[n][ktmp]);
-              last--;
-              tclasspop[cl[k] - 1] += classwt[cl[k]-1];
-              win[k] += classwt[cl[k]-1];
-              jin[k] += 1;
-            }
+        zeroInt(sampledIndices, nsample);
+        
+        for(n = 0; n < nstrata; ++n){
+          normalizeWeights(stratified_weight_subsets[n], strata_size[n]);
+          /*Rprintf("sample size in strata %d: %d\n strata size: %d\n", n, sampsize[n], strata_size[n]);*/
+          sampleDataRows(strata_size[n], sampsize[n], *useweights, replace, stratified_weight_subsets[n], sampledIndices);
+          for(j = 0; j < sampsize[n]; ++j){
+            k = strata_idx[n][sampledIndices[j]];
+            tclasspop[cl[k] - 1] += classwt[cl[k]-1];
+            win[k] += classwt[cl[k]-1];
+            jin[k] += 1;
           }
         }
-      } else {  /* unstratified sampling */
+        
+
+      } 
+      else {  /* unstratified sampling */
           ntry = 0;
         do {
           nEmpty = 0;
           zeroInt(jin, nsample);
           zeroDouble(tclasspop, nclass);
           zeroDouble(win, nsample);
-          if (replace) {
-            for (n = 0; n < *sampsize; ++n) {
-              k = unif_rand() * nsample;
-              tclasspop[cl[k] - 1] += classwt[cl[k]-1];
-              win[k] += classwt[cl[k]-1];
-              jin[k] += 1;
-            }
-          } else {
-            for (n = 0; n < nsample; ++n) nind[n] = n;
-            last = nsample - 1;
-            for (n = 0; n < *sampsize; ++n) {
-              ktmp = (int) (unif_rand() * (last+1));
-              k = nind[ktmp];
-              swapInt(nind[ktmp], nind[last]);
-              last--;
-              tclasspop[cl[k] - 1] += classwt[cl[k]-1];
-              win[k] += classwt[cl[k]-1];
-              jin[k] += 1;
-            }
+          zeroInt(sampledIndices, nsample);
+          sampleDataRows(nsample, *sampsize, *useweights, replace, weights, sampledIndices);
+          /*[1,3,2,4,5,]*/
+          for(n = 0; n < *sampsize; ++n){
+            k = sampledIndices[n];
+            /*Rprintf("K:%d class: %d weight of class: %f\n", k, cl[k], classwt[cl[k]-1]);*/
+            tclasspop[cl[k] - 1] += classwt[cl[k]-1];
+            win[k] += classwt[cl[k]-1];
+            jin[k] += 1;
+          }
+          
+          for(n = 0; n < nclass; ++n){
+            /*Rprintf("%d: tclasspop %f, classwt %f\n", n, tclasspop[n], classwt[n]);*/
           }
           /* check if any class is missing in the sample */
           for (n = 0; n < nclass; ++n) {

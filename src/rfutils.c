@@ -282,3 +282,130 @@ void F77_NAME(unpack)(double *pack, int *nBits, int *bits) {
 	unpack(*pack, *nBits, bits);
 }
 
+void sampleDataRows(int populationSize, int sampleSize, int useWeights, 
+                    int withReplacement, double *weights, int *sampledIndices) {
+    /*At this point shouldn't need to check for sanity (sample > population)*/
+    /*Rprintf("Flags: replace %d useweights %d ", withReplacement, useWeights);*/
+    if(withReplacement) {
+        
+        if(useWeights) {
+            sampleWithReplacementWithWeights(sampleSize, populationSize, weights, sampledIndices);
+        }
+        else{
+            /*Rprintf("We will be sampling with replacement and no weights");*/
+            sampleWithReplacement(sampleSize, populationSize, sampledIndices);
+        }
+        
+    }
+    else{
+        if(useWeights) {
+            sampleWithoutReplacementWithWeights(sampleSize, populationSize, weights, sampledIndices);
+        }
+        else{
+            sampleWithoutReplacement(sampleSize, populationSize, sampledIndices);
+        }
+    }
+}
+
+void sampleWithReplacementWithWeights(int sampleSize, int populationSize, double *weights, int *sampledIndices) {
+    int mflag = 0;
+    int numBoundaries = populationSize + 1;
+    double *boundaries = (double*)Calloc(numBoundaries, double);
+    calculateBoundaries(weights, boundaries, populationSize, numBoundaries);
+
+    double sample;
+    for(int i = 0; i < sampleSize; ++i) {
+        sample = unif_rand();
+        sampledIndices[i] = findInterval(boundaries, numBoundaries, sample, 1, 1,0, &mflag) - 1;
+    }
+}
+
+void sampleWithoutReplacementWithWeights(int sampleSize, int populationSize, double *weights, int *sampledIndices) {
+    /*A snippet to run once when rf is run to verify the output of find_interval, which is what we use to sample with weights*/
+    /*if(tree == 0){
+        int testflag = 0;
+        Rprintf("Testing the find interval function in r\n");
+        double testBoundaries[] = {0, .2, .6, .6, .6, .6, .8, .8, .8, 1};
+        int testInterval = findInterval(testBoundaries, 11, .7, 1, 1,0, &testflag);
+        Rprintf("The resultant test interval found was %d\n", testInterval);
+    }*/
+    int mflag = 0;
+    int numBoundaries = populationSize + 1;
+    double *weightsForTree = (double*)Calloc(populationSize, double);
+    
+    /*copy over weights to array so we don't mess with original weights when removing them*/
+    for(int i = 0; i < populationSize; i++){
+        weightsForTree[i] = weights[i];
+    }
+    double *boundaries = (double*)Calloc(numBoundaries, double);
+    int *populationTaken = (int*)Calloc(populationSize, int);
+    zeroInt(populationTaken, populationSize);
+    calculateBoundaries(weightsForTree, boundaries, populationSize, numBoundaries);
+    int first;
+    int sampledIndex;
+    int sampledIndexCopy;
+    double sample;
+    
+    for(int i = 0; i < sampleSize; ++i) {
+        sample = unif_rand();
+        sampledIndex = findInterval(boundaries, numBoundaries, sample, 1, 1,0, &mflag) - 1;
+        first = sampledIndex;
+        sampledIndexCopy = sampledIndex;
+        sampledIndices[i] = sampledIndex;
+        populationTaken[sampledIndex] = -1;
+        removeWeightAndNormalize(weightsForTree, sampledIndex, populationSize);
+        calculateBoundaries(weightsForTree, boundaries, populationSize, numBoundaries);
+    }
+}
+
+void sampleWithReplacement(int sampleSize, int populationSize, int *sampledIndices) {
+    for(int i = 0; i < sampleSize; ++i) {
+        sampledIndices[i] = unif_rand() * populationSize;
+    }
+}
+
+void sampleWithoutReplacement(int sampleSize, int populationSize, int *sampledIndices) {
+    int *indices = (int*)Calloc(populationSize, int);
+    for(int i = 0; i < populationSize; ++i) {
+        indices[i] = i;
+    }
+    int indexOfLast = populationSize - 1;
+    int k;
+    for(int i = 0; i < sampleSize; i++) {
+        int currentSample = unif_rand() * (indexOfLast + 1);
+        k = indices[currentSample];
+        swapInt(indices[currentSample], indices[indexOfLast]);
+        indexOfLast--;
+        sampledIndices[i] = k;
+    }
+}
+
+void removeWeightAndNormalize(double *weights, int indexToRemove, int populationSize) {
+    double weightToRemove = weights[indexToRemove];
+    double sumOfWeights = 1 - weightToRemove;
+    weights[indexToRemove] = 0;
+    
+    for(int i = 0; i < populationSize; i++) {
+        weights[i] /= sumOfWeights;
+    }
+}
+
+void normalizeWeights(double *weights, int numWeights){
+    double weightSum = 0;
+    for(int i = 0; i < numWeights; i++){
+        weightSum += weights[i];
+    }
+    for(int i = 0; i < numWeights; i++){
+        weights[i] /= weightSum;
+    }
+}
+
+void calculateBoundaries(double *weights, double *boundaries, int populationSize, int numBoundaries) {
+    zeroDouble(boundaries, numBoundaries);
+    double currentSum = 0;
+    boundaries[0] = currentSum;
+    for(int i = 1; i <= populationSize; i++) {
+        currentSum += weights[i - 1];
+        boundaries[i] = currentSum;
+    }
+}

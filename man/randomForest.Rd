@@ -16,6 +16,7 @@
 \method{randomForest}{default}(x, y=NULL,  xtest=NULL, ytest=NULL, ntree=500,
              mtry=if (!is.null(y) && !is.factor(y))
              max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x))),
+             weights=NULL,
              replace=TRUE, classwt=NULL, cutoff, strata,
              sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
              nodesize = if (!is.null(y) && !is.factor(y)) 5 else 1,
@@ -51,6 +52,9 @@
     split.  Note that the default values are different for
     classification (sqrt(p) where p is number of variables in \code{x})
     and regression (p/3)}
+  \item{weights}{A vector of length same as \code{y} that are positive 
+    weights used only in sampling data to grow each tree (not used in any
+    other calculation)}
   \item{replace}{Should sampling of cases be done with or without
     replacement?}
   \item{classwt}{Priors of the classes.  Need not add up to one.
@@ -260,6 +264,15 @@ x <- data.frame(x1=gl(53, 10), x2=runif(530), y=rnorm(530))
 ## test proximity in regression
 iris.rrf <- randomForest(iris[-1], iris[[1]], ntree=101, proximity=TRUE, oob.prox=FALSE)
 str(iris.rrf$proximity)
+
+## Using weights: make versicolors having 3 times larger weights
+iris_wt <- ifelse( iris$Species == "versicolor", 3, 1 )
+set.seed(15)
+iris.wcrf <- randomForest(iris[-5], iris[[5]], weights=iris_wt, keep.inbag=TRUE)
+print(rowSums(iris.wcrf$inbag))
+set.seed(15)
+iris.wrrf <- randomForest(iris[-1], iris[[1]], weights=iris_wt, keep.inbag=TRUE)
+print(rowSums(iris.wrrf$inbag))
 }
 \keyword{classif}% at least one, from doc/KEYWORDS
 \keyword{regression}

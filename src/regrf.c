@@ -18,8 +18,11 @@
 void simpleLinReg(int nsample, double *x, double *y, double *coef,
 		  double *mse, int *hasPred);
 
-
-void regRF(double *x, double *y, int *xdim, int *sampsize,
+ 
+ /*
+ Train a regression randomforest model
+ */
+void regRF(double *x, double *y, int *useweights, double *weights, int *xdim, int *sampsize,
 	   int *nthsize, int *nrnodes, int *nTree, int *mtry, int *imp,
 	   int *cat, int *maxcat, int *jprint, int *doProx, int *oobprox,
            int *biasCorr, double *yptr, double *errimp, double *impmat,
@@ -141,36 +144,26 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     /*************************************
      * Start the loop over trees.
      *************************************/
+    int *sampledIndices = (int*)Calloc(*sampsize,int);
+    zeroInt(sampledIndices, *sampsize);
     for (j = 0; j < *nTree; ++j) {
 		idx = keepF ? j * *nrnodes : 0;
 		zeroInt(in, nsample);
         zeroInt(varUsed, mdim);
         /* Draw a random sample for growing a tree. */
-		if (*replace) { /* sampling with replacement */
-			for (n = 0; n < *sampsize; ++n) {
-				xrand = unif_rand();
-				k = xrand * nsample;
-				in[k] += 1;
-				yb[n] = y[k];
-				for(m = 0; m < mdim; ++m) {
-					xb[m + n * mdim] = x[m + k * mdim];
-				}
+        /*Rprintf("The useweights flag was set to %d", *useweights);*/
+		sampleDataRows(nsample, *sampsize, *useweights, *replace, weights, sampledIndices);
+
+        for(n = 0; n < *sampsize; ++n){
+            k = sampledIndices[n];
+            
+			in[k] += 1;
+			yb[n] = y[k];
+			for(m = 0; m < mdim; ++m) {
+				xb[m + n * mdim] = x[m + k * mdim];
 			}
-		} else { /* sampling w/o replacement */
-			for (n = 0; n < nsample; ++n) nind[n] = n;
-			last = nsample - 1;
-			for (n = 0; n < *sampsize; ++n) {
-				ktmp = (int) (unif_rand() * (last+1));
-                k = nind[ktmp];
-                swapInt(nind[ktmp], nind[last]);
-				last--;
-				in[k] += 1;
-				yb[n] = y[k];
-				for(m = 0; m < mdim; ++m) {
-					xb[m + n * mdim] = x[m + k * mdim];
-				}
-			}
-		}
+        }
+
 		if (keepInbag) {
 			for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
 		}
@@ -339,7 +332,9 @@ void regRF(double *x, double *y, int *xdim, int *sampsize,
     for (m = 0; m < mdim; ++m) tgini[m] /= *nTree;
 }
 
-/*----------------------------------------------------------------------*/
+/*--
+Function for predicting from a trained randomforest model
+--------------------------------------------------------------------*/
 void regForest(double *x, double *ypred, int *mdim, int *n,
                int *ntree, int *lDaughter, int *rDaughter,
                int *nodestatus, int *nrnodes, double *xsplit,
@@ -389,10 +384,10 @@ void regForest(double *x, double *ypred, int *mdim, int *n,
     }
 }
 
-void simpleLinReg(int nsample, double *x, double *y, double *coef,
-		  double *mse, int *hasPred) {
 /* Compute simple linear regression of y on x, returning the coefficients,
    the average squared residual, and the predicted values (overwriting y). */
+void simpleLinReg(int nsample, double *x, double *y, double *coef,
+		  double *mse, int *hasPred) {
     int i, nout = 0;
     double sxx=0.0, sxy=0.0, xbar=0.0, ybar=0.0;
     double dx = 0.0, dy = 0.0, py=0.0;

@@ -79,8 +79,8 @@ using odd number \code{ntree} in \code{randomForest()}.
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
   5-32.
 }
-\author{ Andy Liaw \email{andy\_liaw@merck.com} and Matthew Wiener
-  \email{matthew\_wiener@merck.com}, based on original Fortran code by
+\author{ Andy Liaw \email{andy_liaw@merck.com} and Matthew Wiener
+  \email{matthew_wiener@merck.com}, based on original Fortran code by
   Leo Breiman and Adele Cutler.}
 
 \seealso{\code{\link{randomForest}}}

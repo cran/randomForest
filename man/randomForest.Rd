@@ -200,8 +200,8 @@
   Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
   Random Forests V3.1'', \url{https://www.stat.berkeley.edu/~breiman/Using_random_forests_V3.1.pdf}.
 }
-\author{Andy Liaw \email{andy\_liaw@merck.com} and Matthew Wiener
-  \email{matthew\_wiener@merck.com}, based on original Fortran code by
+\author{Andy Liaw \email{andy_liaw@merck.com} and Matthew Wiener
+  \email{matthew_wiener@merck.com}, based on original Fortran code by
   Leo Breiman and Adele Cutler.}
 
 \seealso{\code{\link{predict.randomForest}}, \code{\link{varImpPlot}}}

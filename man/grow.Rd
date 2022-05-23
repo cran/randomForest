@@ -34,7 +34,7 @@ compnent, if exist) of the combined object will be \code{NULL}.
 
 \seealso{\code{\link{combine}}, \code{\link{randomForest}}}
 
-\author{Andy Liaw \email{andy\_liaw@merck.com}}
+\author{Andy Liaw \email{andy_liaw@merck.com}}
 
 \examples{
 data(iris)

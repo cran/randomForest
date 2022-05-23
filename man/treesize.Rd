@@ -31,7 +31,7 @@ A vector containing number of nodes for the trees in the
 
 \seealso{\code{\link{randomForest}}}
 
-\author{Andy Liaw \email{andy\_liaw@merck.com}}
+\author{Andy Liaw \email{andy_liaw@merck.com}}
 
 \examples{
 data(iris)

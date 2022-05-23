@@ -1,7 +1,7 @@
 Package: randomForest
 Title: Breiman and Cutler's Random Forests for Classification and
         Regression
-Version: 4.7-1
+Version: 4.7-1.1
 Date: 2022-01-24
 Depends: R (>= 4.1.0), stats
 Suggests: RColorBrewer, MASS
@@ -11,6 +11,6 @@ Maintainer: Andy Liaw <andy_liaw@merck.com>
 License: GPL (>= 2)
 URL: https://www.stat.berkeley.edu/~breiman/RandomForests/
 NeedsCompilation: yes
-Packaged: 2022-01-29 02:41:20 UTC; andy
+Packaged: 2022-05-23 08:06:39 UTC; hornik
 Repository: CRAN
-Date/Publication: 2022-02-03 07:50:02 UTC
+Date/Publication: 2022-05-23 08:27:49 UTC

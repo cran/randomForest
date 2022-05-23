@@ -52,5 +52,5 @@ data(iris)
 ## Look at the third trees in the forest.
 getTree(randomForest(iris[,-5], iris[,5], ntree=10), 3, labelVar=TRUE)
 }
-\author{Andy Liaw \email{andy\_liaw@merck.com}}
+\author{Andy Liaw \email{andy_liaw@merck.com}}
 \keyword{tree}

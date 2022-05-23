@@ -34,7 +34,7 @@ mtcars.rf <- randomForest(mpg ~ ., data=mtcars, ntree=1000, keep.forest=FALSE,
                           importance=TRUE)
 varImpPlot(mtcars.rf)
 }
-\author{Andy Liaw \email{andy\_liaw@merck.com}}
+\author{Andy Liaw \email{andy_liaw@merck.com}}
 \keyword{regression}
 \keyword{classif}
 \keyword{tree}

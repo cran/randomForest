@@ -28,7 +28,7 @@ compnent, if exist) of the combined object will be \code{NULL}.
 
 \seealso{\code{\link{randomForest}}, \code{\link{grow}}}
 
-\author{Andy Liaw \email{andy\_liaw@merck.com}}
+\author{Andy Liaw \email{andy_liaw@merck.com}}
 
 \examples{
 data(iris)

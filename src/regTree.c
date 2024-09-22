@@ -3,7 +3,7 @@
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
+   as published by the R_Free Software Foundation; either version 2
    of the License, or (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -35,8 +35,8 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
   int ndstart, ndend, leftChildLastDataPoint, currentNodeCount, splitResult, msplit;
   double label, sumOfSquares, nodeMean, decsplit, ubest, sumOfNodeData;
 
-  nodestart = (int *) Calloc(numNodes, int);
-  numPointsInEachNode   = (int *) Calloc(numNodes, int);
+  nodestart = (int *) R_Calloc(numNodes, int);
+  numPointsInEachNode   = (int *) R_Calloc(numNodes, int);
 
   /* initialize some arrays for the tree */
   zeroInt(nodestatus, numNodes);
@@ -44,7 +44,7 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
   zeroInt(numPointsInEachNode, numNodes);
   zeroDouble(nodeMeans, numNodes);
 
-  rowIndices = (int *) Calloc(nsample, int);
+  rowIndices = (int *) R_Calloc(nsample, int);
   for (i = 1; i <= nsample; ++i){
     rowIndices[i-1] = i;
   }
@@ -164,9 +164,9 @@ void regTree(double *x, double *y, int mdim, int nsample, int *lDaughter,
       nodestatus[k] = NODE_TERMINAL;
     }
   }
-  Free(nodestart);
-  Free(rowIndices);
-  Free(numPointsInEachNode);
+  R_Free(nodestart);
+  R_Free(rowIndices);
+  R_Free(numPointsInEachNode);
 }
 
 /*
@@ -181,13 +181,13 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
   int i, j, kv, l, *varIndices, *ncase;
   double *xt, *ut, *v, *yl, sumcat[MAX_CAT], avcat[MAX_CAT], tavcat[MAX_CAT], valueAtBestSplit;
   double crit, bestSplitForAllVariables, bestSplitWithinVariable, suml, sumr, d, critParent;
-  /*Calloc is different from calloc, r handles memory allocation instead of os*/
-  ut = (double *) Calloc(nsample, double);
-  xt = (double *) Calloc(nsample, double);
-  v  = (double *) Calloc(nsample, double);
-  yl = (double *) Calloc(nsample, double);
-  varIndices  = (int *) Calloc(mdim, int);
-  ncase = (int *) Calloc(nsample, int);
+  /*R_Calloc is different from calloc, r handles memory allocation instead of os*/
+  ut = (double *) R_Calloc(nsample, double);
+  xt = (double *) R_Calloc(nsample, double);
+  v  = (double *) R_Calloc(nsample, double);
+  yl = (double *) R_Calloc(nsample, double);
+  varIndices  = (int *) R_Calloc(mdim, int);
+  ncase = (int *) R_Calloc(nsample, int);
   zeroDouble(avcat, MAX_CAT);
   zeroDouble(tavcat, MAX_CAT);
 
@@ -346,12 +346,12 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     }
   } else *jstat = NODE_TERMINAL;
 
-  Free(ncase);
-  Free(varIndices);
-  Free(v);
-  Free(yl);
-  Free(xt);
-  Free(ut);
+  R_Free(ncase);
+  R_Free(varIndices);
+  R_Free(v);
+  R_Free(yl);
+  R_Free(xt);
+  R_Free(ut);
 }
 
 /*====================================================================*/
@@ -365,7 +365,7 @@ void predictRegTree(double *x, int nsample, int mdim,
 
   /* decode the categorical splits */
   if (maxcat > 1) {
-    cbestsplit = (int *) Calloc(maxcat * treeSize, int);
+    cbestsplit = (int *) R_Calloc(maxcat * treeSize, int);
     zeroInt(cbestsplit, maxcat * treeSize);
     for (i = 0; i < treeSize; ++i) {
       if (nodestatus[i] != NODE_TERMINAL && cat[splitVar[i] - 1] > 1) {
@@ -398,5 +398,5 @@ void predictRegTree(double *x, int nsample, int mdim,
     ypred[i] = nodepred[k];
     nodex[i] = k + 1;
   }
-  if (maxcat > 1) Free(cbestsplit);
+  if (maxcat > 1) R_Free(cbestsplit);
 }

@@ -1,16 +1,28 @@
 Package: randomForest
-Title: Breiman and Cutler's Random Forests for Classification and
+Title: Breiman and Cutlers Random Forests for Classification and
         Regression
-Version: 4.7-1.1
+Version: 4.7-1.2
 Date: 2022-01-24
 Depends: R (>= 4.1.0), stats
 Suggests: RColorBrewer, MASS
-Author: Fortran original by Leo Breiman and Adele Cutler, R port by Andy Liaw and Matthew Wiener.
+Authors@R: c(person("Leo", "Breiman", role = "aut",
+                    comment = "Fortran original"),
+             person("Adele", "Cutler", role = "aut",
+	            comment = "Fortran original"),
+             person("Andy", "Liaw", role = c("aut", "cre"),
+                    email = "andy_liaw@merck.com",
+		    comment = "R port"),
+             person("Matthew", "Wiener", role = "aut",
+	            comment = "R port"))
 Description: Classification and regression based on a forest of trees using random inputs, based on Breiman (2001) <DOI:10.1023/A:1010933404324>.
-Maintainer: Andy Liaw <andy_liaw@merck.com>
 License: GPL (>= 2)
 URL: https://www.stat.berkeley.edu/~breiman/RandomForests/
 NeedsCompilation: yes
-Packaged: 2022-05-23 08:06:39 UTC; hornik
+Packaged: 2024-09-22 08:30:17 UTC; hornik
 Repository: CRAN
-Date/Publication: 2022-05-23 08:27:49 UTC
+Date/Publication: 2024-09-22 09:14:44 UTC
+Author: Leo Breiman [aut] (Fortran original),
+  Adele Cutler [aut] (Fortran original),
+  Andy Liaw [aut, cre] (R port),
+  Matthew Wiener [aut] (R port)
+Maintainer: Andy Liaw <andy_liaw@merck.com>

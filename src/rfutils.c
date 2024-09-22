@@ -3,7 +3,7 @@
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
+   as published by the R_Free Software Foundation; either version 2
    of the License, or (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -64,8 +64,8 @@ void makeA(double *x, const int mdim, const int nsample, int *cat, int *a,
     int i, j, n1, n2, *index;
     double *v;
 
-    v     = (double *) Calloc(nsample, double);
-    index = (int *) Calloc(nsample, int);
+    v     = (double *) R_Calloc(nsample, double);
+    index = (int *) R_Calloc(nsample, int);
 
     for (i = 0; i < mdim; ++i) {
         if (cat[i] == 1) { /* numerical predictor */
@@ -92,8 +92,8 @@ void makeA(double *x, const int mdim, const int nsample, int *cat, int *a,
                 a[i + j*mdim] = (int) x[i + j * mdim];
         }
     }
-    Free(index);
-    Free(v);
+    R_Free(index);
+    R_Free(v);
 }
 
 
@@ -185,7 +185,7 @@ void permuteOOB(int m, double *x, int *in, int nsample, int mdim) {
     double *tp, tmp;
     int i, last, k, nOOB = 0;
 
-    tp = (double *) Calloc(nsample, double);
+    tp = (double *) R_Calloc(nsample, double);
 
     for (i = 0; i < nsample; ++i) {
 		/* make a copy of the OOB part of the data into tp (for permuting) */
@@ -212,7 +212,7 @@ void permuteOOB(int m, double *x, int *in, int nsample, int mdim) {
             nOOB++;
 		}
     }
-    Free(tp);
+    R_Free(tp);
 }
 
 /* Compute proximity. */
@@ -310,7 +310,7 @@ void sampleDataRows(int populationSize, int sampleSize, int useWeights,
 void sampleWithReplacementWithWeights(int sampleSize, int populationSize, double *weights, int *sampledIndices) {
     int mflag = 0;
     int numBoundaries = populationSize + 1;
-    double *boundaries = (double*)Calloc(numBoundaries, double);
+    double *boundaries = (double*)R_Calloc(numBoundaries, double);
     calculateBoundaries(weights, boundaries, populationSize, numBoundaries);
 
     double sample;
@@ -331,14 +331,14 @@ void sampleWithoutReplacementWithWeights(int sampleSize, int populationSize, dou
     }*/
     int mflag = 0;
     int numBoundaries = populationSize + 1;
-    double *weightsForTree = (double*)Calloc(populationSize, double);
+    double *weightsForTree = (double*)R_Calloc(populationSize, double);
     
     /*copy over weights to array so we don't mess with original weights when removing them*/
     for(int i = 0; i < populationSize; i++){
         weightsForTree[i] = weights[i];
     }
-    double *boundaries = (double*)Calloc(numBoundaries, double);
-    int *populationTaken = (int*)Calloc(populationSize, int);
+    double *boundaries = (double*)R_Calloc(numBoundaries, double);
+    int *populationTaken = (int*)R_Calloc(populationSize, int);
     zeroInt(populationTaken, populationSize);
     calculateBoundaries(weightsForTree, boundaries, populationSize, numBoundaries);
     int first;
@@ -365,7 +365,7 @@ void sampleWithReplacement(int sampleSize, int populationSize, int *sampledIndic
 }
 
 void sampleWithoutReplacement(int sampleSize, int populationSize, int *sampledIndices) {
-    int *indices = (int*)Calloc(populationSize, int);
+    int *indices = (int*)R_Calloc(populationSize, int);
     for(int i = 0; i < populationSize; ++i) {
         indices[i] = i;
     }

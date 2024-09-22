@@ -15,6 +15,11 @@ S3method(importance, randomForest)
 S3method(outlier, randomForest)
 S3method(outlier, default)
 
+S3method(grow, default)
+S3method(importance, default)
+S3method(margin, default)
+S3method(partialPlot, default)
+
 S3method(randomForest, formula)
 S3method(randomForest, default)
 S3method(rfImpute, formula)

@@ -3,7 +3,7 @@
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
+   as published by the R_Free Software Foundation; either version 2
    of the License, or (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -144,7 +144,7 @@ void regRF(double *x, double *y, int *useweights, double *weights, int *xdim, in
     /*************************************
      * Start the loop over trees.
      *************************************/
-    int *sampledIndices = (int*)Calloc(*sampsize,int);
+    int *sampledIndices = (int*)R_Calloc(*sampsize,int);
     zeroInt(sampledIndices, *sampsize);
     for (j = 0; j < *nTree; ++j) {
 		idx = keepF ? j * *nrnodes : 0;

@@ -1,6 +1,6 @@
 393a5ca445f6965873eca0259a17f833 *COPYING
-c7fb0874404c16675bf24630a11e0748 *DESCRIPTION
-978decaa39e75944d88ab2dbe33a726a *NAMESPACE
+a2729aa6dee937053f616b6730882b3a *DESCRIPTION
+47f0c68ce5460bac806e587645925c50 *NAMESPACE
 a025b98c25cb7761c0dbf3f421618a4d *R/MDSplot.R
 eae0c348160c0e1f5c5140169c7610be *R/classCenter.R
 1fcc48ac21e6e66f22dcc5a02cd722d1 *R/combine.R
@@ -25,8 +25,9 @@ e695b3cfc07facf54856bf366870e360 *R/tuneRF.R
 143dac20c44a22e3bd132cad4385e90e *R/varImpPlot.R
 18f94384910772d7babc8354b4ebae17 *R/varUsed.R
 a54ba14b0cb6cc15e4b7687ead9a2bf9 *R/zzz.R
-a7f95178c626d8f7830768e75f0961db *data/imports85.rda
-980aa22e77a4fccedc05d253b65645be *inst/CITATION
+aa5e5a2cbfaea3d9b6cdbe378ac48cee *build/partial.rdb
+c2c56a849b187e54307470cfa2b1da3d *data/imports85.rda
+aad37847b2fb0ead0b6f991ba9185c95 *inst/CITATION
 9e00469f24af18d37dfe36b1ff57654e *inst/NEWS
 b9b69f61e9ed079e1d9d84df6360d522 *man/MDSplot.Rd
 4fcbc72dd2475ff32f5a348bfa71af41 *man/classCenter.Rd
@@ -34,7 +35,7 @@ e25dffb14a3dc288fda639b762757595 *man/combine.Rd
 3e2a6b978a69049e7ea7dc7a306c92fd *man/getTree.Rd
 cd05a7ccb5857db3a60da26503a22ef9 *man/grow.Rd
 3a63f7f925c1b4ca1bf805c5c7eca4f0 *man/importance.Rd
-3720f27c0c909c615d6d7f99826e1d3b *man/imports85.Rd
+110ee15f5d64c221b3995703b18131a1 *man/imports85.Rd
 c901b3cb1b2ad299574e76e5d80859ed *man/margin.Rd
 288befa4e77e572480dab78b686411f0 *man/na.roughfix.Rd
 8ecd590e5b87afb8e84058adea3f8415 *man/outlier.Rd
@@ -49,11 +50,11 @@ ac3d31008c56add22352b609f8cea599 *man/rfcv.Rd
 e7180386828b0d248c172a03915fc187 *man/tuneRF.Rd
 4ef6a1e04cf7e13580922c4f5769de09 *man/varImpPlot.Rd
 1638c2a6ba3ef89fe83321470c6d9386 *man/varUsed.Rd
-8ddc24e3050c344581787ce7ed10d7a5 *src/classTree.c
+6c450c23429e0fd0ab6ce1fe3b31ed89 *src/classTree.c
 adde4a205871318b538e448e6b8db090 *src/init.c
-71d6ddd355af9e2628304b53bcfde18c *src/regTree.c
-65214356bb8b82c817dc50d4b2751c91 *src/regrf.c
-c732a558584798d8d7574710060a2c70 *src/rf.c
+e3dbd6e39a262c4eb9f442d59f8d2b9b *src/regTree.c
+9cd55649aa061ba0bd4851fbdb3d210e *src/regrf.c
+ff7098e03cb8044f9eff4e459aa3ae5b *src/rf.c
 eb0ecd114bb31a940b2c131bd5a111c4 *src/rf.h
 a7656a9f81dafdc4fdf8621dbba47979 *src/rfsub.f
-6878639f320be3254a38999a26d5380e *src/rfutils.c
+ebd0c55f9255ab5d2c499730201fda52 *src/rfutils.c

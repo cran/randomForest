@@ -33,7 +33,7 @@ data(imports85)
   Auto Manuals, Insurance Services Office, and Insurance Collision
   Report, Insurance Institute for Highway Safety.
 
-  The original data is at \url{http://www.ics.uci.edu/~mlearn/MLSummary.html}.
+  The original data is at \doi{10.24432/C5B01C}.
 }
 \references{
   1985 Model Import Car and Truck Specifications, 1985 Ward's Automotive
